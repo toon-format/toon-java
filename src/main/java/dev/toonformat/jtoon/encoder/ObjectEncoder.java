@@ -90,7 +90,11 @@ public final class ObjectEncoder {
         int remainingDepth = effectiveFlattenDepth - depth;
 
         // Attempt key folding when enabled
-        if (options.flatten() && !siblings.isEmpty() && remainingDepth > 0 && !blockedKeys.contains(key)) {
+        if (options.flatten()
+                && !siblings.isEmpty()
+                && remainingDepth > 0
+                && blockedKeys != null
+                && !blockedKeys.contains(key)) {
             options = flatten(key, value, writer, depth, options, siblings, rootLiteralKeys, pathPrefix, blockedKeys, remainingDepth);
             if (options == null) {
                 return;
@@ -127,51 +131,73 @@ public final class ObjectEncoder {
      */
     private static EncodeOptions flatten(String key, JsonNode value, LineWriter writer, int depth, EncodeOptions options, Set<String> siblings, Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
         Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
-        if (foldResult != null) {
-            // prevent second folding pass
-            blockedKeys.add(key);
-            blockedKeys.add(foldResult.foldedKey());
+        if (foldResult == null) {
+            return options;
+        }
+        String foldedKey = foldResult.foldedKey();
 
-            String encodedFoldedKey = PrimitiveEncoder.encodeKey(foldResult.foldedKey());
+        // prevent second folding pass
+        blockedKeys.add(key);
+        blockedKeys.add(foldedKey);
 
-            JsonNode remainder = foldResult.remainder();
-            // Case 1: Fully folded to a leaf value
-            if (remainder == null) {
-                // The folded chain ended at a leaf (primitive, array, or empty object)
-                JsonNode leafValue = foldResult.leafValue();
-                if (leafValue.isValueNode()) {
-                    String primitiveEncodedFoldedKey = PrimitiveEncoder.encodeKey(foldResult.foldedKey());
-                    writer.push(depth, indentedLine(depth, primitiveEncodedFoldedKey + ": " + PrimitiveEncoder.encodePrimitive(foldResult.leafValue(), options.delimiter().getValue()), options.indent()));
-                    return null;
-                } else if (leafValue.isArray()) {
-                    ArrayEncoder.encodeArray(foldResult.foldedKey(), (ArrayNode) leafValue, writer, depth, options);
-                    return null;
-                } else if (leafValue.isObject()) {
-                    // Always write the folded key first
-                    writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
-                    if (!leafValue.isEmpty()) {
-                        encodeObject((ObjectNode) leafValue, writer, depth + 1, options, rootLiteralKeys, null, null, blockedKeys);
-                    }
-                }
-            }
 
-            // Case 2: Partially folded with a tail object
-            if (remainder != null && remainder.isObject()) {
-                writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
-                String foldedPath = pathPrefix != null ? pathPrefix + "." + foldResult.foldedKey() : foldResult.foldedKey();
-                int newRemainingDepth = remainingDepth - foldResult.segmentCount();
-                if (newRemainingDepth <= 0) {
-                    // Pass "-1" if remainingDepth is exhausted and set the encoding in the option to false.
-                    // to encode normally without flattening
-                    newRemainingDepth = -1;
-                    options = new EncodeOptions(options.indent(), options.delimiter(), options.lengthMarker(), false, options.flattenDepth());
-                }
-                encodeObject((ObjectNode) remainder, writer, depth + 1, options, rootLiteralKeys, foldedPath, newRemainingDepth, blockedKeys);
-            }
+        String encodedFoldedKey = PrimitiveEncoder.encodeKey(foldedKey);
+        JsonNode remainder = foldResult.remainder();
 
+        // Case 1: Fully folded to a leaf value
+        if (remainder == null) {
+            handleFullyFoldedLeaf(foldResult, writer, depth, options, encodedFoldedKey);
             return null;
         }
+
+        // Case 2: Partially folded with a tail object
+        if (remainder.isObject()) {
+            writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
+
+            String foldedPath = pathPrefix != null ? String.join(".", pathPrefix, foldedKey) : foldedKey;
+            int newRemainingDepth = remainingDepth - foldResult.segmentCount();
+
+            if (newRemainingDepth <= 0) {
+                // Pass "-1" if remainingDepth is exhausted and set the encoding in the option to false.
+                // to encode normally without flattening
+                newRemainingDepth = -1;
+                options = new EncodeOptions(options.indent(), options.delimiter(), options.lengthMarker(), false, options.flattenDepth());
+            }
+
+            encodeObject((ObjectNode) remainder, writer, depth + 1, options, rootLiteralKeys, foldedPath, newRemainingDepth, blockedKeys);
+            return null;
+        }
+
         return options;
+    }
+
+    private static void handleFullyFoldedLeaf(Flatten.FoldResult foldResult, LineWriter writer, int depth, EncodeOptions options, String encodedFoldedKey) {
+        JsonNode leaf = foldResult.leafValue();
+
+        // Primitive
+        if (leaf.isValueNode()) {
+            writer.push(depth,
+                    indentedLine(depth,
+                            encodedFoldedKey + ": " +
+                                    PrimitiveEncoder.encodePrimitive(leaf, options.delimiter().getValue()),
+                            options.indent()));
+            return;
+        }
+
+        // Array
+        if (leaf.isArray()) {
+            ArrayEncoder.encodeArray(foldResult.foldedKey(), (ArrayNode) leaf, writer, depth, options);
+            return;
+        }
+
+        // Object
+        if (leaf.isObject()) {
+            writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
+            if (!leaf.isEmpty()) {
+                encodeObject((ObjectNode) leaf, writer, depth + 1, options,
+                        null, null, null, null);
+            }
+        }
     }
 
     private static String indentedLine(int depth, String content, int indentSize) {
