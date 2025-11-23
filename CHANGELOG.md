@@ -9,10 +9,16 @@ This project adheres to Semantic Versioning and follows a Keep a Changelog-like 
 ### Added
 
 - Key Folding Option with folding death
+- Added unit tests for PrimitiveDecoder to validate handling of primitives and edge cases.
+- Added unit tests for StringValidator, covering the updated pattern evaluation order. 
 
 ### Changed
 
-- Toon Spec for 2.0.1 impl.
+- Refactored ObjectEncoder and Flatter to improve structure robustness after spec updates involving key-folding.
+- Refactored ValueDecoder (two-step refactor) to better separate logic and improve maintainability.
+- Updated test resources to conform to TOON Specification v2.0.1.
+- Updated PrimitiveDecoder with improved regex logic for more accurate literal parsing.
+- Updated StringValidator pattern ordering: octal is now evaluated before numeric.
 
 ## [0.1.4] - 2025-11-20
 
