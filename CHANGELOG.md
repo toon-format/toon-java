@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to Semantic Versioning and follows a Keep a Changelog-like format.
 
+## [0.1.5] - 2025-11-23
+
+### Added
+
+- Key Folding Option with folding death
+
+### Changed
+
+- Toon Spec for 2.0.1 impl.
+
 ## [0.1.4] - 2025-11-20
 
 ### Added
