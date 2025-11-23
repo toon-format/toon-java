@@ -49,10 +49,12 @@ public final class ObjectEncoder {
                     .forEach(rootLiteralKeys::add);
         }
         int effectiveFlattenDepth = remainingDepth != null ? remainingDepth : options.flattenDepth();
+
         //the siblings collision do not need the absolute path
         Set<String> siblings = fields.stream()
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+
         for (Map.Entry<String, JsonNode> entry : fields) {
             encodeKeyValuePair(entry.getKey(), entry.getValue(), writer, depth, options, siblings, rootLiteralKeys, pathPrefix, effectiveFlattenDepth, blockedKeys);
         }
@@ -86,7 +88,6 @@ public final class ObjectEncoder {
         String encodedKey = PrimitiveEncoder.encodeKey(key);
         String currentPath = pathPrefix != null ? pathPrefix + "." + key : key;
         int effectiveFlattenDepth = flattenDepth != null && flattenDepth > 0 ? flattenDepth : options.flattenDepth();
-
         int remainingDepth = effectiveFlattenDepth - depth;
 
         // Attempt key folding when enabled
@@ -132,16 +133,11 @@ public final class ObjectEncoder {
      * @return EncodeOptions changes for Case 2
      */
     private static EncodeOptions flatten(String key, Flatten.FoldResult foldResult, LineWriter writer, int depth, EncodeOptions options,Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
-//        Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
-//        if (foldResult == null) {
-//            return options;
-//        }
         String foldedKey = foldResult.foldedKey();
 
         // prevent second folding pass
         blockedKeys.add(key);
         blockedKeys.add(foldedKey);
-
 
         String encodedFoldedKey = PrimitiveEncoder.encodeKey(foldedKey);
         JsonNode remainder = foldResult.remainder();
