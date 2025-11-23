@@ -30,7 +30,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(objectNode, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(objectNode, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("x: 10", writer.toString());
@@ -48,7 +48,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("""
@@ -67,7 +67,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("x.y: 5", writer.toString());
@@ -87,7 +87,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, 0);
+        ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, 0, new HashSet<>());
 
         // Then → no flattening due to remainingDepth=0
         assertEquals("""
@@ -108,7 +108,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(obj, writer, 0, options, rootLiteralKeys, null, null);
+        ObjectEncoder.encodeObject(obj, writer, 0, options, rootLiteralKeys, null, null, new HashSet<>());
 
         // Then
         assertTrue(rootLiteralKeys.contains("a.b"));
@@ -128,7 +128,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(objectNode, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(objectNode, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("items[2]: a,b", writer.toString());
@@ -145,7 +145,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(obj, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(obj, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("x:", writer.toString());
@@ -167,7 +167,7 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
 
         // When
-        ObjectEncoder.encodeObject(x, writer, 0, options, new HashSet<>(), null, null);
+        ObjectEncoder.encodeObject(x, writer, 0, options, new HashSet<>(), null, null, new HashSet<>());
 
         // Then
         assertEquals("x.y.z: 3", writer.toString());
@@ -185,7 +185,7 @@ class ObjectEncoderTest {
 
 
         // When
-        ObjectEncoder.encodeObject(node, writer, 0, options, rootKeys, null, null);
+        ObjectEncoder.encodeObject(node, writer, 0, options, rootKeys, null, null, new HashSet<>());
 
         // Then
         assertEquals("""

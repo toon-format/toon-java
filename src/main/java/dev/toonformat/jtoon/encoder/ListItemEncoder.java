@@ -48,7 +48,7 @@ public final class ListItemEncoder {
         // Remaining keys on indented lines
         for (int i = 1; i < keys.size(); i++) {
             String key = keys.get(i);
-            ObjectEncoder.encodeKeyValuePair(key, obj.get(key), writer, depth + 1, options, new HashSet<>(keys), Set.of(), null, null);
+            ObjectEncoder.encodeKeyValuePair(key, obj.get(key), writer, depth + 1, options, new HashSet<>(keys), Set.of(), null, null, new HashSet<>());
         }
     }
 
@@ -135,7 +135,7 @@ public final class ListItemEncoder {
                                                  EncodeOptions options) {
         writer.push(depth, LIST_ITEM_PREFIX + encodedKey + COLON);
         if (!nestedObj.isEmpty()) {
-            ObjectEncoder.encodeObject(nestedObj, writer, depth + 2, options, Set.of(), null, null);
+            ObjectEncoder.encodeObject(nestedObj, writer, depth + 2, options, Set.of(), null, null, new HashSet<>());
         }
     }
 }

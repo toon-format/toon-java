@@ -6,7 +6,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,25 +36,26 @@ public final class ObjectEncoder {
      * @param rootLiteralKeys optional set of dotted keys at the root level to avoid collisions
      * @param pathPrefix      optional parent dotted path (for absolute collision checks)
      * @param remainingDepth  optional override for the remaining depth
+     * @param blockedKeys    contains only keys that have undergone a successful flattening
      */
-    public static void encodeObject(ObjectNode value, LineWriter writer, int depth, EncodeOptions options, Set<String> rootLiteralKeys, String pathPrefix, Integer remainingDepth) {
-        Collection<String> fieldNames = value.propertyNames();
+    public static void encodeObject(ObjectNode value, LineWriter writer, int depth, EncodeOptions options, Set<String> rootLiteralKeys, String pathPrefix, Integer remainingDepth, Set<String> blockedKeys) {
+        List<Map.Entry<String, JsonNode>> fields = value.properties().stream().toList();
 
         // At root level (depth 0), collect all literal dotted keys for collision checking
         if (depth == 0 && rootLiteralKeys != null) {
             rootLiteralKeys.clear();
-            fieldNames.stream()
-                    .filter(k -> k.contains("."))
+            fields.stream()
+                    .filter(e -> e.getKey().contains("."))
+                    .map(Map.Entry::getKey)
                     .forEach(rootLiteralKeys::add);
         }
         int effectiveFlattenDepth = remainingDepth != null ? remainingDepth : options.flattenDepth();
-
-        for (String fieldName : fieldNames) {
-            JsonNode fieldValue = value.get(fieldName);
-            Set<String> siblings = fieldNames.stream()
-                    .map(fn -> pathPrefix == null ? fn : pathPrefix + "." + fn)
-                    .collect(Collectors.toSet());
-            encodeKeyValuePair(fieldName, fieldValue, writer, depth, options, siblings, rootLiteralKeys, pathPrefix, effectiveFlattenDepth);
+        //the siblings collision do not need the absolute path
+        Set<String> siblings = fields.stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        for (Map.Entry<String, JsonNode> entry : fields) {
+            encodeKeyValuePair(entry.getKey(), entry.getValue(), writer, depth, options, siblings, rootLiteralKeys, pathPrefix, effectiveFlattenDepth, blockedKeys);
         }
     }
 
@@ -67,6 +71,7 @@ public final class ObjectEncoder {
      * @param rootLiteralKeys optional set of dotted keys at the root level to avoid collisions
      * @param pathPrefix      optional parent dotted path (for absolute collision checks)
      * @param flattenDepth    optional override for depth limit
+     * @param blockedKeys     contains only keys that have undergone a successful flattening
      */
     public static void encodeKeyValuePair(String key,
                                           JsonNode value,
@@ -76,7 +81,8 @@ public final class ObjectEncoder {
                                           Set<String> siblings,
                                           Set<String> rootLiteralKeys,
                                           String pathPrefix,
-                                          Integer flattenDepth
+                                          Integer flattenDepth,
+                                          Set<String> blockedKeys
     ) {
         String encodedKey = PrimitiveEncoder.encodeKey(key);
         String currentPath = pathPrefix != null ? pathPrefix + "." + key : key;
@@ -85,12 +91,12 @@ public final class ObjectEncoder {
         int remainingDepth = effectiveFlattenDepth - depth;
 
         // Attempt key folding when enabled
-        if (options.flatten() && !siblings.isEmpty() && remainingDepth > 0) {
+        if (options.flatten() && !siblings.isEmpty() && remainingDepth > 0 && !blockedKeys.contains(key)) {
             Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
             if (foldResult != null) {
                 // prevent second folding pass
-                siblings.remove(key);
-                siblings.remove(foldResult.foldedKey());
+                blockedKeys.add(key);
+                blockedKeys.add(foldResult.foldedKey());
 
                 String encodedFoldedKey = PrimitiveEncoder.encodeKey(foldResult.foldedKey());
 
@@ -110,7 +116,7 @@ public final class ObjectEncoder {
                         // Always write the folded key first
                         writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
                         if (!leafValue.isEmpty()) {
-                            encodeObject((ObjectNode) leafValue, writer, depth + 1, options, rootLiteralKeys, null, null);
+                            encodeObject((ObjectNode) leafValue, writer, depth + 1, options, rootLiteralKeys, null, null, blockedKeys);
                         }
                     }
                 }
@@ -126,7 +132,7 @@ public final class ObjectEncoder {
                         newRemainingDepth = -1;
                         options = new EncodeOptions(options.indent(), options.delimiter(), options.lengthMarker(), false, options.flattenDepth());
                     }
-                    encodeObject((ObjectNode) remainder, writer, depth + 1, options, rootLiteralKeys, foldedPath, newRemainingDepth);
+                    encodeObject((ObjectNode) remainder, writer, depth + 1, options, rootLiteralKeys, foldedPath, newRemainingDepth, blockedKeys);
                 }
 
                 return;
@@ -141,7 +147,7 @@ public final class ObjectEncoder {
             ObjectNode objValue = (ObjectNode) value;
             writer.push(depth, encodedKey + COLON);
             if (!objValue.isEmpty()) {
-                encodeObject(objValue, writer, depth + 1, options, rootLiteralKeys, currentPath, effectiveFlattenDepth);
+                encodeObject(objValue, writer, depth + 1, options, rootLiteralKeys, currentPath, effectiveFlattenDepth, blockedKeys);
             }
         }
     }
