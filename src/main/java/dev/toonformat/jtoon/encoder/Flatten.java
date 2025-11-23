@@ -160,12 +160,12 @@ public class Flatten {
 
             Map.Entry<String, JsonNode> entry = it.next();
 
-            // >1 field → stop, this is a tail object
+            // >1 field, this is a tail object
             if (it.hasNext()) {
                 return new ChainResult(segments, currentValue, null);
             }
 
-            // exactly one key → continue chain
+            // exactly one key, continue chain
             segments.add(entry.getKey());
             currentValue = entry.getValue();
 

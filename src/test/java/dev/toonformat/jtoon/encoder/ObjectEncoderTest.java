@@ -9,6 +9,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -89,7 +90,7 @@ class ObjectEncoderTest {
         // When
         ObjectEncoder.encodeObject(root, writer, 0, options, new HashSet<>(), null, 0, new HashSet<>());
 
-        // Then → no flattening due to remainingDepth=0
+        // Then
         assertEquals("""
                 a:
                   b:
@@ -153,7 +154,7 @@ class ObjectEncoderTest {
 
     @Test
     void givenMultiLevelFoldChain_whenFullyFoldable_thenEncodesFullyFlattenedKey() {
-        // Given (x → { y → { z: 3 }} )
+        // Given
         ObjectNode z = MAPPER.createObjectNode();
         z.put("z", 3);
 
@@ -210,5 +211,118 @@ class ObjectEncoderTest {
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
+    }
+
+    @Test
+    void givenPrimitiveLeaf_whenFlatten_thenWriterReceivesEncodedLine() throws Exception {
+        // given
+        String key = "a";
+        EncodeOptions options = EncodeOptions.withFlatten(true);
+        LineWriter writer = new LineWriter(options.indent());
+
+        Set<String> rootLiteralKeys = new HashSet<>();
+        Set<String> blockedKeys = new HashSet<>();
+        Flatten.FoldResult fullFold = new Flatten.FoldResult(
+                "a.b",   // foldedKey
+                null,    // remainder
+                MAPPER.readTree("1"), // leafValue
+                1        // segmentCount
+        );
+
+        // Access private method
+        Method flattenMethod = ObjectEncoder.class.getDeclaredMethod(
+                "flatten",
+                String.class,
+                Flatten.FoldResult.class,
+                LineWriter.class,
+                int.class,
+                EncodeOptions.class,
+                Set.class,
+                String.class,
+                Set.class,
+                int.class
+        );
+        flattenMethod.setAccessible(true);
+
+        // when
+        Object returnValue = flattenMethod.invoke(
+                null,  // static method
+                key,
+                fullFold,
+                writer,
+                0,
+                options,
+                rootLiteralKeys,
+                null,
+                blockedKeys,
+                5
+        );
+
+        // then
+        assertNull(returnValue, "Expected null for fully folded primitive case");
+        assertEquals(1, writer.toString().lines().count(), "Writer should contain one line");
+
+        String line = writer.toString();
+        assertEquals("a.b: 1",line );
+
+        assertEquals(2, blockedKeys.size());
+        assertTrue(blockedKeys.contains("a"));
+    }
+
+    @Test
+    void givenPartiallyFolded_whenFlatten_thenWriterReceivesFoldedKeyAndObjectIsEncoded() throws Exception {
+        // given
+        String key = "a";
+
+        EncodeOptions options = EncodeOptions.withFlattenDepth(5);
+        LineWriter writer = new LineWriter(options.indent());
+
+        Set<String> rootLiteralKeys = new HashSet<>();
+        Set<String> blockedKeys = new HashSet<>();
+
+        ObjectNode remainderNode = (ObjectNode) MAPPER.readTree("{\"c\": 5}");
+
+        Flatten.FoldResult partialFold = new Flatten.FoldResult(
+                "a.b",
+                remainderNode,
+                null,
+                1
+        );
+
+        // Access private method
+        Method flattenMethod = ObjectEncoder.class.getDeclaredMethod(
+                "flatten",
+                String.class,
+                Flatten.FoldResult.class,
+                LineWriter.class,
+                int.class,
+                EncodeOptions.class,
+                Set.class,
+                String.class,
+                Set.class,
+                int.class
+        );
+        flattenMethod.setAccessible(true);
+
+        // when
+        Object result = flattenMethod.invoke(
+                null,               // static
+                key,                // "a"
+                partialFold,          // {"b":{"c":5}}
+                writer,
+                0,                  // depth
+                options,
+                rootLiteralKeys,
+                null,               // pathPrefix
+                blockedKeys,
+                1                   // remainingDepth (will go to <=0, disable flattening)
+        );
+
+        // then
+        assertNull(result);
+        assertEquals(2, writer.toString().lines().count(), "Writer should contain two lines");
+
+        assertTrue(blockedKeys.contains("a"), "Original key should be blocked");
+        assertTrue(blockedKeys.contains("a.b"), "Folded key should be blocked");
     }
 }

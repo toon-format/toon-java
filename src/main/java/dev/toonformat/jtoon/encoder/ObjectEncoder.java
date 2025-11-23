@@ -95,9 +95,12 @@ public final class ObjectEncoder {
                 && remainingDepth > 0
                 && blockedKeys != null
                 && !blockedKeys.contains(key)) {
-            options = flatten(key, value, writer, depth, options, siblings, rootLiteralKeys, pathPrefix, blockedKeys, remainingDepth);
-            if (options == null) {
-                return;
+            Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
+            if (foldResult != null) {
+                options = flatten(key, foldResult, writer, depth, options, rootLiteralKeys, pathPrefix, blockedKeys, remainingDepth);
+                if (options == null) {
+                    return;
+                }
             }
         }
 
@@ -118,22 +121,21 @@ public final class ObjectEncoder {
      * Extract to flatten methode for better maintenance.
      *
      * @param key             the key name
-     * @param value           the value to encode
+     * @param foldResult      the result of the folding
      * @param writer          the LineWriter for accumulating output
      * @param depth           the current indentation depth
      * @param options         encoding options
-     * @param siblings        set of sibling keys for collision detection
      * @param rootLiteralKeys optional set of dotted keys at the root level to avoid collisions
      * @param pathPrefix      optional parent dotted path (for absolute collision checks)
      * @param blockedKeys     contains only keys that have undergone a successful flattening
      * @param remainingDepth  the depth that remind to the limit
      * @return EncodeOptions changes for Case 2
      */
-    private static EncodeOptions flatten(String key, JsonNode value, LineWriter writer, int depth, EncodeOptions options, Set<String> siblings, Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
-        Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
-        if (foldResult == null) {
-            return options;
-        }
+    private static EncodeOptions flatten(String key, Flatten.FoldResult foldResult, LineWriter writer, int depth, EncodeOptions options,Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
+//        Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys, pathPrefix, remainingDepth);
+//        if (foldResult == null) {
+//            return options;
+//        }
         String foldedKey = foldResult.foldedKey();
 
         // prevent second folding pass
