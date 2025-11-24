@@ -3,6 +3,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
+    id("me.champeau.jmh") version "0.7.3"
 }
 
 group = 'dev.toonformat'
@@ -12,6 +13,7 @@ description = 'Token-Oriented Object Notation (TOON) - A compact, human-readable
 // Apply external Gradle scripts
 apply from: 'gradle/publishing.gradle'
 apply from: 'gradle/verification.gradle'
+apply from: 'gradle/benchmark.gradle'
 
 java {
     // Only enforce toolchain in CI to ensure consistent Java 17 builds
