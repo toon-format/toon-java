@@ -47,4 +47,18 @@ public class JToonDecodeToMapTest {
         assertNotNull(map);
         assertTrue(map.isEmpty());
     }
+
+    @Test
+    @DisplayName("should return an empty Map for a non-map result")
+    void notAMap() {
+        String toon = """
+                [3]{name,age,active}:
+                  Mark,31,true
+                  Adam,20,true
+                  Elly,45,false
+                """;
+        Map<String, Object> map = JToon.decodeToMap(toon);
+        assertNotNull(map);
+        assertTrue(map.isEmpty());
+    }
 }

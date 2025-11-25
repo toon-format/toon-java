@@ -146,25 +146,25 @@ public final class JToon {
     }
 
     /**
-     * Decodes a TOON-formatted string into a {@code Map<String, Object>} using custom options.
+     * Decodes a TOON-formatted string into a {@code Map<String, Object>} using the provided options.
      *
      * <p>
      * This method is a convenience wrapper around
      * {@link #decode(String, DecodeOptions)} and expects the decoded result to
-     * represent a TOON object. If the decoded value is {@code null} or an invalid {@code String},
-     * an empty map is returned. No deep transformation is applied: the returned map
-     * directly reflects the structure produced by the decoder.
+     * represent a TOON object. If the decoded value is {@code null} or is not a
+     * {@code Map}, an empty map is returned. No deep transformation is applied:
+     * the returned map directly reflects the structure produced by the decoder.
      * </p>
      *
      * <p>
-     * The decoded value must be a {@code Map}; otherwise, a {@link ClassCastException}
-     * will occur due to the unchecked cast.
+     * The decoded value must be a {@code Map}; otherwise, this method returns an
+     * empty map instead of attempting an invalid cast.
      * </p>
      *
      * @param toon    The TOON-formatted string to decode
      * @param options Decoding options (indentation, delimiters, strict mode)
-     * @return A {@code Map<String, Object>} representing the decoded TOON object, or an empty map if the
-     *         input decodes to {@code null} or a {@code String}
+     * @return A {@code Map<String, Object>} representing the decoded TOON object, or an empty map
+     *         if the decoded value is {@code null} or not a {@code Map}
      * @throws IllegalArgumentException if strict mode is enabled and the input is invalid
      */
     @SuppressWarnings("unchecked")
@@ -174,7 +174,7 @@ public final class JToon {
             return Map.of();
         }
 
-        if(result instanceof String string) {
+        if(!(result instanceof Map)) {
             return Map.of();
         }
 
