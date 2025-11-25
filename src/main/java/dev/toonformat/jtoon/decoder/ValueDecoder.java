@@ -121,6 +121,43 @@ public final class ValueDecoder {
     }
 
     /**
+     * Decodes a TOON-formatted string into a {@code Map<String, Object>} using the
+     * provided decoding options.
+     *
+     * <p>
+     * This method is a convenience wrapper around {@link #decode(String, DecodeOptions)}
+     * and expects the decoded result to represent a TOON object. If the decoded
+     * value is {@code null} or is not a {@code Map}, an empty map is returned.
+     * No deep transformation is applied: the returned map reflects exactly the
+     * structure produced by the decoder.
+     * </p>
+     *
+     * <p>
+     * The decoded value must be a {@code Map}; if it is not, this method returns an
+     * empty map instead of attempting an invalid cast.
+     * </p>
+     *
+     * @param toon    The TOON-formatted string to decode
+     * @param options Decoding options (indentation, delimiters, strict mode)
+     * @return A {@code Map<String, Object>} representing the decoded TOON object,
+     *         or an empty map if the decoded value is {@code null} or not a {@code Map}
+     * @throws IllegalArgumentException if strict mode is enabled and the input is invalid
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> decodeToMap(String toon, DecodeOptions options) {
+        Object result = decode(toon, options);
+        if(result == null) {
+            return Map.of();
+        }
+
+        if(!(result instanceof Map)) {
+            return Map.of();
+        }
+
+        return (Map<String, Object>) result;
+    }
+
+    /**
      * Inner parser class managing line-by-line parsing state.
      * Maintains currentLine index and uses recursive descent for nested structures.
      */

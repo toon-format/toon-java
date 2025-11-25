@@ -167,18 +167,8 @@ public final class JToon {
      *         if the decoded value is {@code null} or not a {@code Map}
      * @throws IllegalArgumentException if strict mode is enabled and the input is invalid
      */
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> decodeToMap(String toon, DecodeOptions options) {
-        Object result = decode(toon, options);
-        if(result == null) {
-            return Map.of();
-        }
-
-        if(!(result instanceof Map)) {
-            return Map.of();
-        }
-
-        return (Map<String, Object>) result;
+        return ValueDecoder.decodeToMap(toon, options);
     }
 
     /**
