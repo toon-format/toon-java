@@ -391,8 +391,21 @@ public final class ValueDecoder {
             List<Object> result = new ArrayList<>();
             currentLine++;
 
+            // Determine the expected row depth dynamically from the first non-blank line
+            int expectedRowDepth;
+            if (currentLine < lines.length) {
+                int nextNonBlankLine = findNextNonBlankLine(currentLine);
+                if (nextNonBlankLine < lines.length) {
+                    expectedRowDepth = getDepth(lines[nextNonBlankLine]);
+                } else {
+                    expectedRowDepth = depth + 1;
+                }
+            } else {
+                expectedRowDepth = depth + 1;
+            }
+
             while (currentLine < lines.length) {
-                if (!processTabularArrayLine(depth, keys, arrayDelimiter, result)) {
+                if (!processTabularArrayLine(expectedRowDepth, keys, arrayDelimiter, result)) {
                     break;
                 }
             }
@@ -403,42 +416,44 @@ public final class ValueDecoder {
 
         /**
          * Processes a single line in a tabular array.
-         * Returns true if parsing should continue, false if array should terminate.
+         * Returns true if parsing should continue, false if an array should terminate.
          */
-        private boolean processTabularArrayLine(int depth, List<String> keys, String arrayDelimiter,
+        private boolean processTabularArrayLine(int expectedRowDepth, List<String> keys, String arrayDelimiter,
                                                 List<Object> result) {
             String line = lines[currentLine];
 
             if (isBlankLine(line)) {
-                return !handleBlankLineInTabularArray(depth);
+                return !handleBlankLineInTabularArray(expectedRowDepth);
             }
 
             int lineDepth = getDepth(line);
-            if (shouldTerminateTabularArray(line, lineDepth, depth)) {
+            if (shouldTerminateTabularArray(line, lineDepth, expectedRowDepth)) {
                 return false;
             }
 
-            if (processTabularRow(line, lineDepth, depth, keys, arrayDelimiter, result)) {
+            if (processTabularRow(line, lineDepth, expectedRowDepth, keys, arrayDelimiter, result)) {
                 currentLine++;
             }
             return true;
         }
 
         /**
-         * Handles blank line processing in tabular array.
-         * Returns true if array should terminate, false if line should be skipped.
+         * Handles blank line processing in a tabular array.
+         * Returns true if an array should terminate, false if a line should be skipped.
          */
-        private boolean handleBlankLineInTabularArray(int depth) {
+        private boolean handleBlankLineInTabularArray(int expectedRowDepth) {
             int nextNonBlankLine = findNextNonBlankLine(currentLine + 1);
 
             if (nextNonBlankLine < lines.length) {
                 int nextDepth = getDepth(lines[nextNonBlankLine]);
-                if (nextDepth <= depth) {
-                    return true; // Blank line is outside array - terminate
+                // Header depth is one level above the expected row depth
+                int headerDepth = expectedRowDepth - 1;
+                if (nextDepth <= headerDepth) {
+                    return true;
                 }
             }
 
-            // Blank line is inside array
+            // Blank line is inside the array
             if (options.strict()) {
                 throw new IllegalArgumentException(
                         "Blank line inside tabular array at line " + (currentLine + 1));
@@ -463,10 +478,13 @@ public final class ValueDecoder {
          * Determines if tabular array parsing should terminate based online depth.
          * Returns true if array should terminate, false otherwise.
          */
-        private boolean shouldTerminateTabularArray(String line, int lineDepth, int depth) {
-            if (lineDepth < depth + 1) {
-                if (lineDepth == depth) {
-                    String content = line.substring(depth * options.indent());
+        private boolean shouldTerminateTabularArray(String line, int lineDepth, int expectedRowDepth) {
+            // Header depth is one level above expected row depth
+            int headerDepth = expectedRowDepth - 1;
+
+            if (lineDepth < expectedRowDepth) {
+                if (lineDepth == headerDepth) {
+                    String content = line.substring(headerDepth * options.indent());
                     int colonIdx = findUnquotedColon(content);
                     if (colonIdx > 0) {
                         return true; // Key-value pair at same depth - terminate array
@@ -476,8 +494,8 @@ public final class ValueDecoder {
             }
 
             // Check for key-value pair at expected row depth
-            if (lineDepth == depth + 1) {
-                String rowContent = line.substring((depth + 1) * options.indent());
+            if (lineDepth == expectedRowDepth) {
+                String rowContent = line.substring(expectedRowDepth * options.indent());
                 int colonIdx = findUnquotedColon(rowContent);
                 return colonIdx > 0; // Key-value pair at same depth as rows - terminate array
             }
@@ -490,14 +508,14 @@ public final class ValueDecoder {
          * Returns true if line was processed and currentLine should be incremented,
          * false otherwise.
          */
-        private boolean processTabularRow(String line, int lineDepth, int depth, List<String> keys,
+        private boolean processTabularRow(String line, int lineDepth, int expectedRowDepth, List<String> keys,
                                           String arrayDelimiter, List<Object> result) {
-            if (lineDepth == depth + 1) {
-                String rowContent = line.substring((depth + 1) * options.indent());
+            if (lineDepth == expectedRowDepth) {
+                String rowContent = line.substring(expectedRowDepth * options.indent());
                 Map<String, Object> row = parseTabularRow(rowContent, keys, arrayDelimiter);
                 result.add(row);
                 return true;
-            } else if (lineDepth > depth + 1) {
+            } else if (lineDepth > expectedRowDepth) {
                 // Line is deeper than expected - might be nested content, skip it
                 currentLine++;
                 return false;
@@ -636,7 +654,7 @@ public final class ValueDecoder {
 
                 // For nested arrays in list items, default to comma delimiter if not specified
                 String nestedArrayDelimiter = extractDelimiterFromHeader(arrayHeader);
-                var arrayValue = parseArrayWithDelimiter(arrayHeader, depth + 1, nestedArrayDelimiter);
+                List<Object> arrayValue = parseArrayWithDelimiter(arrayHeader, depth + 2, nestedArrayDelimiter);
 
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put(key, arrayValue);

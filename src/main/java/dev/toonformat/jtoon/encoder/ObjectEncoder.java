@@ -132,7 +132,7 @@ public final class ObjectEncoder {
      * @param remainingDepth  the depth that remind to the limit
      * @return EncodeOptions changes for Case 2
      */
-    private static EncodeOptions flatten(String key, Flatten.FoldResult foldResult, LineWriter writer, int depth, EncodeOptions options,Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
+    private static EncodeOptions flatten(String key, Flatten.FoldResult foldResult, LineWriter writer, int depth, EncodeOptions options, Set<String> rootLiteralKeys, String pathPrefix, Set<String> blockedKeys, int remainingDepth) {
         String foldedKey = foldResult.foldedKey();
 
         // prevent second folding pass

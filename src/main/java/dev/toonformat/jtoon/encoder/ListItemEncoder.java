@@ -25,7 +25,7 @@ public final class ListItemEncoder {
 
     /**
      * Encodes an object as a list item.
-     * First key-value appears on the "- " line, remaining fields are indented.
+     * The first key-value appears on the "- " line, remaining fields are indented.
      *
      * @param obj     The object to encode
      * @param writer  LineWriter for output
@@ -101,13 +101,13 @@ public final class ListItemEncoder {
                     options.delimiter().getValue(), options.lengthMarker());
             writer.push(depth, LIST_ITEM_PREFIX + headerStr);
             // Write just the rows, header was already written above
-            TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 1, options);
+            TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 2, options);
         } else {
             writer.push(depth,
                     LIST_ITEM_PREFIX + encodedKey + OPEN_BRACKET + arrayValue.size() + CLOSE_BRACKET + COLON);
             for (JsonNode item : arrayValue) {
                 if (item.isObject()) {
-                    encodeObjectAsListItem((ObjectNode) item, writer, depth + 1, options);
+                    encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
                 }
             }
         }
@@ -119,14 +119,14 @@ public final class ListItemEncoder {
 
         for (JsonNode item : arrayValue) {
             if (item.isValueNode()) {
-                writer.push(depth + 1, LIST_ITEM_PREFIX
+                writer.push(depth + 2, LIST_ITEM_PREFIX
                         + PrimitiveEncoder.encodePrimitive(item, options.delimiter().getValue()));
             } else if (item.isArray() && ArrayEncoder.isArrayOfPrimitives(item)) {
                 String inline = ArrayEncoder.formatInlineArray((ArrayNode) item, options.delimiter().getValue(), null,
                         options.lengthMarker());
-                writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
+                writer.push(depth + 2, LIST_ITEM_PREFIX + inline);
             } else if (item.isObject()) {
-                encodeObjectAsListItem((ObjectNode) item, writer, depth + 1, options);
+                encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
             }
         }
     }
