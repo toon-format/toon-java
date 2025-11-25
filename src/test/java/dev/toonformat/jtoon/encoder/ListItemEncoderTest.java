@@ -3,12 +3,15 @@ package dev.toonformat.jtoon.encoder;
 import dev.toonformat.jtoon.EncodeOptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -110,5 +113,57 @@ class ListItemEncoderTest {
         // Then
         assertEquals("- a: 1\n" +
                 "  b: 2", writer.toString());
+    }
+
+    @Test
+    void usesTabularFormatForNestedUniformObjectArrays() {
+        // Given
+        String json = "[\n" +
+            "          { \"users\": [{ \"id\": 1, \"name\": \"Ada\" }, { \"id\": 2, \"name\": \"Bob\" }], \"status\": \"active\" }\n" +
+            "        ]";
+        ArrayNode node = (ArrayNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.DEFAULT;
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> rootKeys = new HashSet<>();
+
+        // When
+        ArrayEncoder.encodeArray("items",node, writer, 0, options);
+
+        // Then
+        String expected = String.join("\n",
+                                      "items[1]:",
+                                      "  - users[2]{id,name}:",
+                                      "      1,Ada",
+                                      "      2,Bob",
+                                      "    status: active");
+        assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void usesListFormatForNestedObjectArraysWithMismatchedKeys() {
+        // Given
+        String json = "[\n" +
+                "          { \"users\": [{ \"id\": 1, \"name\": \"Ada\" }, { \"id\": 2 }], \"status\": \"active\" }\n" +
+                "        ]";
+        ArrayNode node = (ArrayNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.DEFAULT;
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> rootKeys = new HashSet<>();
+
+        // When
+        ArrayEncoder.encodeArray("items", node, writer, 0, options);
+
+
+        // Then
+        String expected = String.join("\n",
+                                      "items[1]:",
+                                      "  - users[2]:",
+                                      "      - id: 1",
+                                      "        name: Ada",
+                                      "      - id: 2",
+                                      "    status: active");
+        assertEquals(expected, writer.toString());
     }
 }

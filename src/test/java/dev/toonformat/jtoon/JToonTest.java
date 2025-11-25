@@ -450,8 +450,8 @@ public class JToonTest {
                     """
                             items[1]:
                               - matrix[2]:
-                                - [2]: 1,2
-                                - [2]: 3,4
+                                  - [2]: 1,2
+                                  - [2]: 3,4
                                 name: grid""",
                     encode(obj));
         }
@@ -467,8 +467,8 @@ public class JToonTest {
                     """
                             items[1]:
                               - users[2]{id,name}:
-                                1,Ada
-                                2,Bob
+                                  1,Ada
+                                  2,Bob
                                 status: active""",
                     encode(obj));
         }
@@ -483,9 +483,9 @@ public class JToonTest {
                     """
                             items[1]:
                               - users[2]:
-                                - id: 1
-                                  name: Ada
-                                - id: 2
+                                  - id: 1
+                                    name: Ada
+                                  - id: 2
                                 status: active""",
                     encode(obj));
         }
@@ -538,8 +538,8 @@ public class JToonTest {
                     """
                             items[1]:
                               - users[2]{id}:
-                                1
-                                2
+                                  1
+                                  2
                                 note: x""",
                     encode(obj));
         }

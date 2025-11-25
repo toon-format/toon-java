@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test for the ObjectEncoder
  */
 class ObjectEncoderTest {
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
@@ -53,8 +54,8 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                x:
-                  y: ok""", writer.toString());
+                         x:
+                           y: ok""", writer.toString());
     }
 
     @Test
@@ -92,9 +93,9 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                a:
-                  b:
-                    z: 1""", writer.toString());
+                         a:
+                           b:
+                             z: 1""", writer.toString());
     }
 
     @Test
@@ -184,19 +185,18 @@ class ObjectEncoderTest {
         LineWriter writer = new LineWriter(options.indent());
         Set<String> rootKeys = new HashSet<>();
 
-
         // When
         ObjectEncoder.encodeObject(node, writer, 0, options, rootKeys, null, null, new HashSet<>());
 
         // Then
         assertEquals("""
-                items[3]:
-                  - summary
-                  - id: 1
-                    name: Ada
-                  - [2]:
-                    - id: 2
-                    - status: draft""", writer.toString());
+                         items[3]:
+                           - summary
+                           - id: 1
+                             name: Ada
+                           - [2]:
+                             - id: 2
+                             - status: draft""", writer.toString());
     }
 
     @Test
@@ -206,7 +206,7 @@ class ObjectEncoderTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
@@ -223,39 +223,39 @@ class ObjectEncoderTest {
         Set<String> rootLiteralKeys = new HashSet<>();
         Set<String> blockedKeys = new HashSet<>();
         Flatten.FoldResult fullFold = new Flatten.FoldResult(
-                "a.b",   // foldedKey
-                null,    // remainder
-                MAPPER.readTree("1"), // leafValue
-                1        // segmentCount
+            "a.b",   // foldedKey
+            null,    // remainder
+            MAPPER.readTree("1"), // leafValue
+            1        // segmentCount
         );
 
         // Access private method
         Method flattenMethod = ObjectEncoder.class.getDeclaredMethod(
-                "flatten",
-                String.class,
-                Flatten.FoldResult.class,
-                LineWriter.class,
-                int.class,
-                EncodeOptions.class,
-                Set.class,
-                String.class,
-                Set.class,
-                int.class
+            "flatten",
+            String.class,
+            Flatten.FoldResult.class,
+            LineWriter.class,
+            int.class,
+            EncodeOptions.class,
+            Set.class,
+            String.class,
+            Set.class,
+            int.class
         );
         flattenMethod.setAccessible(true);
 
         // when
         Object returnValue = flattenMethod.invoke(
-                null,  // static method
-                key,
-                fullFold,
-                writer,
-                0,
-                options,
-                rootLiteralKeys,
-                null,
-                blockedKeys,
-                5
+            null,  // static method
+            key,
+            fullFold,
+            writer,
+            0,
+            options,
+            rootLiteralKeys,
+            null,
+            blockedKeys,
+            5
         );
 
         // then
@@ -263,7 +263,7 @@ class ObjectEncoderTest {
         assertEquals(1, writer.toString().lines().count(), "Writer should contain one line");
 
         String line = writer.toString();
-        assertEquals("a.b: 1",line );
+        assertEquals("a.b: 1", line);
 
         assertEquals(2, blockedKeys.size());
         assertTrue(blockedKeys.contains("a"));
@@ -283,39 +283,39 @@ class ObjectEncoderTest {
         ObjectNode remainderNode = (ObjectNode) MAPPER.readTree("{\"c\": 5}");
 
         Flatten.FoldResult partialFold = new Flatten.FoldResult(
-                "a.b",
-                remainderNode,
-                null,
-                1
+            "a.b",
+            remainderNode,
+            null,
+            1
         );
 
         // Access private method
         Method flattenMethod = ObjectEncoder.class.getDeclaredMethod(
-                "flatten",
-                String.class,
-                Flatten.FoldResult.class,
-                LineWriter.class,
-                int.class,
-                EncodeOptions.class,
-                Set.class,
-                String.class,
-                Set.class,
-                int.class
+            "flatten",
+            String.class,
+            Flatten.FoldResult.class,
+            LineWriter.class,
+            int.class,
+            EncodeOptions.class,
+            Set.class,
+            String.class,
+            Set.class,
+            int.class
         );
         flattenMethod.setAccessible(true);
 
         // when
         Object result = flattenMethod.invoke(
-                null,               // static
-                key,                // "a"
-                partialFold,          // {"b":{"c":5}}
-                writer,
-                0,                  // depth
-                options,
-                rootLiteralKeys,
-                null,               // pathPrefix
-                blockedKeys,
-                1                   // remainingDepth (will go to <=0, disable flattening)
+            null,               // static
+            key,                // "a"
+            partialFold,          // {"b":{"c":5}}
+            writer,
+            0,                  // depth
+            options,
+            rootLiteralKeys,
+            null,               // pathPrefix
+            blockedKeys,
+            1                   // remainingDepth (will go to <=0, disable flattening)
         );
 
         // then
@@ -325,4 +325,32 @@ class ObjectEncoderTest {
         assertTrue(blockedKeys.contains("a"), "Original key should be blocked");
         assertTrue(blockedKeys.contains("a.b"), "Folded key should be blocked");
     }
+
+    @Test
+    void usesListFormatForObjectsContainingArraysOfArrays() {
+        // Given
+        String json = "{\n" +
+            "        \"items\": [\n" +
+            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
+            "        ]\n" +
+            "      }";
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.withFlatten(true);
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> rootKeys = new HashSet<>();
+
+        // When
+        ObjectEncoder.encodeObject(node, writer, 0, options, rootKeys, null, null, new HashSet<>());
+
+        // Then
+        String expected = String.join("\n",
+                                      "items[1]:",
+                                      "  - matrix[2]:",
+                                      "      - [2]: 1,2",
+                                      "      - [2]: 3,4",
+                                      "    name: grid");
+        assertEquals(expected, writer.toString());
+    }
+
 }
