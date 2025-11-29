@@ -1,0 +1,86 @@
+package dev.toonformat.jtoon.decoder;
+
+import dev.toonformat.jtoon.DecodeOptions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@Tag("unit")
+public class ArrayDecoderTest {
+    private final DecodeContext context = new DecodeContext();
+
+    @Test
+    @DisplayName("throws unsupported Operation Exception for calling the constructor")
+    void throwsOnConstructor() throws NoSuchMethodException {
+        final Constructor<ArrayDecoder> constructor = ArrayDecoder.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        final InvocationTargetException thrown =
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
+
+        final Throwable cause = thrown.getCause();
+        assertInstanceOf(UnsupportedOperationException.class, cause);
+        assertEquals("Utility class cannot be instantiated", cause.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should parse TOON format numerical array to JSON")
+    void parseNumericalPrimitiveArray () {
+        setUpContext("[3]: 1,2,3");
+        List <Object> result = ArrayDecoder.parseArray("[3]: 1,2,3", 0, context);
+        assertEquals("[1, 2, 3]", result.toString());
+    }
+
+    @Test
+    @DisplayName("Should parse TOON format string array to JSON")
+    void parseStrPrimitiveArray () {
+        setUpContext("[3]: reading,gaming,coding");
+        List <Object> result = ArrayDecoder.parseArray("[3]: reading,gaming,coding", 0, context);
+        assertEquals("[reading, gaming, coding]", result.toString());
+    }
+
+    @Test
+    @DisplayName("Should parse TOON format tabular array to JSON")
+    void parseTabularArray () {
+        setUpContext("[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5");
+        List <Object> result = ArrayDecoder.parseArray("[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5", 0, context);
+        assertEquals("[{sku=A1, qty=2, price=9.99}, {sku=B2, qty=1, price=14.5}]", result.toString());
+    }
+
+    @Test
+    @DisplayName("Should parse TOON format list array to JSON")
+    void parseListArray () {
+        setUpContext("[1]:\n  - first\n  - second\n  -");
+        List<Object> result = ArrayDecoder.parseArray("[1]:\n  - first\n  - second\n  -", 0, context);
+        assertEquals("""
+            [- first
+              - second
+              -]""", result.toString());
+    }
+
+    @Test
+    @DisplayName("Should extract the correct comma from delimiter")
+    void expectsToExtractCommaFromDelimiter () {
+        setUpContext("items[3]: a,b,c");
+        String result = ArrayDecoder.extractDelimiterFromHeader("items[3]: a,b,c", context);
+        assertEquals(",", result);
+    }
+
+    @Test
+    @DisplayName("Should validate array length")
+    void validateArrayLength () {
+        assertThrows(IllegalArgumentException.class, () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 3));
+    }
+
+    private void setUpContext (String toon) {
+        this.context.lines = toon.split("\n", -1);
+        this.context.options = DecodeOptions.DEFAULT;
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+    }
+}
