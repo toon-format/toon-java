@@ -8,6 +8,9 @@ import java.util.regex.Matcher;
 import static dev.toonformat.jtoon.util.Headers.ARRAY_HEADER_PATTERN;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
+/**
+ * Handles decoding of TOON arrays to JSON format.
+ */
 public class ArrayDecoder {
 
     private ArrayDecoder() {
@@ -17,6 +20,10 @@ public class ArrayDecoder {
     /**
      * Parses array from header string and following lines.
      * Detects array type (tabular, list, or primitive) and routes accordingly.
+     * @param header the header string to parse
+     * @param depth the depth of array
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return parsed array with delimiter
      */
     protected static List<Object> parseArray(String header, int depth, DecodeContext context) {
         String arrayDelimiter = extractDelimiterFromHeader(header, context);
@@ -27,10 +34,13 @@ public class ArrayDecoder {
     /**
      * Extracts delimiter from array header.
      * Returns tab, pipe, or comma (default) based on header pattern.
+     * @param header the header string to parse
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return extracted delimiter from header
      */
     protected static String extractDelimiterFromHeader(String header, DecodeContext context) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
-        if (matcher.find()) {
+        if (matcher.find() && matcher.groupCount() == 3) {
             String delimChar = matcher.group(3);
             if (delimChar != null) {
                 if ("\t".equals(delimChar)) {
@@ -48,6 +58,11 @@ public class ArrayDecoder {
      * Parses array from header string and following lines with a specific
      * delimiter.
      * Detects array type (tabular, list, or primitive) and routes accordingly.
+     * @param header the header string to parse
+     * @param depth depth of array
+     * @param arrayDelimiter array delimiter
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return parsed array
      */
     protected static List<Object> parseArrayWithDelimiter(String header, int depth, String arrayDelimiter, DecodeContext context) {
         Matcher tabularMatcher = TABULAR_HEADER_PATTERN.matcher(header);
@@ -81,9 +96,8 @@ public class ArrayDecoder {
                 if (nextDepth <= depth) {
                     // The next line is not a child of this array,
                     // the array is empty
-                    List<Object> empty = new ArrayList<>();
                     validateArrayLength(header, 0);
-                    return empty;
+                    return Collections.emptyList();
                 }
 
                 if (nextContent.startsWith("- ")) {
@@ -109,6 +123,8 @@ public class ArrayDecoder {
 
     /**
      * Validates array length if declared in header.
+     * @param header header
+     * @param actualLength actual length
      */
     protected static void validateArrayLength(String header, int actualLength) {
         Integer declaredLength = extractLengthFromHeader(header);
@@ -136,6 +152,9 @@ public class ArrayDecoder {
 
     /**
      * Parses array values from a delimiter-separated string.
+     * @param values the values string to parse
+     * @param arrayDelimiter array delimiter
+     * @return parsed array values
      */
     protected static List<Object> parseArrayValues(String values, String arrayDelimiter) {
         List<Object> result = new ArrayList<>();
@@ -149,6 +168,9 @@ public class ArrayDecoder {
     /**
      * Splits a string by delimiter, respecting quoted sections.
      * Whitespace around delimiters is tolerated and trimmed.
+     * @param input the input string to parse
+     * @param arrayDelimiter array delimiter
+     * @return parsed delimited values
      */
     protected static List<String> parseDelimitedValues(String input, String arrayDelimiter) {
         List<String> result = new ArrayList<>();

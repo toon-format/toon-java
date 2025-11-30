@@ -10,12 +10,20 @@ import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
+/**
+ * Handles decoding of key values/arrays to JSON format.
+ */
 public class KeyDecoder {
 
     private KeyDecoder() { throw new UnsupportedOperationException("Utility class cannot be instantiated"); }
 
     /**
      * Processes a keyed array line (e.g., "key[3]: value").
+     * @param result result
+     * @param content the content string to parse
+     * @param keyedArray keyed array
+     * @param parentDepth parent depth of keyed array line
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void processKeyedArrayLine(Map<String, Object> result, String content, Matcher keyedArray,
                                                 int parentDepth, DecodeContext context) {
@@ -36,6 +44,10 @@ public class KeyDecoder {
 
     /**
      * Expands a dotted key into nested object structure.
+     * @param map map
+     * @param dottedKey dottedKey
+     * @param value value
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void expandPathIntoMap(Map<String, Object> map, String dottedKey, Object value, DecodeContext context) {
         String[] segments = dottedKey.split("\\.");
@@ -83,6 +95,10 @@ public class KeyDecoder {
 
     /**
      * Processes a key-value line (e.g., "key: value").
+     * @param result result
+     * @param content the content string to parse
+     * @param depth the depth of the value line
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void processKeyValueLine(Map<String, Object> result, String content, int depth, DecodeContext context) {
         int colonIdx = DecodeHelper.findUnquotedColon(content);
@@ -103,6 +119,11 @@ public class KeyDecoder {
 
     /**
      * Parses a key-value pair and adds it to an existing map.
+     * @param map existing map
+     * @param key key
+     * @param value the value string to parse
+     * @param depth the depth of the value pair
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void parseKeyValuePairIntoMap(Map<String, Object> map, String key, String value,
                                                    int depth, DecodeContext context) {
@@ -116,6 +137,9 @@ public class KeyDecoder {
      * Checks if a key should be expanded (is a valid identifier segment).
      * Keys with dots that are valid identifiers can be expanded.
      * Quoted keys are never expanded.
+     * @param key key
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return true if key should be expanded or false if not
      */
     protected static boolean shouldExpandKey(String key, DecodeContext context) {
         if (context.options.expandPaths() != PathExpansion.SAFE) {
@@ -203,6 +227,11 @@ public class KeyDecoder {
 
     /**
      * Parses a key-value pair at root level, creating a new Map.
+     * @param key key-value
+     * @param value the value string to parse
+     * @param depth the depth of the key value pair
+     * @param parseRootFields true or false if root fields should be parsed
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static Object parseKeyValuePair(String key, String value, int depth, boolean parseRootFields,
                                               DecodeContext context) {
@@ -217,6 +246,11 @@ public class KeyDecoder {
 
     /**
      * Parses a keyed array value (e.g., "items[2]{id,name}:").
+     * @param keyedArray keyed array
+     * @param content the content string to parse
+     * @param depth the depth of the keyed array value
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return parsed keyed array value
      */
     protected static Object parseKeyedArrayValue(Matcher keyedArray, String content, int depth, DecodeContext context) {
         String originalKey = keyedArray.group(1).trim();

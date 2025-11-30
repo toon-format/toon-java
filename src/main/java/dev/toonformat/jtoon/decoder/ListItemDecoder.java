@@ -9,14 +9,23 @@ import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
+/**
+ * Handles decoding of TOON list item to JSON format.
+ */
 public class ListItemDecoder {
 
     private ListItemDecoder() { throw new UnsupportedOperationException("Utility class cannot be instantiated"); }
 
     /**
      * Processes a single list array item if it matches the expected depth.
+     * @param line the line string to parse
+     * @param lineDepth the depth of the line
+     * @param depth the depth of list array item
+     * @param result the stored result of each list item parse
+     * @param context decode object in order to deal with lines, delimiter and options
      */
-    public static void processListArrayItem(String line, int lineDepth, int depth, List<Object> result, DecodeContext context) {
+    public static void processListArrayItem(String line, int lineDepth, int depth,
+                                            List<Object> result, DecodeContext context) {
         if (lineDepth == depth + 1) {
             String content = line.substring((depth + 1) * context.options.indent());
 
@@ -33,6 +42,10 @@ public class ListItemDecoder {
     /**
      * Parses a single list item starting with "- ".
      * Item can be a scalar value or an object with nested fields.
+     * @param content the content string to parse
+     * @param depth the depth of list item
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return parsed item (scalar value or object)
      */
     public static Object parseListItem(String content, int depth, DecodeContext context) {
         // Handle empty item: just "-" or "- "

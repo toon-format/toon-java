@@ -10,6 +10,9 @@ import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
+/**
+ * Handles decoding of tabular arrays to JSON format.
+ */
 public class TabularArrayDecoder {
 
     private TabularArrayDecoder() {
@@ -20,6 +23,11 @@ public class TabularArrayDecoder {
      * Parses tabular array format where each row contains delimiter-separated
      * values.
      * Example: items[2]{id,name}:\n 1,Ada\n 2,Bob
+     * @param header the string representation of header
+     * @param depth depth of array
+     * @param arrayDelimiter the type of delimiter used in the array
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return tabular array converted to JSON format
      */
     public static List<Object> parseTabularArray(String header, int depth, String arrayDelimiter, DecodeContext context) {
         Matcher matcher = TABULAR_HEADER_PATTERN.matcher(header);

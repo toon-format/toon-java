@@ -8,12 +8,18 @@ import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
+/**
+ * Handles decoding of TOON objects to JSON format.
+ */
 public class ObjectDecoder {
 
     private ObjectDecoder() { throw new UnsupportedOperationException("Utility class cannot be instantiated"); }
 
     /**
      * Parses nested object starting at currentLine.
+     * @param parentDepth the parent depth of the nested object
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return parsed nested object
      */
     protected static Map<String, Object> parseNestedObject(int parentDepth, DecodeContext context) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -67,6 +73,9 @@ public class ObjectDecoder {
 
     /**
      * Parses additional key-value pairs at root level.
+     * @param obj the string key-value pairs
+     * @param depth the depth of object field
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void parseRootObjectFields(Map<String, Object> obj, int depth, DecodeContext context) {
         while (context.currentLine < context.lines.length) {
@@ -125,6 +134,9 @@ public class ObjectDecoder {
 
     /**
      * Parses a bare scalar value and validates in strict mode.
+     * @param content the content string to parse
+     * @param depth the depth of the scalar value
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static Object parseBareScalarValue(String content, int depth, DecodeContext context) {
         Object result = PrimitiveDecoder.parse(content);

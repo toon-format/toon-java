@@ -2,6 +2,9 @@ package dev.toonformat.jtoon.util;
 
 import java.util.regex.Pattern;
 
+/**
+ * Patterns in form of regex that must be followed in order to decode arrays, tabular, keyed arrays
+ */
 public class Headers {
 
     /**

@@ -3,6 +3,9 @@ package dev.toonformat.jtoon.decoder;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handles indentation, depth, conflicts and validation for other decode classes.
+ */
 public class DecodeHelper {
 
     private DecodeHelper() {
@@ -13,6 +16,9 @@ public class DecodeHelper {
      * Calculates indentation depth (nesting level) of a line.
      * Counts leading spaces in multiples of the configured indent size.
      * In strict mode, validates indentation (no tabs, proper multiples).
+     * @param line the line string to parse
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return the depth of a line
      */
     public static int getDepth(String line, DecodeContext context) {
         // Blank lines (including lines with only spaces) have depth 0
@@ -60,6 +66,8 @@ public class DecodeHelper {
 
     /**
      * Checks if a line is blank (empty or only whitespace).
+     * @param line the line string to parse
+     * @return true or false depending on if the line is blank or not
      */
     protected static boolean isBlankLine(String line) {
         return line.trim().isEmpty();
@@ -102,6 +110,8 @@ public class DecodeHelper {
     /**
      * Finds the index of the first unquoted colon in a line.
      * Critical for handling quoted keys like "order:id": value.
+     * @param content the content string to parse
+     * @return the unquoted colon
      */
     protected static int findUnquotedColon(String content) {
         boolean inQuotes = false;
@@ -126,6 +136,9 @@ public class DecodeHelper {
 
     /**
      * Finds the next non-blank line starting from the given index.
+     * @param startIndex given index
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return index aiming to the next non-blank line
      */
     protected static int findNextNonBlankLine(int startIndex, DecodeContext context) {
         int index = startIndex;
@@ -135,6 +148,14 @@ public class DecodeHelper {
         return index;
     }
 
+    /**
+     * Finds the next non-blank line starting from the given index.
+     * @param finalSegment final segment
+     * @param existing existing
+     * @param value value present in map
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @throws IllegalArgumentException in case there's a expansion conflict
+     */
     protected static void checkFinalValueConflict(String finalSegment, Object existing, Object value, DecodeContext context) {
         if (existing != null && context.options.strict()) {
             // Check for conflicts in strict mode
@@ -154,6 +175,10 @@ public class DecodeHelper {
     /**
      * Checks for path expansion conflicts when setting a non-expanded key.
      * In strict mode, throws if the key conflicts with an existing expanded path.
+     * @param map map
+     * @param key present key in the map
+     * @param value present value in map
+     * @param context decode object in order to deal with lines, delimiter and options
      */
     protected static void checkPathExpansionConflict(Map<String, Object> map, String key, Object value, DecodeContext context) {
         if (!context.options.strict()) {
@@ -166,7 +191,7 @@ public class DecodeHelper {
 
     /**
      * Finds the depth of the next non-blank line, skipping blank lines.
-     *
+     * @param context decode object in order to deal with lines, delimiter and options
      * @return the depth of the next non-blank line, or null if none exists
      */
     protected static Integer findNextNonBlankLineDepth(DecodeContext context) {
@@ -184,6 +209,8 @@ public class DecodeHelper {
 
     /**
      * Validates that there are no multiple primitives at root level in strict mode.
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @throws IllegalArgumentException in case next depth is equal to 0
      */
     protected static void validateNoMultiplePrimitivesAtRoot(DecodeContext context) {
         int lineIndex = context.currentLine;
@@ -201,6 +228,8 @@ public class DecodeHelper {
 
     /**
      * Handles unexpected indentation at root level.
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @throws IllegalArgumentException in case there's an unexpected indentation
      */
     protected static Object handleUnexpectedIndentation(DecodeContext context) {
         if (context.options.strict()) {
