@@ -17,7 +17,7 @@ import dev.toonformat.jtoon.util.StringEscaper;
  * </ul>
  *
  * <h2>Examples:</h2>
- * 
+ *
  * <pre>{@code
  * parse("null")      → null
  * parse("true")      → true
@@ -39,7 +39,7 @@ final class PrimitiveDecoder {
      *
      * @param value The string representation of the value
      * @return The parsed value as {@code Boolean}, {@code Long}, {@code Double},
-     *         {@code String}, or {@code null}
+     * {@code String}, or {@code null}
      */
     static Object parse(String value) {
         if (value == null || value.isEmpty()) {
@@ -72,8 +72,8 @@ final class PrimitiveDecoder {
         // Check for leading zeros (treat as string, except for "0", "-0", "0.0", etc.)
         String trimmed = value.trim();
         if (trimmed.length() > 1
-                && trimmed.matches("^-?0+[0-7].*") //octal number
-                && !trimmed.matches("^-?0+(\\.0+)?([eE][+-]?\\d+)?$")) {
+            && trimmed.matches("^-?0+[0-7].*") //octal number
+            && !trimmed.matches("^-?0+(\\.0+)?([eE][+-]?\\d+)?$")) {
             return value;
         }
 
@@ -88,10 +88,11 @@ final class PrimitiveDecoder {
                 }
                 // Check if the result is a whole number - if so, return as Long
                 if (parsed == Math.floor(parsed)
-                        && !Double.isInfinite(parsed)
-                        && parsed >= Long.MIN_VALUE
-                        && parsed <= Long.MAX_VALUE)
+                    && !Double.isInfinite(parsed)
+                    && parsed >= Long.MIN_VALUE
+                    && parsed <= Long.MAX_VALUE) {
                     return (long) parsed;
+                }
 
                 return parsed;
             } else {

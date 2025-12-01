@@ -14,15 +14,16 @@ import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
  */
 public class ListItemDecoder {
 
-    private ListItemDecoder() { throw new UnsupportedOperationException("Utility class cannot be instantiated"); }
+    private ListItemDecoder() {throw new UnsupportedOperationException("Utility class cannot be instantiated");}
 
     /**
      * Processes a single list array item if it matches the expected depth.
-     * @param line the line string to parse
+     *
+     * @param line      the line string to parse
      * @param lineDepth the depth of the line
-     * @param depth the depth of list array item
-     * @param result the stored result of each list item parse
-     * @param context decode object in order to deal with lines, delimiter and options
+     * @param depth     the depth of list array item
+     * @param result    the stored result of each list item parse
+     * @param context   decode an object to deal with lines, delimiter and options
      */
     public static void processListArrayItem(String line, int lineDepth, int depth,
                                             List<Object> result, DecodeContext context) {
@@ -42,9 +43,10 @@ public class ListItemDecoder {
     /**
      * Parses a single list item starting with "- ".
      * Item can be a scalar value or an object with nested fields.
+     *
      * @param content the content string to parse
-     * @param depth the depth of list item
-     * @param context decode object in order to deal with lines, delimiter and options
+     * @param depth   the depth of list item
+     * @param context decode an object to deal with lines, delimiter and options
      * @return parsed item (scalar value or object)
      */
     public static Object parseListItem(String content, int depth, DecodeContext context) {
@@ -115,7 +117,7 @@ public class ListItemDecoder {
 
         Map<String, Object> item = new LinkedHashMap<>();
         Object parsedValue;
-        // If no next line exists, handle simple case
+        // If no next line exists, handle a simple case
         if (context.currentLine >= context.lines.length) {
             parsedValue = value.trim().isEmpty() ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value);
         } else {
@@ -130,6 +132,10 @@ public class ListItemDecoder {
 
     /**
      * Parses additional fields for a list item object.
+     *
+     * @param item    the item to parse
+     * @param depth   the depth of the item
+     * @param context decode an object to deal with lines, delimiter and options     *
      */
     private static void parseListItemFields(Map<String, Object> item, int depth, DecodeContext context) {
         while (context.currentLine < context.lines.length) {
@@ -143,13 +149,13 @@ public class ListItemDecoder {
             if (lineDepth == depth + 2) {
                 String fieldContent = line.substring((depth + 2) * context.options.indent());
 
-                // Try to parse as keyed array first, then as key-value pair
+                // Try to parse as a keyed array first, then as a key-value pair
                 boolean wasParsed = KeyDecoder.parseKeyedArrayField(fieldContent, item, depth, context);
                 if (!wasParsed) {
                     wasParsed = KeyDecoder.parseKeyValueField(fieldContent, item, depth, context);
                 }
 
-                // If neither pattern matched, skip this line to avoid infinite loop
+                // If neither pattern matched, skip this line to avoid an infinite loop
                 if (!wasParsed) {
                     context.currentLine++;
                 }

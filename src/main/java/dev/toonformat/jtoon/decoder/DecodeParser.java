@@ -2,14 +2,13 @@ package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
 
-
 import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Parser class managing line-by-line parsing state.
- * Maintains currentLine index and uses recursive descent for nested structures.
+ * Maintains the currentLine index and uses recursive descent for nested structures.
  */
 public class DecodeParser {
 
@@ -23,7 +22,7 @@ public class DecodeParser {
 
     /**
      * Parses the current line at root level (depth 0).
-     * Routes to appropriate handler based online content.
+     * Routes to appropriate handler-based online content.
      */
     Object parseValue() {
         if (context.currentLine >= context.lines.length) {

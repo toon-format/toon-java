@@ -7,10 +7,25 @@ import dev.toonformat.jtoon.DecodeOptions;
  */
 public class DecodeContext {
 
+    /**
+     * Lines of the TOON file.
+     */
     protected String[] lines;
+    /**
+     * Options used to decode the TOON file.
+     */
     protected DecodeOptions options;
+    /**
+     * Delimiter used to split array elements.
+     */
     protected String delimiter;
+    /**
+     * Current line being decoded.
+     */
     protected int currentLine = 0;
 
-    public DecodeContext () {}
+    /**
+     * Default constructor
+     */
+    public DecodeContext() {}
 }
