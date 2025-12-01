@@ -30,18 +30,4 @@ public class DecodeContext {
     public DecodeContext() {
     }
 
-    /**
-     * Full constructor
-     *
-     * @param lines       Lines of the TOON file.
-     * @param options     Options used to decode the TOON file.
-     * @param delimiter   Delimiter used to split array elements.
-     * @param currentLine Current line being decoded.
-     */
-    public DecodeContext(String[] lines, DecodeOptions options, String delimiter, int currentLine) {
-        this.lines = lines;
-        this.options = options;
-        this.delimiter = delimiter;
-        this.currentLine = currentLine;
-    }
 }
