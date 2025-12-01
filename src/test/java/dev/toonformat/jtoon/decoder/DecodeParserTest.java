@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("unit")
-public class DecodeParserTest {
+class DecodeParserTest {
 
     @Test
     @DisplayName("Should parse TOON format primitive array to JSON")

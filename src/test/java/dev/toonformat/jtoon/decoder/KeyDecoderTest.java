@@ -51,7 +51,7 @@ class KeyDecoderTest {
 
     @Test
     @DisplayName("Given SAFE path expansion and valid dotted key When checked Then key is expandable")
-    void shouldExpandKey_givenKeyWithQuteses_whenChecked_thenTrue() {
+    void shouldExpandKeyGivenKeyWithQutesWhenCheckedThenTrue() {
         // Given
         DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE);

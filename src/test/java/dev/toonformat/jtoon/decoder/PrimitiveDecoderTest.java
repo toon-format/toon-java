@@ -7,10 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for PrimitiveDecoder utility class.
@@ -42,6 +39,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals("", result);
     }
 
@@ -151,6 +149,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals(3.14, (Double) result, 0.000001);
     }
 
@@ -163,6 +162,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals(1000.0, (Long) result, 0.000001);
     }
 

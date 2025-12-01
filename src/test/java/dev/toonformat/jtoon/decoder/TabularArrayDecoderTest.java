@@ -61,7 +61,7 @@ class TabularArrayDecoderTest {
         // Arrange: header + one valid row, then a deeper-indented line, then another valid row
         // expected row depth (1) -> parsed as first row
         // deeper than expected (depth 2) -> should be skipped by else-if branch
-        String toon = "[2]{id,name}:\n  1,Ada\n    nested: true\n  2,Bob".formatted();
+        String toon = "[2]{id,name}:\n  1,Ada\n    nested: true\n  2,Bob";
 
         setUpContext(toon);
 
@@ -134,9 +134,9 @@ class TabularArrayDecoderTest {
     }
 
     // Reflection helpers for invoking private static methods
-    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+    private static void invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
         Method declaredMethod = TabularArrayDecoder.class.getDeclaredMethod(methodName, paramTypes);
         declaredMethod.setAccessible(true);
-        return declaredMethod.invoke(null, args);
+        declaredMethod.invoke(null, args);
     }
 }

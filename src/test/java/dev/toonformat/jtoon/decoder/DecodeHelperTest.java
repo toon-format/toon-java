@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("unit")
-public class DecodeHelperTest {
+class DecodeHelperTest {
 
     private final DecodeContext context = new DecodeContext();
 
@@ -368,7 +368,6 @@ public class DecodeHelperTest {
         @DisplayName("Given strict mode and existing map but new primitive -> conflict")
         void mapToPrimitiveConflict() {
             setUpContext(new String[] {}, true, 2);
-            Map<String, Object> existing = Map.of("a", 1);
 
             assertThrows(IllegalArgumentException.class,
                          () -> DecodeHelper.checkFinalValueConflict("a", new HashMap<>(), 5, context));
