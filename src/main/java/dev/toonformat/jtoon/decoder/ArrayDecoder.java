@@ -43,11 +43,11 @@ public class ArrayDecoder {
     protected static String extractDelimiterFromHeader(String header, DecodeContext context) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find() && matcher.groupCount() == 3) {
-            String delimChar = matcher.group(3);
-            if (delimChar != null) {
-                if ("\t".equals(delimChar)) {
+            String delimiter = matcher.group(3);
+            if (delimiter != null) {
+                if ("\t".equals(delimiter)) {
                     return "\t";
-                } else if ("|".equals(delimChar)) {
+                } else if ("|".equals(delimiter)) {
                     return "|";
                 }
             }
@@ -183,45 +183,45 @@ public class ArrayDecoder {
      */
     protected static List<String> parseDelimitedValues(String input, String arrayDelimiter) {
         List<String> result = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         boolean inQuotes = false;
         boolean escaped = false;
-        char delimChar = arrayDelimiter.charAt(0);
+        char delimiterChar = arrayDelimiter.charAt(0);
 
         int i = 0;
         while (i < input.length()) {
-            char c = input.charAt(i);
+            char currentChar = input.charAt(i);
 
             if (escaped) {
-                current.append(c);
+                stringBuilder.append(currentChar);
                 escaped = false;
                 i++;
-            } else if (c == '\\') {
-                current.append(c);
+            } else if (currentChar == '\\') {
+                stringBuilder.append(currentChar);
                 escaped = true;
                 i++;
-            } else if (c == '"') {
-                current.append(c);
+            } else if (currentChar == '"') {
+                stringBuilder.append(currentChar);
                 inQuotes = !inQuotes;
                 i++;
-            } else if (c == delimChar && !inQuotes) {
-                // Found delimiter - add current value (trimmed) and reset
-                String value = current.toString().trim();
+            } else if (currentChar == delimiterChar && !inQuotes) {
+                // Found delimiter - add stringBuilder value (trimmed) and reset
+                String value = stringBuilder.toString().trim();
                 result.add(value);
-                current = new StringBuilder();
+                stringBuilder = new StringBuilder();
                 // Skip whitespace after delimiter
                 do {
                     i++;
                 } while (i < input.length() && Character.isWhitespace(input.charAt(i)));
             } else {
-                current.append(c);
+                stringBuilder.append(currentChar);
                 i++;
             }
         }
 
         // Add final value
-        if (!current.isEmpty() || input.endsWith(arrayDelimiter)) {
-            result.add(current.toString().trim());
+        if (!stringBuilder.isEmpty() || input.endsWith(arrayDelimiter)) {
+            result.add(stringBuilder.toString().trim());
         }
 
         return result;

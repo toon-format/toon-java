@@ -39,7 +39,27 @@ public class DecodeHelper {
         }
 
         int depth;
-        int indentSize = context.options.indent();
+        int leadingSpaces = getLeadingSpaces(line, context);
+
+        //never div to zero
+        if (context.options.indent() == 0) {
+            return leadingSpaces;
+        }
+
+        // Calculate depth based on indent size
+        depth = leadingSpaces / context.options.indent();
+
+        return depth;
+    }
+
+    /**
+     * Get the amount of leading spaces
+     *
+     * @param line    the line string to parse
+     * @param context decode an object to deal with lines, delimiter, and options
+     * @return the amount of leading spaces of the given line
+     */
+    private static int getLeadingSpaces(String line, DecodeContext context) {
         int leadingSpaces = 0;
 
         // Count leading spaces
@@ -50,23 +70,15 @@ public class DecodeHelper {
                 break;
             }
         }
+        int indentSize = context.options.indent();
 
         // In strict mode, check if it's an exact multiple
         if (context.options.strict() && leadingSpaces > 0 && leadingSpaces % indentSize != 0) {
             throw new IllegalArgumentException(
                 String.format("Non-multiple indentation: %d spaces with indent=%d at line %d",
-                              leadingSpaces, indentSize, context.currentLine + 1));
+                    leadingSpaces, indentSize, context.currentLine + 1));
         }
-
-        //never div to zero
-        if (indentSize == 0) {
-            return leadingSpaces;
-        }
-
-        // Calculate depth based on indent size
-        depth = leadingSpaces / indentSize;
-
-        return depth;
+        return leadingSpaces;
     }
 
     /**
@@ -82,6 +94,9 @@ public class DecodeHelper {
     /**
      * Validates indentation in strict mode.
      * Checks for tabs, mixed tabs/spaces, and non-multiple indentation.
+     *
+     * @param line    the line string to parse
+     * @param context decode an object to deal with lines, delimiter, and options
      */
     private static void validateIndentation(String line, DecodeContext context) {
         if (line.trim().isEmpty()) {
@@ -109,7 +124,7 @@ public class DecodeHelper {
         if (leadingSpaces > 0 && leadingSpaces % indentSize != 0) {
             throw new IllegalArgumentException(
                 String.format("Non-multiple indentation: %d spaces with indent=%d at line %d",
-                              leadingSpaces, indentSize, context.currentLine + 1));
+                    leadingSpaces, indentSize, context.currentLine + 1));
         }
     }
 
@@ -171,12 +186,12 @@ public class DecodeHelper {
             if (existing instanceof Map && !(value instanceof Map)) {
                 throw new IllegalArgumentException(
                     String.format("Path expansion conflict: %s is object, cannot set to %s",
-                                  finalSegment, value.getClass().getSimpleName()));
+                        finalSegment, value.getClass().getSimpleName()));
             }
             if (existing instanceof List && !(value instanceof List)) {
                 throw new IllegalArgumentException(
                     String.format("Path expansion conflict: %s is array, cannot set to %s",
-                                  finalSegment, value.getClass().getSimpleName()));
+                        finalSegment, value.getClass().getSimpleName()));
             }
         }
     }
