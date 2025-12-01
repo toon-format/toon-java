@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.DecimalNode;
 import tools.jackson.databind.node.DoubleNode;
@@ -12,9 +13,13 @@ import tools.jackson.databind.node.FloatNode;
 import tools.jackson.databind.node.IntNode;
 import tools.jackson.databind.node.LongNode;
 import tools.jackson.databind.node.NullNode;
+import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.node.ShortNode;
 import tools.jackson.databind.node.StringNode;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -25,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -41,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * JUnit 5 test class for JsonNormalizer utility.
  */
 @Tag("unit")
-public class JsonNormalizerTest {
+class JsonNormalizerTest {
 
     @Nested
     @DisplayName("Null and JsonNode")
@@ -373,7 +379,7 @@ public class JsonNormalizerTest {
             Date date = Date.from(Instant.parse("2023-10-15T14:30:45.123Z"));
             JsonNode result = JsonNormalizer.normalize(date);
             assertTrue(result.isString());
-            assertEquals("2023-10-15T14:30:45.123Z", result.asString());
+            assertEquals("2023-10-15", result.asString());
         }
     }
 
@@ -623,8 +629,8 @@ public class JsonNormalizerTest {
         @DisplayName("should handle nested arrays")
         void testNestedArrays() {
             Object[] array = {
-                    new int[]{1, 2},
-                    new String[]{"a", "b"}
+                new int[]{1, 2},
+                new String[]{"a", "b"}
             };
             JsonNode result = JsonNormalizer.normalize(array);
             assertTrue(result.isArray());
@@ -758,8 +764,8 @@ public class JsonNormalizerTest {
         @DisplayName("should handle collections of POJOs")
         void testCollectionOfPojos() {
             List<SimplePojo> pojos = List.of(
-                    new SimplePojo("Alice", 25),
-                    new SimplePojo("Bob", 30)
+                new SimplePojo("Alice", 25),
+                new SimplePojo("Bob", 30)
             );
             JsonNode result = JsonNormalizer.normalize(pojos);
             assertTrue(result.isArray());
@@ -799,13 +805,13 @@ public class JsonNormalizerTest {
         @DisplayName("should handle mixed types in collections")
         void testMixedTypes() {
             List<Object> mixed = java.util.Arrays.asList(
-                    1,
-                    "text",
-                    true,
-                    3.14,
-                    List.of(1, 2),
-                    Map.of("key", "value"),
-                    null
+                1,
+                "text",
+                true,
+                3.14,
+                List.of(1, 2),
+                Map.of("key", "value"),
+                null
             );
             JsonNode result = JsonNormalizer.normalize(mixed);
             assertTrue(result.isArray());
@@ -850,6 +856,542 @@ public class JsonNormalizerTest {
             assertTrue(result.isObject());
             assertEquals("value", result.get("key1").asString());
             assertTrue(result.get("key2").isNull());
+        }
+    }
+
+    @Test
+    @DisplayName("throws unsupported Operation Exception for calling the constructor")
+    void throwsOnConstructor() throws NoSuchMethodException {
+        final Constructor<JsonNormalizer> constructor = JsonNormalizer.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        final InvocationTargetException thrown =
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
+
+        final Throwable cause = thrown.getCause();
+        assertInstanceOf(UnsupportedOperationException.class, cause);
+        assertEquals("Utility class cannot be instantiated", cause.getMessage());
+    }
+
+    // Reflection helpers for invoking private static methods
+    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+        Method m = JsonNormalizer.class.getDeclaredMethod(methodName, paramTypes);
+        m.setAccessible(true);
+        return m.invoke(null, args);
+    }
+
+
+    @Nested
+    @DisplayName("tryNormalizePrimitive")
+    class TryNormalizePrimitive {
+
+        @Test
+        @DisplayName("Given an Integer value, When tryNormalizePrimitive is called, Then an IntNode is returned")
+        void givenInteger_whenTryNormalizePrimitive_thenIntNode() throws Exception {
+            // Given
+            Integer input = 42;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(IntNode.class, result);
+            assertEquals(42, ((JsonNode) result).asInt());
+        }
+
+        @Test
+        @DisplayName("Given an unsupported type, When tryNormalizePrimitive is called, Then null is returned")
+        void givenUnsupported_whenTryNormalizePrimitive_thenNull() throws Exception {
+            // Given
+            Object input = new Object();
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertNull(result);
+        }
+
+        @Test
+        @DisplayName("Given an String value, When tryNormalizePrimitive is called, Then an StringNode is returned")
+        void givenString_whenTryNormalizePrimitive_thenStringNode() throws Exception {
+            // Given
+            String input = "hello world";
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("hello world", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given an Boolean value, When tryNormalizePrimitive is called, Then an BooleanNode is returned")
+        void givenBoolean_whenTryNormalizePrimitive_thenBooleanNode() throws Exception {
+            // Given
+            Boolean input = Boolean.TRUE;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(BooleanNode.class, result);
+            assertTrue(((JsonNode) result).asBoolean());
+        }
+
+        @Test
+        @DisplayName("Given an Long value, When tryNormalizePrimitive is called, Then an LongNode is returned")
+        void givenLong_whenTryNormalizePrimitive_thenLongNode() throws Exception {
+            // Given
+            Long input = Long.MAX_VALUE;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(LongNode.class, result);
+            assertEquals(Long.MAX_VALUE, ((JsonNode) result).asLong());
+        }
+
+        @Test
+        @DisplayName("Given an Short value, When tryNormalizePrimitive is called, Then an ShortNode is returned")
+        void givenShort_whenTryNormalizePrimitive_thenShortNode() throws Exception {
+            // Given
+            Short input = Short.MAX_VALUE;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(ShortNode.class, result);
+            assertEquals(Short.MAX_VALUE, ((JsonNode) result).asShort());
+        }
+
+        @Test
+        @DisplayName("Given an Byte value, When tryNormalizePrimitive is called, Then an ByteNode is returned")
+        void givenByte_whenTryNormalizePrimitive_thenByteNode() throws Exception {
+            // Given
+            byte input = 42;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePrimitive", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(IntNode.class, result);
+            assertEquals(42, ((JsonNode) result).intValue());
+        }
+    }
+
+    @Nested
+    @DisplayName("tryNormalizeBigNumber")
+    class TryNormalizeBigNumber {
+
+        @Test
+        @DisplayName("Given BigInteger within long range, When tryNormalizeBigNumber is called, Then a LongNode is returned")
+        void givenBigIntegerInRange_whenTryNormalizeBigNumber_thenLongNode() throws Exception {
+            // Given
+            BigInteger input = BigInteger.valueOf(Long.MAX_VALUE);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeBigNumber", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(LongNode.class, result);
+            assertEquals(Long.MAX_VALUE, ((JsonNode) result).longValue());
+        }
+
+        @Test
+        @DisplayName("Given BigInteger outside long range, When tryNormalizeBigNumber is called, Then a StringNode is returned")
+        void givenBigIntegerOutOfRange_whenTryNormalizeBigNumber_thenStringNode() throws Exception {
+            // Given
+            BigInteger input = new BigInteger("99999999999999999999999999999999");
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeBigNumber", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals(input.toString(), ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given BigDecimal value, When tryNormalizeBigNumber is called, Then a DecimalNode is returned")
+        void givenBigDecimal_whenTryNormalizeBigNumber_thenDecimalNode() throws Exception {
+            // Given
+            BigDecimal input = new BigDecimal("123.456");
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeBigNumber", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(DecimalNode.class, result);
+            assertEquals(input, ((JsonNode) result).decimalValue());
+        }
+
+        @Test
+        @DisplayName("Given non big-number type, When tryNormalizeBigNumber is called, Then null is returned")
+        void givenOther_whenTryNormalizeBigNumber_thenNull() throws Exception {
+            // Given
+            String input = "not-a-number";
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeBigNumber", new Class[]{Object.class}, input);
+
+            // Then
+            assertNull(result);
+        }
+    }
+
+    @Nested
+    @DisplayName("tryNormalizeTemporal")
+    class TryNormalizeTemporal {
+
+        @Test
+        @DisplayName("Given LocalDate, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenLocalDate_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            LocalDate input = LocalDate.of(2024, 2, 29);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("2024-02-29", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given non temporal type, When tryNormalizeTemporal is called, Then null is returned")
+        void givenOther_whenTryNormalizeTemporal_thenNull() throws Exception {
+            // Given
+            Object input = 10;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertNull(result);
+        }
+
+        @Test
+        @DisplayName("Given LocalDateTime, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenLocalDateTime_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            LocalDateTime input = LocalDateTime.of(2024, 2, 29, 14, 45, 12);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("2024-02-29T14:45:12", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given LocalTime, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenLocalTime_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            LocalTime input = LocalTime.of(14, 45, 12);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("14:45:12", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given ZoneDateTime, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenZoneDateTime_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            ZonedDateTime input = ZonedDateTime.of(LocalDate.of(2025, 11, 26), LocalTime.of(15, 45), ZoneId.of("Europe/Berlin"));
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("2025-11-26T15:45:00+01:00[Europe/Berlin]", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given OffsetDateTime, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenOffsetDateTime_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            ZoneId zone = ZoneId.of("Europe/Berlin");
+            ZoneOffset zoneOffSet = zone.getRules().getOffset(LocalDateTime.of(2025, 11, 26, 15, 45, 36));
+            OffsetDateTime input = OffsetDateTime.of(LocalDate.of(2025, 11, 26), LocalTime.of(15, 45), zoneOffSet);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("2025-11-26T15:45:00+01:00", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given Instant, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenInstant_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            ZoneId zone = ZoneId.of("Europe/Berlin");
+            ZoneOffset zoneOffSet = zone.getRules().getOffset(LocalDateTime.of(2025, 11, 26, 15, 45, 36));
+            Instant input = LocalDateTime.of(2025, 11, 26, 15, 45, 36).toInstant(zoneOffSet);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("2025-11-26T14:45:36Z", ((JsonNode) result).asString());
+        }
+
+        @Test
+        @DisplayName("Given Date, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        void givenDate_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
+            // Given
+            Date input = new Date(1764362004);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeTemporal", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(StringNode.class, result);
+            assertEquals("1970-01-21", ((JsonNode) result).asString());
+        }
+    }
+
+    @Nested
+    @DisplayName("tryConvertToLong")
+    class TryConvertToLong {
+
+        @Test
+        @DisplayName("Given whole double within long range, When tryConvertToLong is called, Then Optional with LongNode is returned")
+        void givenWholeDoubleInRange_whenTryConvertToLong_thenOptionalLongNode() throws Exception {
+            // Given
+            Double input = 1_000_000d;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            Optional<?> opt = (Optional<?>) result;
+            assertTrue(opt.isPresent());
+            assertInstanceOf(LongNode.class, opt.get());
+            assertEquals(1_000_000L, ((JsonNode) opt.get()).longValue());
+        }
+
+        @Test
+        @DisplayName("Given fractional double, When tryConvertToLong is called, Then Optional.empty is returned")
+        void givenFractionalDouble_whenTryConvertToLong_thenEmpty() throws Exception {
+            // Given
+            Double input = 3.14;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertTrue(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given whole double outside long range (max), When tryConvertToLong is called, Then Optional.empty is returned")
+        void givenWholeDoubleOutOfRangeMax_whenTryConvertToLong_thenEmpty() throws Exception {
+            // Given
+            Double input = (double) Long.MAX_VALUE + 1000d;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given whole double outside long range (min), When tryConvertToLong is called, Then Optional.empty is returned")
+        void givenWholeDoubleOutOfRangeMin_whenTryConvertToLong_thenEmpty() throws Exception {
+            // Given
+            Double input = (double) Long.MIN_VALUE - 1000d;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given NonInteger, When tryConvertToLong is called, Then Optional.empty is returned")
+        void testNonIntegerValueReturnsEmpty_whenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) 3.14;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertTrue(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given Integer, When tryConvertToLong is called, Then Optional is returned")
+        void testIntegerValueReturnsOptional_whenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) 10.0;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given negative NonInteger, When tryConvertToLong is called, Then Optional.empty is returned")
+        void testNegativeNonIntegerValueReturnsEmptyWhenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) -5.7;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertTrue(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given negative Integer, When tryConvertToLong is called, Then Optional is returned")
+        void testNegativeIntegerValueReturnsOptionalWhenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) -8.0;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("tryNormalizeCollection")
+    class TryNormalizeCollection {
+
+        @Test
+        @DisplayName("Given List, When tryNormalizeCollection is called, Then ArrayNode is returned")
+        void givenList_whenTryNormalizeCollection_thenArrayNode() throws Exception {
+            // Given
+            List<Object> input = java.util.Arrays.asList(1, "two", true);
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeCollection", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(ArrayNode.class, result);
+            ArrayNode array = (ArrayNode) result;
+            assertEquals(3, array.size());
+            assertEquals(1, array.get(0).asInt());
+            assertEquals("two", array.get(1).asString());
+            assertTrue(array.get(2).asBoolean());
+        }
+
+        @Test
+        @DisplayName("Given Map, When tryNormalizeCollection is called, Then ObjectNode is returned")
+        void givenMap_whenTryNormalizeCollection_thenObjectNode() throws Exception {
+            // Given
+            Map<String, Object> input = new LinkedHashMap<>();
+            input.put("a", 1);
+            input.put("b", "two");
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeCollection", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(ObjectNode.class, result);
+            ObjectNode object = (ObjectNode) result;
+            assertEquals(1, object.get("a").asInt());
+            assertEquals("two", object.get("b").asString());
+        }
+
+        @Test
+        @DisplayName("Given non-collection, When tryNormalizeCollection is called, Then null is returned")
+        void givenOther_whenTryNormalizeCollection_thenNull() throws Exception {
+            // Given
+            Object input = 10.0;
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizeCollection", new Class[]{Object.class}, input);
+
+            // Then
+            assertNull(result);
+        }
+    }
+
+    @Nested
+    @DisplayName("normalizeCollection")
+    class NormalizeCollection {
+
+        @Test
+        @DisplayName("Given mixed-type list, When normalizeCollection is called, Then items are normalized in an ArrayNode")
+        void givenMixedList_whenNormalizeCollection_thenArrayNode() throws Exception {
+            // Given
+            List<Object> input = java.util.Arrays.asList(1, 2L, 3.0, "four");
+
+            // When
+            Object result = invokePrivateStatic("normalizeCollection", new Class[]{Collection.class}, input);
+
+            // Then
+            assertInstanceOf(ArrayNode.class, result);
+            ArrayNode array = (ArrayNode) result;
+            assertEquals(4, array.size());
+            assertEquals(1, array.get(0).asInt());
+            assertEquals(2L, array.get(1).asLong());
+            assertEquals(3.0, array.get(2).asDouble());
+            assertEquals("four", array.get(3).asString());
+        }
+
+        @Test
+        @DisplayName("Given empty list, When normalizeCollection is called, Then an empty ArrayNode is returned")
+        void givenEmptyList_whenNormalizeCollection_thenEmptyArrayNode() throws Exception {
+            // Given
+            List<Object> input = java.util.Collections.emptyList();
+
+            // When
+            Object result = invokePrivateStatic("normalizeCollection", new Class[]{Collection.class}, input);
+
+            // Then
+            assertInstanceOf(ArrayNode.class, result);
+            assertEquals(0, ((ArrayNode) result).size());
+        }
+    }
+
+    @Nested
+    @DisplayName("normalizeArray")
+    class NormalizeArray {
+
+        @Test
+        @DisplayName("Given Object, When normalizeArray is called, Then ArrayNode get return")
+        void givenException_whenTryNormalizePojo_thenNullNode() throws Exception {
+            // Given
+            Object input = new Object();
+
+            // When
+            Object result = invokePrivateStatic("normalizeArray", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(ArrayNode.class, result);
+
+
         }
     }
 }

@@ -24,9 +24,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
@@ -36,25 +43,27 @@ import java.util.stream.Stream;
  * Handles Java-specific types like LocalDateTime, Optional, Stream, etc.
  */
 public final class JsonNormalizer {
-    /** Shared ObjectMapper instance configured for JSON normalization. */
+    /**
+     * Shared ObjectMapper instance configured for JSON normalization.
+     */
     public static final ObjectMapper MAPPER;
 
     static {
         MAPPER = JsonMapper.builder()
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-                .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
-                // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
-                // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
-                .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
-                .build();
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
+            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
+            // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
+            // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
+            .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
+            .build();
     }
 
     private static final List<Function<Object, JsonNode>> NORMALIZERS = List.of(
-            JsonNormalizer::tryNormalizePrimitive,
-            JsonNormalizer::tryNormalizeBigNumber,
-            JsonNormalizer::tryNormalizeTemporal,
-            JsonNormalizer::tryNormalizeCollection,
-            JsonNormalizer::tryNormalizePojo);
+        JsonNormalizer::tryNormalizePrimitive,
+        JsonNormalizer::tryNormalizeBigNumber,
+        JsonNormalizer::tryNormalizeTemporal,
+        JsonNormalizer::tryNormalizeCollection,
+        JsonNormalizer::tryNormalizePojo);
 
     private JsonNormalizer() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -110,10 +119,10 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeWithStrategy(Object value) {
         return NORMALIZERS.stream()
-                .map(normalizer -> normalizer.apply(value))
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(NullNode.getInstance());
+            .map(normalizer -> normalizer.apply(value))
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(NullNode.getInstance());
     }
 
     /**
@@ -153,7 +162,7 @@ public final class JsonNormalizer {
             return IntNode.valueOf(0);
         }
         return tryConvertToLong(value)
-                .orElse(DoubleNode.valueOf(value));
+            .orElse(DoubleNode.valueOf(value));
     }
 
     /**
@@ -161,8 +170,8 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeFloat(Float value) {
         return Float.isFinite(value)
-                ? FloatNode.valueOf(value)
-                : NullNode.getInstance();
+            ? FloatNode.valueOf(value)
+            : NullNode.getInstance();
     }
 
     /**
@@ -177,8 +186,8 @@ public final class JsonNormalizer {
         }
         long longVal = value.longValue();
         return longVal == value
-                ? Optional.of(LongNode.valueOf(longVal))
-                : Optional.empty();
+            ? Optional.of(LongNode.valueOf(longVal))
+            : Optional.empty();
     }
 
     /**
@@ -200,10 +209,10 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeBigInteger(BigInteger value) {
         boolean fitsInLong = value.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0
-                && value.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) >= 0;
+            && value.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) >= 0;
         return fitsInLong
-                ? LongNode.valueOf(value.longValue())
-                : StringNode.valueOf(value.toString());
+            ? LongNode.valueOf(value.longValue())
+            : StringNode.valueOf(value.toString());
     }
 
     /**
@@ -224,7 +233,7 @@ public final class JsonNormalizer {
         } else if (value instanceof Instant instant) {
             return StringNode.valueOf(instant.toString());
         } else if (value instanceof Date date) {
-            return StringNode.valueOf(date.toInstant().toString());
+            return StringNode.valueOf(LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault()).toString());
         } else {
             return null;
         }
@@ -324,8 +333,8 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeDoubleElement(double value) {
         return Double.isFinite(value)
-                ? DoubleNode.valueOf(value)
-                : NullNode.getInstance();
+            ? DoubleNode.valueOf(value)
+            : NullNode.getInstance();
     }
 
     /**
@@ -333,7 +342,7 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeFloatElement(float value) {
         return Float.isFinite(value)
-                ? FloatNode.valueOf(value)
-                : NullNode.getInstance();
+            ? FloatNode.valueOf(value)
+            : NullNode.getInstance();
     }
 }

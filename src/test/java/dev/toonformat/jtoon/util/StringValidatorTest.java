@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests validation logic for safe unquoted strings and keys in TOON format.
  */
 @Tag("unit")
-public class StringValidatorTest {
+class StringValidatorTest {
 
     @Nested
     @DisplayName("isSafeUnquoted - Basic Cases")
@@ -408,6 +408,43 @@ public class StringValidatorTest {
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
+    }
+
+    @Test
+    void returnsFalseForStringWithoutQuotesOrBackslash() {
+        assertFalse(StringValidator.containsQuotesOrBackslash("abc"));
+    }
+
+    @Test
+    void detectsDoubleQuote() {
+        assertTrue(StringValidator.containsQuotesOrBackslash("a\"b"));
+    }
+
+    @Test
+    void detectsBackslash() {
+        assertTrue(StringValidator.containsQuotesOrBackslash("a\\b"));
+    }
+
+    @Test
+    void detectsBoth() {
+        assertTrue(StringValidator.containsQuotesOrBackslash("x\"y\\z"));
+    }
+
+    @Test
+    void detectsQuoteAtStart() {
+        assertTrue(StringValidator.containsQuotesOrBackslash("\"abc"));
+        assertTrue(StringValidator.containsQuotesOrBackslash("\\abc"));
+        assertTrue(StringValidator.containsQuotesOrBackslash("x\"y\\z"));
+    }
+
+    @Test
+    void detectsBackslashAtEnd() {
+        assertTrue(StringValidator.containsQuotesOrBackslash("abc\\"));
+    }
+
+    @Test
+    void emptyStringReturnsFalse() {
+        assertFalse(StringValidator.containsQuotesOrBackslash(""));
     }
 }
 

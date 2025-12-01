@@ -8,6 +8,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -285,5 +287,19 @@ public class HeaderFormatterTest {
             String result = HeaderFormatter.format(3, "items", fields, ",", false);
             assertEquals("items[3]{sku,qty,price}:", result);
         }
+    }
+
+    @Test
+    @DisplayName("throws unsupported Operation Exception for calling the constructor")
+    void throwsOnConstructor() throws NoSuchMethodException {
+        final Constructor<HeaderFormatter> constructor = HeaderFormatter.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        final InvocationTargetException thrown =
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
+
+        final Throwable cause = thrown.getCause();
+        assertInstanceOf(UnsupportedOperationException.class, cause);
+        assertEquals("Utility class cannot be instantiated", cause.getMessage());
     }
 }

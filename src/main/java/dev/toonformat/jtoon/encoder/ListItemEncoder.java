@@ -25,7 +25,7 @@ public final class ListItemEncoder {
 
     /**
      * Encodes an object as a list item.
-     * First key-value appears on the "- " line, remaining fields are indented.
+     * The first key-value appears on the "- " line, remaining fields are indented.
      *
      * @param obj     The object to encode
      * @param writer  LineWriter for output
@@ -72,7 +72,7 @@ public final class ListItemEncoder {
     private static void encodeFirstValueAsPrimitive(String encodedKey, JsonNode value, LineWriter writer, int depth,
                                                     EncodeOptions options) {
         writer.push(depth, LIST_ITEM_PREFIX + encodedKey + COLON + SPACE
-                + PrimitiveEncoder.encodePrimitive(value, options.delimiter().getValue()));
+                + PrimitiveEncoder.encodePrimitive(value, options.delimiter().toString()));
     }
 
     private static void encodeFirstValueAsArray(String key, String encodedKey, ArrayNode arrayValue, LineWriter writer,
@@ -88,7 +88,7 @@ public final class ListItemEncoder {
 
     private static void encodeFirstArrayAsPrimitives(String key, ArrayNode arrayValue, LineWriter writer, int depth,
                                                      EncodeOptions options) {
-        String formatted = ArrayEncoder.formatInlineArray(arrayValue, options.delimiter().getValue(), key,
+        String formatted = ArrayEncoder.formatInlineArray(arrayValue, options.delimiter().toString(), key,
                 options.lengthMarker());
         writer.push(depth, LIST_ITEM_PREFIX + formatted);
     }
@@ -98,16 +98,16 @@ public final class ListItemEncoder {
         List<String> header = TabularArrayEncoder.detectTabularHeader(arrayValue);
         if (!header.isEmpty()) {
             String headerStr = PrimitiveEncoder.formatHeader(arrayValue.size(), key, header,
-                    options.delimiter().getValue(), options.lengthMarker());
+                    options.delimiter().toString(), options.lengthMarker());
             writer.push(depth, LIST_ITEM_PREFIX + headerStr);
             // Write just the rows, header was already written above
-            TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 1, options);
+            TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 2, options);
         } else {
             writer.push(depth,
                     LIST_ITEM_PREFIX + encodedKey + OPEN_BRACKET + arrayValue.size() + CLOSE_BRACKET + COLON);
             for (JsonNode item : arrayValue) {
                 if (item.isObject()) {
-                    encodeObjectAsListItem((ObjectNode) item, writer, depth + 1, options);
+                    encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
                 }
             }
         }
@@ -119,14 +119,14 @@ public final class ListItemEncoder {
 
         for (JsonNode item : arrayValue) {
             if (item.isValueNode()) {
-                writer.push(depth + 1, LIST_ITEM_PREFIX
-                        + PrimitiveEncoder.encodePrimitive(item, options.delimiter().getValue()));
+                writer.push(depth + 2, LIST_ITEM_PREFIX
+                        + PrimitiveEncoder.encodePrimitive(item, options.delimiter().toString()));
             } else if (item.isArray() && ArrayEncoder.isArrayOfPrimitives(item)) {
-                String inline = ArrayEncoder.formatInlineArray((ArrayNode) item, options.delimiter().getValue(), null,
+                String inline = ArrayEncoder.formatInlineArray((ArrayNode) item, options.delimiter().toString(), null,
                         options.lengthMarker());
-                writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
+                writer.push(depth + 2, LIST_ITEM_PREFIX + inline);
             } else if (item.isObject()) {
-                encodeObjectAsListItem((ObjectNode) item, writer, depth + 1, options);
+                encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
             }
         }
     }

@@ -99,7 +99,7 @@ public final class StringValidator {
         return value.contains(COLON);
     }
 
-    private static boolean containsQuotesOrBackslash(String value) {
+    static boolean containsQuotesOrBackslash(String value) {
         return value.indexOf(DOUBLE_QUOTE) >= 0
                 || value.indexOf(BACKSLASH) >= 0;
     }

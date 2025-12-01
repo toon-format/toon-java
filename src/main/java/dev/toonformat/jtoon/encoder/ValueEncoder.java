@@ -28,7 +28,7 @@ public final class ValueEncoder {
     public static String encodeValue(JsonNode value, EncodeOptions options) {
         // Handle primitive values directly
         if (value.isValueNode()) {
-            return PrimitiveEncoder.encodePrimitive(value, options.delimiter().getValue());
+            return PrimitiveEncoder.encodePrimitive(value, options.delimiter().toString());
         }
 
         // Complex values need a LineWriter for indentation

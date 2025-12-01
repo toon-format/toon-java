@@ -225,6 +225,31 @@ public class StringEscaperTest {
         void testUnknownEscapeSequences() {
             assertEquals("ax", StringEscaper.unescape("\\ax"));
         }
+
+        @Test
+        void unquotesValueWhenStartsAndEndsWithQuote() {
+            assertEquals("abc", StringEscaper.unescape("\"abc\""));
+        }
+        @Test
+        void unescapesBackslashSequences() {
+            assertEquals("a\"b", StringEscaper.unescape("a\\\"b"));
+        }
+
+        @Test
+        void unescapesMultipleCharacters() {
+            assertEquals("a\nb\tc", StringEscaper.unescape("a\\nb\\tc"));
+        }
+
+        @Test
+        void handlesTrailingBackslashCorrectly() {
+            // trailing \ will set escaped=true but there is no next char → nothing appended
+            assertEquals("abc", StringEscaper.unescape("abc\\"));
+        }
+
+        @Test
+        void handlesDoubleBackslashCorrectly() {
+            assertEquals("a\\b", StringEscaper.unescape("a\\\\b"));
+        }
     }
 
     @Test
@@ -239,5 +264,34 @@ public class StringEscaperTest {
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
+    }
+
+    @Test
+    void testingValidateString_WithNull() {
+        // Given
+        String input = null;
+        // When
+        StringEscaper.validateString(input);
+        // Then
+
+    }
+    @Test
+    void testingValidateString_WithEmptyString() {
+        // Given
+        String input = "";
+        // When
+        StringEscaper.validateString(input);
+        // Then
+
+    }
+    @Test
+    void testingValidateString_WithWildStringToThrowsException() {
+        // Given
+        String input = "\"te\\st\"";
+        // When      // Then
+        assertThrows(IllegalArgumentException.class,
+            ()->{
+                StringEscaper.validateString(input);
+            });
     }
 }
