@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for PrimitiveDecoder utility class.
@@ -23,7 +26,7 @@ class PrimitiveDecoderTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
@@ -90,12 +93,10 @@ class PrimitiveDecoderTest {
         assertEquals(false, result);
     }
 
-
     @Test
     void givenQuotedString_whenParse_thenReturnsUnescapedString() {
         // Given
         String input = "\"hello\\nworld\"";
-
 
         // When
         Object result = PrimitiveDecoder.parse(input);
@@ -140,7 +141,6 @@ class PrimitiveDecoderTest {
         // Then
         assertEquals(42L, result);
     }
-
 
     @Test
     void givenDecimalNumber_whenParse_thenReturnsDouble() {
