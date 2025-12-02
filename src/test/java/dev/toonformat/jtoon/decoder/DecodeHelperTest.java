@@ -84,14 +84,6 @@ class DecodeHelperTest {
         assertEquals(0, result);
     }
 
-    // Reflection helpers for invoking private static methods
-    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
-        Method m = DecodeHelper.class.getDeclaredMethod(methodName, paramTypes);
-        m.setAccessible(true);
-        return m.invoke(null, args);
-    }
-
-
     @Test
     @DisplayName("getDepth: throws on tab indentation in strict mode")
     void getDepth_throwsOnTabInStrict() {
