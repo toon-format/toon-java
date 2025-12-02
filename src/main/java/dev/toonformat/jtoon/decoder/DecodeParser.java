@@ -33,7 +33,10 @@ public class DecodeParser {
         int depth = DecodeHelper.getDepth(line, context);
 
         if (depth > 0) {
-            return DecodeHelper.handleUnexpectedIndentation(context);
+            if (context.options.strict()) {
+                throw new IllegalArgumentException("Unexpected indentation at line " + context.currentLine);
+            }
+            return null;
         }
 
         String content = line.substring(depth * context.options.indent());

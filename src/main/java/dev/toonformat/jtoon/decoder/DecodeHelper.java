@@ -26,60 +26,49 @@ public class DecodeHelper {
         if (isBlankLine(line)) {
             return 0;
         }
-
-        // Validate indentation (including tabs) in strict mode
-        // Check for tabs first before any other processing
-        if (context.options.strict() && !line.isEmpty() && line.charAt(0) == '\t') {
-            throw new IllegalArgumentException(
-                String.format("Tab character used in indentation at line %d", context.currentLine + 1));
-        }
-
-        if (context.options.strict()) {
-            validateIndentation(line, context);
-        }
-
-        int depth;
-        int leadingSpaces = getLeadingSpaces(line, context);
-
-        //never div to zero
-        if (context.options.indent() == 0) {
-            return leadingSpaces;
-        }
-
-        // Calculate depth based on indent size
-        depth = leadingSpaces / context.options.indent();
-
-        return depth;
+        return computeLeadingSpaces(line, context) / Math.max(1, context.options.indent());
     }
 
     /**
-     * Get the amount of leading spaces
+     * Computes leading spaces, validates indentation in strict mode,
+     * and rejects tabs. Single scan for all indentation logic.
      *
      * @param line    the line string to parse
-     * @param context decode an object to deal with lines, delimiter, and options
-     * @return the amount of leading spaces of the given line
+     * @param context decode object in order to deal with lines, delimiter and options
+     * @return amount of leading spaces
      */
-    private static int getLeadingSpaces(String line, DecodeContext context) {
+    private static int computeLeadingSpaces(String line, DecodeContext context) {
+        int indentSize = context.options.indent();
         int leadingSpaces = 0;
 
-        // Count leading spaces
-        for (int i = 0; i < line.length(); i++) {
-            if (line.charAt(i) == ' ') {
+        int i = 0;
+        int lengthOfLine = line.length();
+        while (i < lengthOfLine) {
+            char c = line.charAt(i);
+            if (c == ' ') {
                 leadingSpaces++;
-            } else {
+            } else if (c == '\t') {
+                if (context.options.strict()) {
+                    throw new IllegalArgumentException(
+                        "Tab character used in indentation at line " + (context.currentLine + 1));
+                }
+                // In non-strict mode treat tab as non-indent and stop.
                 break;
+            } else {
+                break; // reached content
             }
+            i++;
         }
-        int indentSize = context.options.indent();
 
-        // In strict mode, check if it's an exact multiple
-        if (context.options.strict() && leadingSpaces > 0 && leadingSpaces % indentSize != 0) {
+        if (context.options.strict() && leadingSpaces > 0 && indentSize > 0 && leadingSpaces % indentSize != 0) {
             throw new IllegalArgumentException(
-                String.format("Non-multiple indentation: %d spaces with indent=%d at line %d",
+                String.format("Non-multiple indentation: %d leadingSpaces with indent=%d at line %d",
                     leadingSpaces, indentSize, context.currentLine + 1));
         }
+
         return leadingSpaces;
     }
+
 
     /**
      * Checks if a line is blank (empty or only whitespace).
@@ -89,43 +78,6 @@ public class DecodeHelper {
      */
     protected static boolean isBlankLine(String line) {
         return line.trim().isEmpty();
-    }
-
-    /**
-     * Validates indentation in strict mode.
-     * Checks for tabs, mixed tabs/spaces, and non-multiple indentation.
-     *
-     * @param line    the line string to parse
-     * @param context decode an object to deal with lines, delimiter, and options
-     */
-    private static void validateIndentation(String line, DecodeContext context) {
-        if (line.trim().isEmpty()) {
-            // Blank lines are allowed (handled separately)
-            return;
-        }
-
-        int indentSize = context.options.indent();
-        int leadingSpaces = 0;
-
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c == '\t') {
-                throw new IllegalArgumentException(
-                    String.format("Tab character used in indentation at line %d", context.currentLine + 1));
-            } else if (c == ' ') {
-                leadingSpaces++;
-            } else {
-                // Reached non-whitespace
-                break;
-            }
-        }
-
-        // Check for non-multiple indentation (only if there's actual content)
-        if (leadingSpaces > 0 && leadingSpaces % indentSize != 0) {
-            throw new IllegalArgumentException(
-                String.format("Non-multiple indentation: %d spaces with indent=%d at line %d",
-                    leadingSpaces, indentSize, context.currentLine + 1));
-        }
     }
 
     /**
@@ -253,17 +205,4 @@ public class DecodeHelper {
         }
     }
 
-    /**
-     * Handles unexpected indentation at root level.
-     *
-     * @param context decode an object to deal with lines, delimiter, and options
-     * @return null if in non-strict mode, otherwise throws an exception
-     * @throws IllegalArgumentException in case there's an unexpected indentation
-     */
-    protected static Object handleUnexpectedIndentation(DecodeContext context) {
-        if (context.options.strict()) {
-            throw new IllegalArgumentException("Unexpected indentation at line " + context.currentLine);
-        }
-        return null;
-    }
 }
