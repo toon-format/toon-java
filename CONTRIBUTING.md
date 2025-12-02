@@ -59,7 +59,7 @@ This project targets Java 17 and above.
 ### Testing
 
 - All new features must include JUnit tests
-- Maintain test coverage at **85%+ line coverage (enforced in CI)**
+- Maintain test coverage at **85%+ line coverage**
 - Tests should cover edge cases and spec compliance
 - Run the full test suite:
   ```bash
@@ -102,11 +102,13 @@ Before submitting changes that affect encoding/decoding behavior:
 
 ## Pull Request Guidelines
 
-- **Title**: Use a clear, descriptive title (e.g., "Add support for nested arrays", "Fix: Handle edge case in decoder")
+- **Title**: Use a clear, descriptive title
 - **Description**: Explain what changes you made and why
 - **Tests**: Include tests for your changes
-- **Documentation**: Update README or JavaDoc comments if needed
+- **Documentation**: Update README or documentation if needed
 - **Commits**: Use clear commit messages ([Conventional Commits](https://www.conventionalcommits.org/) preferred)
+
+Your pull request will use our standard template which guides you through the required information.
 
 ## Communication
 
@@ -119,8 +121,10 @@ Before submitting changes that affect encoding/decoding behavior:
 
 This is a collaborative project. Current maintainers:
 
-- [@felipestanzani](https://github.com/felipestanzani)
-- [@jenspapenhagen](https://github.com/jenspapenhagen)
+- Felipe Cesar Stanzani Fonseca – [@felipestanzani](https://github.com/felipestanzani)
+- Jens Papenhagen – [@jenspapenhagen](https://github.com/jenspapenhagen)
+- Aaro Koinsaari – [@koinsaari](https://github.com/koinsaari)
+- Johann Schopplich – [@johannschopplich](https://github.com/johannschopplich)
 
 All maintainers have equal and consensual decision-making power. For major architectural decisions, please open a discussion issue first.
 
