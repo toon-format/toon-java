@@ -18,11 +18,12 @@ public class ArrayDecoder {
     }
 
     /**
-     * Parses array from header string and following lines.
+     * Parses array from the header string and the following lines.
      * Detects array type (tabular, list, or primitive) and routes accordingly.
-     * @param header the header string to parse
-     * @param depth the depth of array
-     * @param context decode object in order to deal with lines, delimiter and options
+     *
+     * @param header  the header string to parse
+     * @param depth   the depth of an array
+     * @param context decode an object to deal with lines, delimiter and options
      * @return parsed array with delimiter
      */
     protected static List<Object> parseArray(String header, int depth, DecodeContext context) {
@@ -32,20 +33,21 @@ public class ArrayDecoder {
     }
 
     /**
-     * Extracts delimiter from array header.
-     * Returns tab, pipe, or comma (default) based on header pattern.
-     * @param header the header string to parse
-     * @param context decode object in order to deal with lines, delimiter and options
+     * Extracts delimiter from the array header.
+     * Returns tab, pipe, or comma (default) based on a header pattern.
+     *
+     * @param header  the header string to parse
+     * @param context decode an object to deal with lines, delimiter and options
      * @return extracted delimiter from header
      */
     protected static String extractDelimiterFromHeader(String header, DecodeContext context) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find() && matcher.groupCount() == 3) {
-            String delimChar = matcher.group(3);
-            if (delimChar != null) {
-                if ("\t".equals(delimChar)) {
+            String delimiter = matcher.group(3);
+            if (delimiter != null) {
+                if ("\t".equals(delimiter)) {
                     return "\t";
-                } else if ("|".equals(delimChar)) {
+                } else if ("|".equals(delimiter)) {
                     return "|";
                 }
             }
@@ -55,13 +57,14 @@ public class ArrayDecoder {
     }
 
     /**
-     * Parses array from header string and following lines with a specific
+     * Parses array from the header string and following lines with a specific
      * delimiter.
      * Detects array type (tabular, list, or primitive) and routes accordingly.
-     * @param header the header string to parse
-     * @param depth depth of array
+     *
+     * @param header         the header string to parse
+     * @param depth          depth of an array
      * @param arrayDelimiter array delimiter
-     * @param context decode object in order to deal with lines, delimiter and options
+     * @param context        decode an object to deal with lines, delimiter and options
      * @return parsed array
      */
     protected static List<Object> parseArrayWithDelimiter(String header, int depth, String arrayDelimiter, DecodeContext context) {
@@ -122,8 +125,9 @@ public class ArrayDecoder {
     }
 
     /**
-     * Validates array length if declared in header.
-     * @param header header
+     * Validates array length if declared in the header.
+     *
+     * @param header       header
      * @param actualLength actual length
      */
     protected static void validateArrayLength(String header, int actualLength) {
@@ -135,12 +139,15 @@ public class ArrayDecoder {
     }
 
     /**
-     * Extracts declared length from array header.
+     * Extracts declared length from the array header.
      * Returns the number specified in [n] or null if not found.
+     *
+     * @param header header string for length check
+     * @return extracted length from header
      */
     private static Integer extractLengthFromHeader(String header) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
-        if (matcher.find()) {
+        if (matcher.find() && matcher.groupCount() > 2) {
             try {
                 return Integer.parseInt(matcher.group(2));
             } catch (NumberFormatException e) {
@@ -152,7 +159,8 @@ public class ArrayDecoder {
 
     /**
      * Parses array values from a delimiter-separated string.
-     * @param values the values string to parse
+     *
+     * @param values         the value string to parse
      * @param arrayDelimiter array delimiter
      * @return parsed array values
      */
@@ -168,58 +176,59 @@ public class ArrayDecoder {
     /**
      * Splits a string by delimiter, respecting quoted sections.
      * Whitespace around delimiters is tolerated and trimmed.
-     * @param input the input string to parse
+     *
+     * @param input          the input string to parse
      * @param arrayDelimiter array delimiter
      * @return parsed delimited values
      */
     protected static List<String> parseDelimitedValues(String input, String arrayDelimiter) {
         List<String> result = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         boolean inQuotes = false;
         boolean escaped = false;
-        char delimChar = arrayDelimiter.charAt(0);
+        char delimiterChar = arrayDelimiter.charAt(0);
 
         int i = 0;
         while (i < input.length()) {
-            char c = input.charAt(i);
+            char currentChar = input.charAt(i);
 
             if (escaped) {
-                current.append(c);
+                stringBuilder.append(currentChar);
                 escaped = false;
                 i++;
-            } else if (c == '\\') {
-                current.append(c);
+            } else if (currentChar == '\\') {
+                stringBuilder.append(currentChar);
                 escaped = true;
                 i++;
-            } else if (c == '"') {
-                current.append(c);
+            } else if (currentChar == '"') {
+                stringBuilder.append(currentChar);
                 inQuotes = !inQuotes;
                 i++;
-            } else if (c == delimChar && !inQuotes) {
-                // Found delimiter - add current value (trimmed) and reset
-                String value = current.toString().trim();
+            } else if (currentChar == delimiterChar && !inQuotes) {
+                // Found delimiter - add stringBuilder value (trimmed) and reset
+                String value = stringBuilder.toString().trim();
                 result.add(value);
-                current = new StringBuilder();
+                stringBuilder = new StringBuilder();
                 // Skip whitespace after delimiter
                 do {
                     i++;
                 } while (i < input.length() && Character.isWhitespace(input.charAt(i)));
             } else {
-                current.append(c);
+                stringBuilder.append(currentChar);
                 i++;
             }
         }
 
         // Add final value
-        if (!current.isEmpty() || input.endsWith(arrayDelimiter)) {
-            result.add(current.toString().trim());
+        if (!stringBuilder.isEmpty() || input.endsWith(arrayDelimiter)) {
+            result.add(stringBuilder.toString().trim());
         }
 
         return result;
     }
 
     /**
-     * Parses list array format where items are prefixed with "- ".
+     * Parses list an array format where items are prefixed with "- ".
      * Example: items[2]:\n - item1\n - item2
      */
     private static List<Object> parseListArray(int depth, String header, DecodeContext context) {
@@ -245,20 +254,24 @@ public class ArrayDecoder {
         }
 
         if (header != null) {
-            ArrayDecoder.validateArrayLength(header, result.size());
+            validateArrayLength(header, result.size());
         }
         return result;
     }
 
     /**
-     * Handles blank line processing in list array.
-     * Returns true if array should terminate, false if line should be skipped.
+     * Handles blank line processing in a list array.
+     * Returns true if an array should terminate, false if a line should be skipped.
+     *
+     * @param depth   the depth of the blank line
+     * @param context decode an object to deal with lines, delimiter and options
+     * @return true if an array should terminate, false if a line should be skipped
      */
     private static boolean handleBlankLineInListArray(int depth, DecodeContext context) {
         int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
 
         if (nextNonBlankLine >= context.lines.length) {
-            return true; // End of file - terminate array
+            return true; // EOF - terminate array
         }
 
         int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
@@ -266,7 +279,7 @@ public class ArrayDecoder {
             return true; // Blank line is outside array - terminate
         }
 
-        // Blank line is inside array
+        // Blank line is inside the array
         if (context.options.strict()) {
             throw new IllegalArgumentException("Blank line inside list array at line " + (context.currentLine + 1));
         }
@@ -276,8 +289,12 @@ public class ArrayDecoder {
     }
 
     /**
-     * Determines if list array parsing should terminate based online depth.
-     * Returns true if array should terminate, false otherwise.
+     * Determines if list array parsing should terminate based on online depth.
+     *
+     * @param lineDepth the depth of the line being parsed
+     * @param depth     the depth of the array
+     * @param context   decode an object to deal with lines, delimiter and options
+     * @return true if an array should terminate, false otherwise.
      */
     private static boolean shouldTerminateListArray(int lineDepth, int depth, String line, DecodeContext context) {
         if (lineDepth < depth + 1) {

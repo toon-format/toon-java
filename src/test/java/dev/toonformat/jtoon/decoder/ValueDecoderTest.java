@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for ValueDecoder utility class.
@@ -24,7 +26,7 @@ class ValueDecoderTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
