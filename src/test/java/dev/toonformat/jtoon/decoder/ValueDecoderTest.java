@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for ValueDecoder utility class.
@@ -58,4 +60,19 @@ class ValueDecoderTest {
         // Then
         assertEquals("{\"items\":[{\"matrix\":[[1,2],[3,4]],\"name\":\"grid\"}]}", result);
     }
+
+    @Test
+    void decode_returnsEmptyMap_whenProcessedIsEmpty() {
+        // Given
+        String input = "   ";  // only whitespace
+
+        // When
+        DecodeOptions options = new DecodeOptions();
+        Object result = ValueDecoder.decode(input, options);
+
+        // Then
+        assertInstanceOf(LinkedHashMap.class, result, "Result must be an empty LinkedHashMap");
+        assertTrue(((LinkedHashMap<?, ?>) result).isEmpty(), "Map must be empty");
+    }
+
 }

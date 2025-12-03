@@ -498,6 +498,98 @@ class DecodeHelperTest {
         }
     }
 
+    @Nested
+    @DisplayName("parseValue()")
+    class parseValue {
+        @Test
+        @DisplayName("Should parse TOON format primitive array to JSON")
+        void parsePrimitiveArray() {
+            // When
+            Object parseValue = DecodeHelper.parseValue("items[3]: a,\"b,c\",\"d:e\"", DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{items=[a, b,c, d:e]}", parseValue.toString());
+        }
+
+        @Test
+        @DisplayName("Should parse TOON format tabular array to JSON")
+        void parseTabularArray() {
+            // When
+            Object parseValue = DecodeHelper.parseValue("items[2]{id,name}:\n  1,Alice\n  2,Bob\ncount: 2", DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{items=[{id=1, name=Alice}, {id=2, name=Bob}], count=2}", parseValue.toString());
+        }
+
+        @Test
+        @DisplayName("Should parse TOON format nested array to JSON")
+        void parseNestedArray() {
+            // When
+            Object parseValue = DecodeHelper.parseValue(
+                "items[1]:\n  - users[2]{id,name}:\n      1,Ada\n      2,Bob\n    status: active"
+                , DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{items=[{users=[{id=1, name=Ada}, {id=2, name=Bob}], status=active}]}", parseValue.toString());
+        }
+
+        @Test
+        @DisplayName("Should parse TOON format object to JSON")
+        void parseObject() {
+            // When
+            Object parseValue = DecodeHelper.parseValue("id: 123\nname: Ada\nactive: true", DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{id=123, name=Ada, active=true}", parseValue.toString());
+        }
+
+        @Test
+        @DisplayName("Should parse TOON format number to JSON")
+        void parseNumber() {
+            // When
+            Object parseValue = DecodeHelper.parseValue("value: 1.5000", DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{value=1.5}", parseValue.toString());
+        }
+
+        @Test
+        @DisplayName("Should parse TOON format to JSON tolerating whitespaces")
+        void parseToleratingSpacesInCommas() {
+            Object parseValue = DecodeHelper.parseValue("tags[3]: a , b , c", DecodeOptions.DEFAULT);
+
+            // Then
+            assertNotNull(parseValue);
+            assertEquals("{tags=[a, b, c]}", parseValue.toString());
+        }
+
+        @Test
+        void givenNoLines_whenParse_thenReturnNull() {
+            // Given
+            DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
+            Object parseValue = DecodeHelper.parseValue("  indented", decodeOptions);// depth=1
+
+            // Then
+            assertNull(parseValue);
+        }
+
+        @Test
+        void givenIndentedLineAndStrict_whenParse_thenThrow() {
+            // Given
+            DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+
+            // When / Then
+            assertThrows(IllegalArgumentException.class, () -> DecodeHelper.parseValue("  indented", decodeOptions));
+        }
+
+
+    }
+
     private void setUpContext(String toon) {
         this.context.lines = toon.split("\n", -1);
         this.context.options = DecodeOptions.DEFAULT;
