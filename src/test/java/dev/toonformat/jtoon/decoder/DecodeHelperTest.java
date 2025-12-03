@@ -4,7 +4,6 @@ import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.PathExpansion;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,14 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("unit")
 class DecodeHelperTest {
@@ -158,7 +150,11 @@ class DecodeHelperTest {
         Integer depth = DecodeHelper.findNextNonBlankLineDepth(context);
         assertNotNull(depth);
         assertEquals(1, depth);
+    }
 
+    @Test
+    @DisplayName("findNextNonBlankLineDepth: returns depth or null when none")
+    void findNextNonBlankLineDepth_casesOnStrangeContent() {
         setUpContext("\n\n");
         context.currentLine = 0;
         assertNull(DecodeHelper.findNextNonBlankLineDepth(context));

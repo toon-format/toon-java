@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -266,6 +268,22 @@ class ObjectDecoderTest {
             Object v = ObjectDecoder.parseFieldValue("", 0, context);
 
             assertInstanceOf(Map.class, v);
+            assertEquals(1, context.currentLine);
+        }
+
+        @Test
+        @DisplayName("GIVEN empty and no nested => empty map")
+        void parseFieldValue_empty_no_nestedButBigCurrentLine() {
+            setUpContext("""
+                key:
+                next
+                """);
+            context.currentLine = 25;
+
+            Object v = ObjectDecoder.parseFieldValue("", 0, context);
+
+            assertInstanceOf(Map.class, v);
+            assertEquals(26, context.currentLine);
         }
     }
 
@@ -329,6 +347,45 @@ class ObjectDecoderTest {
 
             assertInstanceOf(Map.class, v);
         }
+
+        @Test
+        @DisplayName("GIVEN empty and no nested => empty map")
+        void parseObjectItemValue_emptyContext() {
+            setUpContext("\n\n");
+
+            context.currentLine = 0;
+
+            Object v = ObjectDecoder.parseObjectItemValue("", 0, context);
+
+            assertInstanceOf(Map.class, v);
+        }
+    }
+
+    @Test
+    void testExpandPathIntoMapCalledForDottedKey() throws Exception {
+        // Given
+        Map<String, Object> objectMap = new LinkedHashMap<>();
+        String content = "user.name[1]: Alice";
+
+        int depth = 0;
+
+        setUpContext(content);
+
+        // When
+        invokePrivateStatic(
+            "processRootKeyedArrayLine", new Class[]{Map.class, String.class, String.class, int.class, DecodeContext.class},
+            objectMap, content, "user.name", depth, context);
+
+        // Then
+        assertTrue(objectMap.containsKey("user.name"));
+        assertEquals(List.of("Alice"), objectMap.get("user.name"));
+    }
+
+    // Reflection helpers for invoking private static methods
+    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+        Method declaredMethod = ObjectDecoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 
     private void setUpContext(String toon) {

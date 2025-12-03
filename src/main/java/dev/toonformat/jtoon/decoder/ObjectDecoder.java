@@ -13,7 +13,9 @@ import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
  */
 public class ObjectDecoder {
 
-    private ObjectDecoder() {throw new UnsupportedOperationException("Utility class cannot be instantiated");}
+    private ObjectDecoder() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
     /**
      * Parses nested object starting at the currentLine.
@@ -92,7 +94,7 @@ public class ObjectDecoder {
 
             Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
             if (keyedArray.matches()) {
-                processRootKeyedArrayLine(obj, content, keyedArray, depth, context);
+                processRootKeyedArrayLine(obj, content, keyedArray.group(1), depth, context);
             } else {
                 int colonIdx = DecodeHelper.findUnquotedColon(content);
                 if (colonIdx > 0) {
@@ -110,22 +112,22 @@ public class ObjectDecoder {
     /**
      * Processes a keyed array line in root object fields.
      *
-     * @param objectMap  the string key-value pairs
-     * @param content    the content string to parse
-     * @param keyedArray the matcher for the keyed array pattern
-     * @param depth      the depth of the object field
-     * @param context    decode an object to deal with lines, delimiter and options
+     * @param objectMap   the string key-value pairs
+     * @param content     the content string to parse
+     * @param originalKey the original Key
+     * @param depth       the depth of the object field
+     * @param context     decode an object to deal with lines, delimiter and options
      */
-    private static void processRootKeyedArrayLine(Map<String, Object> objectMap, String content, Matcher keyedArray,
+    private static void processRootKeyedArrayLine(Map<String, Object> objectMap, String content, String originalKey,
                                                   int depth, DecodeContext context) {
-        String originalKey = keyedArray.group(1).trim();
+        String originalKeyTrimmed = originalKey.trim();
         String key = StringEscaper.unescape(originalKey);
-        String arrayHeader = content.substring(keyedArray.group(1).length());
+        String arrayHeader = content.substring(originalKey.length());
 
         var arrayValue = ArrayDecoder.parseArray(arrayHeader, depth, context);
 
         // Handle path expansion for array keys
-        if (KeyDecoder.shouldExpandKey(originalKey, context)) {
+        if (KeyDecoder.shouldExpandKey(originalKeyTrimmed, context)) {
             KeyDecoder.expandPathIntoMap(objectMap, key, arrayValue, context);
         } else {
             // Check for conflicts with existing expanded paths

@@ -1,12 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
-import dev.toonformat.jtoon.DecodeOptions;
-
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-
-import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.

@@ -9,14 +9,13 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("unit")
 class KeyDecoderTest {
@@ -114,13 +113,100 @@ class KeyDecoderTest {
     }
 
     @Test
+    void testThrowsIllegalArgumentExceptionWhenPathConflictsInStrictMode() {
+        // Given
+        Map<String, Object> root = new LinkedHashMap<>();
+
+        root.put("foo", "notAMap");
+
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+
+
+        // When / Then
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> KeyDecoder.expandPathIntoMap(root, "foo.bar.baz", 123, context)
+        );
+
+        assertTrue(ex.getMessage().contains("Path expansion conflict"));
+        assertTrue(ex.getMessage().contains("foo"));
+    }
+
+    @Test
+    void testCallsExpandPathIntoMapWhenShouldExpandKeyTrue() {
+        // Given
+        Map<String, Object> result = new LinkedHashMap<>();
+        String originalKey = "foo.bar";
+        String content = "foo.bar[#0]";
+        int parentDepth = 0;
+
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.lines = new String[]{content};
+
+        List<Object> expectedArray = Arrays.asList(1, 2, 3);
+
+        // When
+        KeyDecoder.processKeyedArrayLine(result, content, originalKey, parentDepth, context);
+
+        // Then
+        Map<String, Object> expectedNestedMap = new LinkedHashMap<>();
+        expectedNestedMap.put("bar", expectedArray);
+    }
+
+    @Test
+    void testEmptyValueCreatesLinkedHashMap() throws Exception {
+        // Given
+        String value = " ";
+        int depth = 25;
+
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.lines = new String[]{"key:   "};
+        context.currentLine = -1;
+
+        // When
+        Object result = invokePrivateStatic("parseKeyValue", new Class[]{String.class, int.class, DecodeContext.class}, value, depth, context);
+
+        // Then
+        assertInstanceOf(LinkedHashMap.class, result, "Expected a LinkedHashMap for empty value");
+        assertTrue(((Map<?, ?>) result).isEmpty(), "LinkedHashMap should be empty");
+        assertEquals(0, context.currentLine);
+    }
+
+    @Test
+    void testExpandPathIntoMapCalledWhenShouldExpandKeyTrue() {
+        // Given
+        Map<String, Object> item = new LinkedHashMap<>();
+        String fieldContent = "foo.bar: someValue"; // contains colon
+        int depth = 0;
+
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.lines = fieldContent.split(" ");
+        Object parsedValue = "someValue";
+
+        // When
+        boolean result = KeyDecoder.parseKeyValueField(fieldContent, item, depth, context);
+
+        // Then
+        assertTrue(result, "Should return true for field with colon");
+
+        Map<String, Object> expectedNestedMap = new LinkedHashMap<>();
+        expectedNestedMap.put("bar", parsedValue);
+        assertEquals(expectedNestedMap, item.get("foo"));
+    }
+
+
+    @Test
     @DisplayName("Given dotted key/value line and SAFE expansion When processed Then value is placed in nested map")
     void processKeyValueLine_givenDottedKey_whenProcessed_thenNestedMapContainsValue() {
         // Given
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
-        context.lines = new String[] { "user.name: Ada" };
+        context.lines = new String[]{"user.name: Ada"};
         context.currentLine = 0;
 
         // When
@@ -139,7 +225,7 @@ class KeyDecoderTest {
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE);
-        context.lines = new String[] { "invalid line" };
+        context.lines = new String[]{"invalid line"};
         context.currentLine = 0;
 
         // When
@@ -156,12 +242,12 @@ class KeyDecoderTest {
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
-        context.lines = new String[] { "invalid line" };
+        context.lines = new String[]{"invalid line"};
         context.currentLine = 0;
 
         // When / Then
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                                                   () -> KeyDecoder.processKeyValueLine(result, context.lines[0], 0, context));
+            () -> KeyDecoder.processKeyValueLine(result, context.lines[0], 0, context));
         assertTrue(ex.getMessage().contains("Missing colon"));
     }
 
@@ -171,7 +257,7 @@ class KeyDecoderTest {
         // Given
         DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
-        context.lines = new String[] { "a.b: 1" };
+        context.lines = new String[]{"a.b: 1"};
         context.currentLine = 0;
 
         // When
@@ -200,5 +286,12 @@ class KeyDecoderTest {
 
         // Then
         assertFalse(expandable);
+    }
+
+    // Reflection helpers for invoking private static methods
+    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+        Method declaredMethod = KeyDecoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 }

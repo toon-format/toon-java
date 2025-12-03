@@ -44,16 +44,12 @@ public class TabularArrayDecoder {
         context.currentLine++;
 
         // Determine the expected row depth dynamically from the first non-blank line
-        int expectedRowDepth;
+        int expectedRowDepth = depth + 1;
         if (context.currentLine < context.lines.length) {
             int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine, context);
             if (nextNonBlankLine < context.lines.length) {
                 expectedRowDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
-            } else {
-                expectedRowDepth = depth + 1;
             }
-        } else {
-            expectedRowDepth = depth + 1;
         }
 
         while (context.currentLine < context.lines.length) {

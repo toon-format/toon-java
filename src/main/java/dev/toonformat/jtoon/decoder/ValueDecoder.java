@@ -2,7 +2,6 @@ package dev.toonformat.jtoon.decoder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.toonformat.jtoon.DecodeOptions;
-import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.module.afterburner.AfterburnerModule;
