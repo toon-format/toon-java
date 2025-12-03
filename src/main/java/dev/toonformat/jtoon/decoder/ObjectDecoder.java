@@ -56,12 +56,6 @@ public class ObjectDecoder {
      * skipped.
      */
     private static void processDirectChildLine(Map<String, Object> result, String line, int parentDepth, int depth, DecodeContext context) {
-        // Skip blank lines
-        if (DecodeHelper.isBlankLine(line)) {
-            context.currentLine++;
-            return;
-        }
-
         String content = line.substring((parentDepth + 1) * context.options.indent());
         Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
 

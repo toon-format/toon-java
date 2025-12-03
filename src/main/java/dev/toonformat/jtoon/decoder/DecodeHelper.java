@@ -1,7 +1,12 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.DecodeOptions;
+
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+
+import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.
@@ -203,6 +208,62 @@ public class DecodeHelper {
                     "Multiple primitives at root depth in strict mode at line " + (lineIndex + 1));
             }
         }
+    }
+
+    /**
+     * Parses the current line at root level (depth 0).
+     * Routes to appropriate handler-based online content.
+     *
+     * @param toon    the input as a String
+     * @param options used to decode the TOON file.
+     * @return an object
+     */
+    protected static Object parseValue(String toon, DecodeOptions options) {
+        //set an own decode context
+        final DecodeContext context = new DecodeContext();
+        context.lines = toon.split("\r?\n", -1);
+        context.options = options;
+
+        context.delimiter = options.delimiter().toString();
+
+        int lineIndex = context.currentLine;
+        if (lineIndex >= context.lines.length) {
+            return null;
+        }
+
+        String line = context.lines[lineIndex];
+        int depth = DecodeHelper.getDepth(line, context);
+
+        if (depth > 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException("Unexpected indentation at line " + lineIndex);
+            }
+            return null;
+        }
+
+        String content = depth == 0 ? line : line.substring(depth * context.options.indent());
+
+        // Handle standalone arrays: [2]:
+        if (!content.isEmpty() && content.charAt(0) == '[') {
+            return ArrayDecoder.parseArray(content, depth, context);
+        }
+
+        // Handle keyed arrays: items[2]{id,name}:
+        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
+        if (keyedArray.matches()) {
+            return KeyDecoder.parseKeyedArrayValue(keyedArray, content, depth, context);
+        }
+
+        // Handle key-value pairs: name: Ada
+        int colonIdx = findUnquotedColon(content);
+        if (colonIdx > 0) {
+            String key = content.substring(0, colonIdx).trim();
+            String value = content.substring(colonIdx + 1).trim();
+            return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
+        }
+
+        // Bare scalar value
+        return ObjectDecoder.parseBareScalarValue(content, depth, context);
     }
 
 }

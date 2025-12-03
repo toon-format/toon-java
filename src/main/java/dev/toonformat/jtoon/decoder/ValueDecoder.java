@@ -1,9 +1,14 @@
 package dev.toonformat.jtoon.decoder;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.toonformat.jtoon.DecodeOptions;
+import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.module.afterburner.AfterburnerModule;
 
 import java.util.LinkedHashMap;
+import java.util.TimeZone;
 
 /**
  * Main decoder for converting TOON-formatted strings to Java objects.
@@ -26,7 +31,17 @@ import java.util.LinkedHashMap;
  */
 public final class ValueDecoder {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER;
+
+    static {
+        OBJECT_MAPPER = JsonMapper.builder()
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
+            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
+            // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
+            // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
+            .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
+            .build();
+    }
 
     private ValueDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -54,18 +69,11 @@ public final class ValueDecoder {
 
         // Don't trim leading whitespace - we need it for indentation validation
         // Only trim trailing whitespace to avoid issues with empty lines at the end
-        String processed = toon;
-        while (!processed.isEmpty() && Character.isWhitespace(processed.charAt(processed.length() - 1))) {
-            processed = processed.substring(0, processed.length() - 1);
-        }
+        String processed = Character.isWhitespace(toon.charAt(toon.length() - 1)) ? toon.stripTrailing() : toon;
+        Object result =  DecodeHelper.parseValue(processed, options);
 
-        DecodeParser parser = new DecodeParser(processed, options);
-        Object result = parser.parseValue();
-        // If result is null (no content), return empty object
-        if (result == null) {
-            return new LinkedHashMap<>();
-        }
-        return result;
+        // If a result is null (no content), return an empty object
+        return result == null ? new LinkedHashMap<>() : result;
     }
 
     /**
