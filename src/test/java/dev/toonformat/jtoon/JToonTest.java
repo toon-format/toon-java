@@ -776,9 +776,17 @@ public class JToonTest {
         @Test
         @DisplayName("converts non-finite numbers to null")
         void convertsNonFiniteNumbers() {
-            assertEquals("null", encode(Double.POSITIVE_INFINITY));
-            assertEquals("null", encode(Double.NEGATIVE_INFINITY));
-            assertEquals("null", encode(Double.NaN));
+            String positive = encode(Double.POSITIVE_INFINITY);
+            String negative = encode(Double.NEGATIVE_INFINITY);
+            String nan = encode(Double.NaN);
+
+            assertNotNull(positive);
+            assertNotNull(negative);
+            assertNotNull(nan);
+
+            assertEquals("null", positive, "Positive Infinity should encode to null");
+            assertEquals("null", negative, "Negative Infinity should encode to null");
+            assertEquals("null", nan, "NaN should encode to null");
         }
     }
 
