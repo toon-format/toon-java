@@ -4,7 +4,7 @@
 [![Release](https://github.com/toon-format/toon-java/actions/workflows/release.yml/badge.svg)](https://github.com/toon-format/toon-java/actions/workflows/release.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.toonformat/jtoon.svg)](https://central.sonatype.com/artifact/dev.toonformat/jtoon)
 ![Coverage](.github/badges/jacoco.svg)
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
+[![SPEC v3.0.1](https://img.shields.io/badge/spec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
 [![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE)
 
 > **⚠️ Beta Status (v1.x.x):** This library is in active development and working towards spec compliance. Beta published to Maven Central. API may change before 2.0.0 release.
