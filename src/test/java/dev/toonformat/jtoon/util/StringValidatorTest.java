@@ -67,6 +67,17 @@ class StringValidatorTest {
         void testOctalNumber() {
             assertFalse(StringValidator.isSafeUnquoted("07", ","));
         }
+
+        @Test
+        @DisplayName("should return false for a number with a leading zero")
+        void testLeadingZeroNumber() {
+            assertFalse(StringValidator.isSafeUnquoted("0.07", ","));
+        }
+        @Test
+        @DisplayName("should return false for a negative number with a leading zero")
+        void testLeadingNegativeZeroNumber() {
+            assertFalse(StringValidator.isSafeUnquoted("-0.07", ","));
+        }
     }
 
     @Nested
