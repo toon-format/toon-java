@@ -7,14 +7,19 @@ import tools.jackson.module.afterburner.AfterburnerModule;
 
 import java.util.TimeZone;
 
+/**
+ * Provides a singleton ObjectMapper instance.
+ */
 public class ObjectMapperSingleton {
-
+    /**
+     * Holds the singleton ObjectMapper.
+     */
     private static ObjectMapper INSTANCE = new ObjectMapper();
 
     static {
         INSTANCE = JsonMapper.builder()
             .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
+            .addModule(new AfterburnerModule()) // Speeds up Jackson by 20–40% in most real-world cases
             // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
             // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
             // .configure(SerializationFeature.INDENT_OUTPUT, false)  in Jackson 3 this is default false
@@ -23,8 +28,14 @@ public class ObjectMapperSingleton {
     }
 
     private ObjectMapperSingleton() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
+    /**
+     * Returns the singleton ObjectMapper.
+     *
+     * @return ObjectMapper
+     */
     public static ObjectMapper getInstance() {
         return INSTANCE;
     }

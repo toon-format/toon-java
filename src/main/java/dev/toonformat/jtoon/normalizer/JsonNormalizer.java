@@ -40,6 +40,7 @@ import java.util.stream.Stream;
  * Handles Java-specific types like LocalDateTime, Optional, Stream, etc.
  */
 public final class JsonNormalizer {
+
     /**
      * Shared ObjectMapper instance configured for JSON normalization.
      */
