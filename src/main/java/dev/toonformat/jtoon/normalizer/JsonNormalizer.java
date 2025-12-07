@@ -1,9 +1,8 @@
 package dev.toonformat.jtoon.normalizer;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.DecimalNode;
@@ -15,7 +14,6 @@ import tools.jackson.databind.node.NullNode;
 import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.node.ShortNode;
 import tools.jackson.databind.node.StringNode;
-import tools.jackson.module.afterburner.AfterburnerModule;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -33,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
@@ -46,17 +43,7 @@ public final class JsonNormalizer {
     /**
      * Shared ObjectMapper instance configured for JSON normalization.
      */
-    public static final ObjectMapper MAPPER;
-
-    static {
-        MAPPER = JsonMapper.builder()
-            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
-            // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
-            // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
-            .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
-            .build();
-    }
+    public static final ObjectMapper MAPPER = ObjectMapperSingleton.getInstance();
 
     private static final List<Function<Object, JsonNode>> NORMALIZERS = List.of(
         JsonNormalizer::tryNormalizePrimitive,
@@ -68,6 +55,7 @@ public final class JsonNormalizer {
     private JsonNormalizer() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
+
 
     /**
      * Parses a JSON string into a JsonNode using the shared ObjectMapper.

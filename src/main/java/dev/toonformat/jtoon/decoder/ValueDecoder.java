@@ -1,13 +1,10 @@
 package dev.toonformat.jtoon.decoder;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.toonformat.jtoon.DecodeOptions;
+import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.module.afterburner.AfterburnerModule;
 
 import java.util.LinkedHashMap;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
@@ -33,17 +30,7 @@ import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
  */
 public final class ValueDecoder {
 
-    private static final ObjectMapper OBJECT_MAPPER;
-
-    static {
-        OBJECT_MAPPER = JsonMapper.builder()
-            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
-            // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
-            // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
-            .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
-            .build();
-    }
+    private static final ObjectMapper MAPPER = ObjectMapperSingleton.getInstance();
 
     private ValueDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -132,7 +119,7 @@ public final class ValueDecoder {
     public static String decodeToJson(String toon, DecodeOptions options) {
         try {
             Object decoded = decode(toon, options);
-            return OBJECT_MAPPER.writeValueAsString(decoded);
+            return MAPPER.writeValueAsString(decoded);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to convert decoded value to JSON: " + e.getMessage(), e);
         }
