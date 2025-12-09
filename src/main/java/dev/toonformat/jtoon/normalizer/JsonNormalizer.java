@@ -15,7 +15,7 @@ import tools.jackson.databind.node.NullNode;
 import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.node.ShortNode;
 import tools.jackson.databind.node.StringNode;
-import tools.jackson.module.afterburner.AfterburnerModule;
+import tools.jackson.module.blackbird.BlackbirdModule;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -51,9 +51,7 @@ public final class JsonNormalizer {
     static {
         MAPPER = JsonMapper.builder()
             .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-            .addModule(new AfterburnerModule().setUseValueClassLoader(true)) // Speeds up Jackson by 20–40% in most real-world cases
-            // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
-            // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
+            .addModule(new BlackbirdModule()) // Speeds up Jackson by 20–40% in most real-world cases
             .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
             .build();
     }
