@@ -3,6 +3,7 @@ package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.EncodeOptions;
+import dev.toonformat.jtoon.JToon;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -20,23 +21,21 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.concurrent.TimeUnit;
 
 /**
- * JMH benchmark for ObjectEncoder.encodeObject
+ * JMH benchmark for JToon.encodeJson
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgsAppend = {
-        "-Xms1G",
-        "-Xmx1G",
-        "-XX:+UseG1GC"
+    "-Xms1G",
+    "-Xmx1G",
+    "-XX:+UseG1GC"
 })
 @Warmup(iterations = 2, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 3, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 public class ObjectEncoderBenchmark {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -51,7 +50,7 @@ public class ObjectEncoderBenchmark {
     @Param({"1", "3", "6"})
     public int buildDepth;
 
-    private ObjectNode payload;
+    private String payload;
     private EncodeOptions options;
 
     @Setup(Level.Trial)
@@ -59,12 +58,12 @@ public class ObjectEncoderBenchmark {
         int sizeCount;
         switch (size) {
             case "small" -> sizeCount = 2;
-            case "large" -> sizeCount = 200;
-            case "medium" -> sizeCount = 20;
+            case "large" -> sizeCount = 100;
+            case "medium" -> sizeCount = 50;
             default -> sizeCount = 20;
         }
 
-        payload = createNestedObject(sizeCount, buildDepth);
+        payload = createNestedObject(sizeCount, buildDepth).toString();
         options = buildEncodeOptions(flatten);
     }
 
@@ -74,11 +73,9 @@ public class ObjectEncoderBenchmark {
      */
     @Benchmark
     public void benchEncodeObjectSingle(Blackhole bh) {
-        LineWriter localWriter = new LineWriter(options.indent());
-
-        ObjectEncoder.encodeObject(payload, localWriter, 0, options, null, null, null, Collections.synchronizedSet(new LinkedHashSet<>()));
+        final String json = JToon.encodeJson(payload, options);
         // consume the result so JIT can't optimize it away
-        bh.consume(localWriter.toString());
+        bh.consume(json);
     }
 
     private static ObjectNode createNestedObject(int elementsPerLevel, int depth) {
