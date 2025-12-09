@@ -2,10 +2,7 @@ package dev.toonformat.jtoon.normalizer;
 
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.DecimalNode;
