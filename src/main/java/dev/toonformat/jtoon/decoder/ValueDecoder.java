@@ -2,11 +2,7 @@ package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
-import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.module.afterburner.AfterburnerModule;
 
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
