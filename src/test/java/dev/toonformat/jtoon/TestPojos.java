@@ -124,5 +124,16 @@ public class TestPojos {
             Address address,
             @JsonIgnore String ssn) {
     }
+
+    /**
+     * Record for checking the field order in the output.
+     */
+    public record HotelInfoLlmRerankDTO(String no,
+                                        String hotelId,
+                                        String hotelName,
+                                        String hotelBrand,
+                                        String hotelCategory,
+                                        String hotelPrice,
+                                        String hotelAddressDistance) {}
 }
 

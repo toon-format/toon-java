@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1199,6 +1200,24 @@ public class JToonTest {
                                   101,Keyboard,79.99
                                   102,Monitor,299.99""",
                         encode(obj));
+            }
+
+            @Test
+            @DisplayName("encodes nested POJO with keeping the order")
+            void encodesNestedWithKeepingTheOrder() {
+                List<HotelInfoLlmRerankDTO> hotelList = new ArrayList<>();
+                for (int i = 0; i < 5; i++) {
+                    hotelList.add(new HotelInfoLlmRerankDTO("A" + (i + 1),
+                        "hotelId " + i,
+                        "hotelName",
+                        "hotelBrand",
+                        "hotelCategory",
+                        "hotelPrice",
+                        "hotelAddressDistance"
+                    ));
+                }
+
+                assertTrue(encode(hotelList).startsWith("[5]{no,hotelId,hotelName,hotelBrand,hotelCategory,hotelPrice,hotelAddressDistance}:"));
             }
         }
     }
