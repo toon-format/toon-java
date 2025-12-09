@@ -44,8 +44,6 @@ public final class ValueDecoder {
             // .disable(MapperFeature.DEFAULT_VIEW_INCLUSION) in Jackson 3 this is default disabled
             // .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) in Jackson 3 this is default disabled
             .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-            .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .build();
     }
 
