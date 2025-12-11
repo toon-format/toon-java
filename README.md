@@ -11,7 +11,7 @@
 
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Working towards full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
 
-**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • Comprehensive test coverage.
+**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • full Jackson Annotation Support •Comprehensive test coverage.
 
 ## Installation
 
@@ -118,6 +118,8 @@ Converts any Java object or JSON-string to TOON format.
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Delimiter enum for array values and tabular rows: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `lengthMarker` – Boolean to prefix array lengths with `#` (default: `false`)
+  - `flatten` – Boolean to key folding to collapse single-key wrapper chains (default: `false`)
+  - `flattenDepth` – maximum number of segments to fold  (default: `Infinity`)
 
 For `encodeJson` overloads:
 
@@ -195,7 +197,7 @@ Item item1 = new Item("A1", "Widget", 2, 9.99);
 Item item2 = new Item("B2", "Gadget", 1, 14.5);
 Data data = new Data(List.of(item1, item2));
 
-EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false);
+EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false, false, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -224,7 +226,7 @@ Pipe delimiters offer a middle ground between commas and tabs:
 
 ```java
 // Using the same Item and Data records from above
-EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false);
+EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false, false, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -252,14 +254,14 @@ Item item1 = new Item("A1", 2, 9.99);
 Item item2 = new Item("B2", 1, 14.5);
 Data data = new Data(List.of("reading", "gaming", "coding"), List.of(item1, item2));
 
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true, false, 3)));
 // tags[#3]: reading,gaming,coding
 // items[#2]{sku,qty,price}:
 //   A1,2,9.99
 //   B2,1,14.5
 
 // Works with custom delimiters
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true, false, 3)));
 // tags[#3|]: reading|gaming|coding
 // items[#2|]{sku|qty|price}:
 //   A1|2|9.99
@@ -283,6 +285,7 @@ Converts TOON-formatted strings back to Java objects or JSON.
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Expected delimiter: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, returns `null` on errors.
+  - `expandPaths` – Boolean Path expansion mode for dotted keys (default: OFF).
 
 **Returns:**
 
