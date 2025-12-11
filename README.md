@@ -118,7 +118,7 @@ Converts any Java object or JSON-string to TOON format.
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Delimiter enum for array values and tabular rows: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `lengthMarker` – Boolean to prefix array lengths with `#` (default: `false`)
-  - `flatten` – Boolean to key folding to collapse single-key wrapper chains (default: `false`)
+  - `flatten` – Boolean to key folding to collapse single-key wrapper chains (default: `OFF`).
   - `flattenDepth` – maximum number of segments to fold  (default: `Infinity`)
 
 For `encodeJson` overloads:
@@ -288,7 +288,7 @@ Converts TOON-formatted strings back to Java objects or JSON.
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Expected delimiter: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, returns `null` on errors.
-  - `expandPaths` – Boolean Path expansion mode for dotted keys (default: OFF).
+  - `expandPaths` – Boolean Path expansion mode for dotted keys (default: `OFF`).
 
 **Returns:**
 
