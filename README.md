@@ -11,7 +11,7 @@
 
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Working towards full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
 
-**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • full Jackson Annotation Support •Comprehensive test coverage.
+**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • full [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) Support • Comprehensive test coverage.
 
 ## Installation
 
@@ -133,13 +133,14 @@ A TOON-formatted string with no trailing newline or spaces.
 
 ```java
 import dev.toonformat.jtoon.JToon;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
 
-record Item(String sku, int qty, double price) {}
+record Item(String sku, int qty, double price,  @JsonIgnore double internPrice) {}
 record Data(List<Item> items) {}
 
-Item item1 = new Item("A1", 2, 9.99);
-Item item2 = new Item("B2", 1, 14.5);
+Item item1 = new Item("A1", 2, 9.99, 8.50);
+Item item2 = new Item("B2", 1, 14.5, 14.0);
 Data data = new Data(List.of(item1, item2));
 
 System.out.println(JToon.encode(data));
@@ -152,6 +153,8 @@ items[2]{sku,qty,price}:
   A1,2,9.99
   B2,1,14.5
 ```
+
+The [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) @JsonIgnore will help to keep fields from exposing.
 
 #### Encode a plain JSON string
 
@@ -197,7 +200,7 @@ Item item1 = new Item("A1", "Widget", 2, 9.99);
 Item item2 = new Item("B2", "Gadget", 1, 14.5);
 Data data = new Data(List.of(item1, item2));
 
-EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false, false, 3);
+EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -226,7 +229,7 @@ Pipe delimiters offer a middle ground between commas and tabs:
 
 ```java
 // Using the same Item and Data records from above
-EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false, false, 3);
+EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -254,14 +257,14 @@ Item item1 = new Item("A1", 2, 9.99);
 Item item2 = new Item("B2", 1, 14.5);
 Data data = new Data(List.of("reading", "gaming", "coding"), List.of(item1, item2));
 
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true, false, 3)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, 3)));
 // tags[#3]: reading,gaming,coding
 // items[#2]{sku,qty,price}:
 //   A1,2,9.99
 //   B2,1,14.5
 
 // Works with custom delimiters
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true, false, 3)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, 3)));
 // tags[#3|]: reading|gaming|coding
 // items[#2|]{sku|qty|price}:
 //   A1|2|9.99
