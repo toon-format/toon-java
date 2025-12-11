@@ -309,7 +309,7 @@ public class RoundTripTest {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
-            EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE);
+            EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE);
             DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.TAB, true, PathExpansion.OFF);
 
             String toon = JToon.encode(data, encodeOpts);
@@ -324,7 +324,7 @@ public class RoundTripTest {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
-            EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE);
+            EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE);
             DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.PIPE, true, PathExpansion.OFF);
 
             String toon = JToon.encode(data, encodeOpts);

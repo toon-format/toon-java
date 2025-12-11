@@ -804,7 +804,7 @@ public class JToonTest {
             void encodesWithTab() {
                 Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
                 assertEquals("tags[3\t]: reading\tgaming\tcoding",
-                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -812,7 +812,7 @@ public class JToonTest {
             void encodesWithPipe() {
                 Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
                 assertEquals("tags[3|]: reading|gaming|coding",
-                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -820,7 +820,7 @@ public class JToonTest {
             void encodesWithComma() {
                 Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
                 assertEquals("tags[3]: reading,gaming,coding",
-                        encode(obj, new EncodeOptions(2, Delimiter.COMMA, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.COMMA, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -831,7 +831,7 @@ public class JToonTest {
                                 obj("sku", "A1", "qty", 2, "price", 9.99),
                                 obj("sku", "B2", "qty", 1, "price", 14.5)));
                 assertEquals("items[2\t]{sku\tqty\tprice}:\n  A1\t2\t9.99\n  B2\t1\t14.5",
-                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -842,7 +842,7 @@ public class JToonTest {
                                 obj("sku", "A1", "qty", 2, "price", 9.99),
                                 obj("sku", "B2", "qty", 1, "price", 14.5)));
                 assertEquals("items[2|]{sku|qty|price}:\n  A1|2|9.99\n  B2|1|14.5",
-                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -850,7 +850,7 @@ public class JToonTest {
             void encodesNestedWithTab() {
                 Map<String, Object> obj = obj("pairs", list(list("a", "b"), list("c", "d")));
                 assertEquals("pairs[2\t]:\n  - [2\t]: a\tb\n  - [2\t]: c\td",
-                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -858,35 +858,35 @@ public class JToonTest {
             void encodesNestedWithPipe() {
                 Map<String, Object> obj = obj("pairs", list(list("a", "b"), list("c", "d")));
                 assertEquals("pairs[2|]:\n  - [2|]: a|b\n  - [2|]: c|d",
-                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("encodes root arrays with tab")
             void encodesRootWithTab() {
                 List<Object> arr = list("x", "y", "z");
-                assertEquals("[3\t]: x\ty\tz", encode(arr, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                assertEquals("[3\t]: x\ty\tz", encode(arr, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("encodes root arrays with pipe")
             void encodesRootWithPipe() {
                 List<Object> arr = list("x", "y", "z");
-                assertEquals("[3|]: x|y|z", encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                assertEquals("[3|]: x|y|z", encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("encodes root arrays of objects with tab")
             void encodesRootObjectsWithTab() {
                 List<Object> arr = list(obj("id", 1), obj("id", 2));
-                assertEquals("[2\t]{id}:\n  1\n  2", encode(arr, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                assertEquals("[2\t]{id}:\n  1\n  2", encode(arr, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("encodes root arrays of objects with pipe")
             void encodesRootObjectsWithPipe() {
                 List<Object> arr = list(obj("id", 1), obj("id", 2));
-                assertEquals("[2|]{id}:\n  1\n  2", encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                assertEquals("[2|]{id}:\n  1\n  2", encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
         }
 
@@ -899,7 +899,7 @@ public class JToonTest {
             void quotesTab() {
                 List<Object> input = list("a", "b\tc", "d");
                 assertEquals("items[3\t]: a\t\"b\\tc\"\td",
-                        encode(obj("items", input), new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj("items", input), new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -907,7 +907,7 @@ public class JToonTest {
             void quotesPipe() {
                 List<Object> input = list("a", "b|c", "d");
                 assertEquals("items[3|]: a|\"b|c\"|d",
-                        encode(obj("items", input), new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj("items", input), new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -915,7 +915,7 @@ public class JToonTest {
             void doesNotQuoteCommasWithTab() {
                 List<Object> input = list("a,b", "c,d");
                 assertEquals("items[2\t]: a,b\tc,d",
-                        encode(obj("items", input), new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj("items", input), new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -923,7 +923,7 @@ public class JToonTest {
             void doesNotQuoteCommasWithPipe() {
                 List<Object> input = list("a,b", "c,d");
                 assertEquals("items[2|]: a,b|c,d",
-                        encode(obj("items", input), new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj("items", input), new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -934,25 +934,25 @@ public class JToonTest {
                                 obj("id", 1, "note", "a,b"),
                                 obj("id", 2, "note", "c,d")));
                 assertEquals("items[2]{id,note}:\n  1,\"a,b\"\n  2,\"c,d\"",
-                        encode(obj, new EncodeOptions(2, Delimiter.COMMA, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.COMMA, false, KeyFolding.OFF, Integer.MAX_VALUE)));
                 assertEquals("items[2\t]{id\tnote}:\n  1\ta,b\n  2\tc,d",
-                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("does not quote commas in object values with non-comma delimiter")
             void doesNotQuoteCommasInValues() {
-                assertEquals("note: a,b", encode(obj("note", "a,b"), new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
-                assertEquals("note: a,b", encode(obj("note", "a,b"), new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                assertEquals("note: a,b", encode(obj("note", "a,b"), new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                assertEquals("note: a,b", encode(obj("note", "a,b"), new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
             @DisplayName("quotes nested array values containing the delimiter")
             void quotesNestedDelimiter() {
                 assertEquals("pairs[1|]:\n  - [2|]: a|\"b|c\"",
-                        encode(obj("pairs", list(list("a", "b|c"))), new EncodeOptions(2, Delimiter.PIPE, false, false, Integer.MAX_VALUE)));
+                        encode(obj("pairs", list(list("a", "b|c"))), new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
                 assertEquals("pairs[1\t]:\n  - [2\t]: a\t\"b\\tc\"",
-                        encode(obj("pairs", list(list("a", "b\tc"))), new EncodeOptions(2, Delimiter.TAB, false, false, Integer.MAX_VALUE)));
+                        encode(obj("pairs", list(list("a", "b\tc"))), new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
         }
     }
@@ -965,13 +965,13 @@ public class JToonTest {
         @DisplayName("adds length marker to primitive arrays")
         void addsMarkerToPrimitives() {
             Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
-            assertEquals("tags[#3]: reading,gaming,coding", encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, false, Integer.MAX_VALUE)));
+            assertEquals("tags[#3]: reading,gaming,coding", encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
         }
 
         @Test
         @DisplayName("handles empty arrays")
         void handlesEmptyArrays() {
-            assertEquals("items[#0]:", encode(obj("items", List.of()), new EncodeOptions(2, Delimiter.COMMA, true, false, Integer.MAX_VALUE)));
+            assertEquals("items[#0]:", encode(obj("items", List.of()), new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
         }
 
         @Test
@@ -982,7 +982,7 @@ public class JToonTest {
                             obj("sku", "A1", "qty", 2, "price", 9.99),
                             obj("sku", "B2", "qty", 1, "price", 14.5)));
             assertEquals("items[#2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5",
-                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, false, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
         }
 
         @Test
@@ -990,14 +990,14 @@ public class JToonTest {
         void addsMarkerToNested() {
             Map<String, Object> obj = obj("pairs", list(list("a", "b"), list("c", "d")));
             assertEquals("pairs[#2]:\n  - [#2]: a,b\n  - [#2]: c,d",
-                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, false, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
         }
 
         @Test
         @DisplayName("works with delimiter option")
         void worksWithDelimiter() {
             Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
-            assertEquals("tags[#3|]: reading|gaming|coding", encode(obj, new EncodeOptions(2, Delimiter.PIPE, true, false, Integer.MAX_VALUE)));
+            assertEquals("tags[#3|]: reading|gaming|coding", encode(obj, new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, Integer.MAX_VALUE)));
         }
 
         @Test
