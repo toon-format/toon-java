@@ -68,7 +68,7 @@ System.out.println(JToon.encode(data));
 
 **Output:**
 
-```
+```yaml
 user:
   id: 123
   name: Ada
@@ -145,7 +145,7 @@ System.out.println(JToon.encode(data));
 
 **Output:**
 
-```
+```yaml
 items[2]{sku,qty,price}:
   A1,2,9.99
   B2,1,14.5
@@ -168,7 +168,7 @@ System.out.println(JToon.encodeJson(json));
 
 Output:
 
-```
+```yaml
 user:
   id: 123
   name: Ada
@@ -201,7 +201,7 @@ System.out.println(JToon.encode(data, options));
 
 **Output:**
 
-```
+```yaml
 items[2 ]{sku name qty price}:
   A1 Widget 2 9.99
   B2 Gadget 1 14.5
@@ -230,7 +230,7 @@ System.out.println(JToon.encode(data, options));
 
 **Output:**
 
-```
+```yaml
 items[2|]{sku|name|qty|price}:
   A1|Widget|2|9.99
   B2|Gadget|1|14.5
