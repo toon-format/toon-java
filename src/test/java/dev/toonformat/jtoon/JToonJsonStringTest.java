@@ -63,7 +63,7 @@ public class JToonJsonStringTest {
         @DisplayName("supports custom options with pipe delimiter and length marker")
         void encodesWithCustomOptions() {
             String json = "{\"tags\":[\"reading\",\"gaming\",\"coding\"],\"items\":[{\"sku\":\"A1\",\"qty\":2,\"price\":9.99},{\"sku\":\"B2\",\"qty\":1,\"price\":14.5}]}";
-            EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, true, false, Integer.MAX_VALUE);
+            EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, Integer.MAX_VALUE);
             String result = JToon.encodeJson(json, options);
 
             String expected = String.join("\n",

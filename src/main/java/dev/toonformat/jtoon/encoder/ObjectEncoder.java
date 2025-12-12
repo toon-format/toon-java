@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.EncodeOptions;
+import dev.toonformat.jtoon.KeyFolding;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -93,7 +94,7 @@ public final class ObjectEncoder {
         int remainingDepth = effectiveFlattenDepth - depth;
 
         // Attempt key folding when enabled
-        if (options.flatten()
+        if (KeyFolding.SAFE.equals(options.flatten())
             && !siblings.isEmpty()
             && remainingDepth > 0
             && blockedKeys != null
@@ -162,7 +163,7 @@ public final class ObjectEncoder {
                 // Pass "-1" if remainingDepth is exhausted and set the encoding in the option to false.
                 // to encode normally without flattening
                 newRemainingDepth = -1;
-                options = new EncodeOptions(options.indent(), options.delimiter(), options.lengthMarker(), false, options.flattenDepth());
+                options = new EncodeOptions(options.indent(), options.delimiter(), options.lengthMarker(), KeyFolding.OFF, options.flattenDepth());
             }
 
             encodeObject((ObjectNode) remainder, writer, depth + 1, options, rootLiteralKeys, foldedPath, newRemainingDepth, blockedKeys);
@@ -178,10 +179,10 @@ public final class ObjectEncoder {
         // Primitive
         if (leaf.isValueNode()) {
             writer.push(depth,
-                        indentedLine(depth,
-                                     encodedFoldedKey + ": " +
-                                         PrimitiveEncoder.encodePrimitive(leaf, options.delimiter().toString()),
-                                     options.indent()));
+                indentedLine(depth,
+                    encodedFoldedKey + ": " +
+                        PrimitiveEncoder.encodePrimitive(leaf, options.delimiter().toString()),
+                    options.indent()));
             return;
         }
 
@@ -196,7 +197,7 @@ public final class ObjectEncoder {
             writer.push(depth, indentedLine(depth, encodedFoldedKey + ":", options.indent()));
             if (!leaf.isEmpty()) {
                 encodeObject((ObjectNode) leaf, writer, depth + 1, options,
-                             null, null, null, null);
+                    null, null, null, null);
             }
         }
     }

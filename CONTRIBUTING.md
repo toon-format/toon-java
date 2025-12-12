@@ -9,7 +9,7 @@ This project uses [Gradle](https://gradle.org) for dependency management and bui
 ```bash
 # Clone the repository
 git clone https://github.com/toon-format/toon-java.git
-cd JToon
+cd toon-java
 
 # Build the project
 ./gradlew build
