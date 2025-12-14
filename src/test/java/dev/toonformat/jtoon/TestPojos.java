@@ -5,7 +5,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.StdSerializer;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -131,7 +138,7 @@ public class TestPojos {
     /**
      * OrderEmployee record containing a nested Address.
      */
-    @JsonPropertyOrder({ "id", "name" })
+    @JsonPropertyOrder({"id", "name"})
     public record OrderEmployee(String name, int id, Address address) {
     }
 
@@ -164,5 +171,41 @@ public class TestPojos {
                                         String hotelPrice,
                                         String hotelAddressDistance) {
     }
+
+    /**
+     * Custom Serializer for HotelInfoLlmRerankDTO
+     */
+    public static class CustomHotelInfoLlmRerankDTOSerializer extends StdSerializer<HotelInfoLlmRerankDTO> {
+
+        public CustomHotelInfoLlmRerankDTOSerializer() {
+            this(null);
+        }
+
+        public CustomHotelInfoLlmRerankDTOSerializer(Class<HotelInfoLlmRerankDTO> t) {
+            super(t);
+        }
+
+        @Override
+        public void serialize(HotelInfoLlmRerankDTO value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
+            jsonGenerator.writeString(value.hotelId);
+        }
+    }
+
+    /**
+     * POJO with custom serializer
+     */
+    public static class HotelInfoLlmRerankDTOWithSerializer {
+        public String name;
+
+        @JsonSerialize(using = CustomHotelInfoLlmRerankDTOSerializer.class)
+        public HotelInfoLlmRerankDTO hotelInfo;
+
+        public HotelInfoLlmRerankDTOWithSerializer(String name, HotelInfoLlmRerankDTO hotelInfo) {
+            this.name = name;
+            this.hotelInfo = hotelInfo;
+        }
+    }
+
+
 }
 

@@ -1,6 +1,5 @@
 package dev.toonformat.jtoon;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -22,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * JUnit 5 test class for JToon encoder, converted from TypeScript vitest tests.
  */
 @Tag("unit")
-public class JToonTest {
+class JToonTest {
 
     // Helper to create a LinkedHashMap for objects, preserving insertion order
     private static Map<String, Object> obj(Object... kvs) {
@@ -1235,6 +1234,31 @@ public class JToonTest {
                           street: 789 Pine Rd
                           city: Gotham
                           zipCode: "99999\"""",
+                    encode);
+            }
+
+            @Test
+            @DisplayName("encodes POJO with annotation: JsonSerialize")
+            void encodesWithJsonSerializeAnnotations() {
+                // Given
+                HotelInfoLlmRerankDTO hotelInfoLlmRerankDTO = new HotelInfoLlmRerankDTO("A 23",
+                    "hotelId 23",
+                    "hotelName",
+                    "hotelBrand",
+                    "hotelCategory",
+                    "hotelPrice",
+                    "hotelAddressDistance"
+                );
+                HotelInfoLlmRerankDTOWithSerializer hotel = new HotelInfoLlmRerankDTOWithSerializer("Sunset Hotel", hotelInfoLlmRerankDTO);
+
+                // When
+                String encode = encode(hotel);
+
+                // Then
+                assertEquals(
+                    """
+                        name: Sunset Hotel
+                        hotelInfo: hotelId 23""",
                     encode);
             }
 
