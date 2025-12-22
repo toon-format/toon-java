@@ -192,8 +192,8 @@ class ObjectEncoderTest {
         // Then
         assertNull(result);
         String expected = String.join("\n",
-                                      "user.info:",
-                                      "  id: 1"
+            "user.info:",
+            "  id: 1"
         );
         assertEquals(expected, writer.toString());
         assertTrue(blockedKeys.contains("user"));
@@ -269,8 +269,8 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         x:
-                           y: ok""", writer.toString());
+            x:
+              y: ok""", writer.toString());
     }
 
     @Test
@@ -308,9 +308,9 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         a:
-                           b:
-                             z: 1""", writer.toString());
+            a:
+              b:
+                z: 1""", writer.toString());
     }
 
     @Test
@@ -405,13 +405,13 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         items[3]:
-                           - summary
-                           - id: 1
-                             name: Ada
-                           - [2]:
-                             - id: 2
-                             - status: draft""", writer.toString());
+            items[3]:
+              - summary
+              - id: 1
+                name: Ada
+              - [2]:
+                - id: 2
+                - status: draft""", writer.toString());
     }
 
     @Test
@@ -560,11 +560,11 @@ class ObjectEncoderTest {
 
         // Then
         String expected = String.join("\n",
-                                      "items[1]:",
-                                      "  - matrix[2]:",
-                                      "      - [2]: 1,2",
-                                      "      - [2]: 3,4",
-                                      "    name: grid");
+            "items[1]:",
+            "  - matrix[2]:",
+            "      - [2]: 1,2",
+            "      - [2]: 3,4",
+            "    name: grid");
         assertEquals(expected, writer.toString());
     }
 
@@ -587,14 +587,37 @@ class ObjectEncoderTest {
 
         // Then
         String expected = String.join("\n",
-                                      "items:",
-                                      "  items[1]:",
-                                      "    - matrix[2]:",
-                                      "        - [2]: 1,2",
-                                      "        - [2]: 3,4",
-                                      "      name: grid");
+            "items:",
+            "  items[1]:",
+            "    - matrix[2]:",
+            "        - [2]: 1,2",
+            "        - [2]: 3,4",
+            "      name: grid");
         assertEquals(expected, writer.toString());
     }
+
+    @Test
+    void testEncodeKeyValuePairWithANullKey() {
+        // Given
+        String json = "{\n" +
+            "        \"items\": [\n" +
+            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
+            "        ]\n" +
+            "      }";
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.withFlatten(true);
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> rootKeys = new HashSet<>();
+
+        // When
+        ObjectEncoder.encodeKeyValuePair(null, node, writer, 0, options, rootKeys, null, null, 10, new HashSet<>());
+
+        // Then
+        String expected = "";
+        assertEquals(expected, writer.toString());
+    }
+
     @Test
     void testEncodeKeyValuePairWithNullFlattenDepth() {
         // Given
@@ -622,6 +645,7 @@ class ObjectEncoderTest {
             "      name: grid");
         assertEquals(expected, writer.toString());
     }
+
     @Test
     void testEncodeKeyValuePairWithToSmallFlattenDepth() {
         // Given

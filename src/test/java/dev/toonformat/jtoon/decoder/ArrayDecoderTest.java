@@ -10,10 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("unit")
 class ArrayDecoderTest {
@@ -71,9 +68,9 @@ class ArrayDecoderTest {
         setUpContext("[1]:\n  - first\n  - second\n  -");
         List<Object> result = ArrayDecoder.parseArray("[1]:\n  - first\n  - second\n  -", 0, context);
         assertEquals("""
-                         [- first
-                           - second
-                           -]""", result.toString());
+            [- first
+              - second
+              -]""", result.toString());
     }
 
     @Test
@@ -97,7 +94,7 @@ class ArrayDecoderTest {
         String input = "[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5";
 
         // When
-        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[] { String.class }, input);
+        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class}, input);
 
         // Then
         assertEquals(2, extractLengthFromHeader);
@@ -110,10 +107,23 @@ class ArrayDecoderTest {
         String input = "[T]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5";
 
         // When
-        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[] { String.class }, input);
+        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class}, input);
 
         // Then
         assertNull(extractLengthFromHeader);
+    }
+
+    @Test
+    @DisplayName("do not terminate the List Array")
+    void shouldTerminateListArrayReturnFalse() throws Exception {
+        // Given
+        setUpContext("items[3]: a,b,c");
+
+        // When
+        boolean terminateListArray = (boolean) invokePrivateStatic("shouldTerminateListArray", new Class[]{int.class, int.class, String.class, DecodeContext.class}, 3, 1, "    - item", this.context);
+
+        // Then
+        assertFalse(terminateListArray);
     }
 
     private void setUpContext(String toon) {

@@ -102,6 +102,22 @@ class EncodeOptionsTest {
     }
 
     @Test
+    void givenNegativeFlattenFlag_whenUsingWithFlatten_thenOnlyFlattenIsModified() {
+        // Given
+        boolean flatten = false;
+
+        // When
+        EncodeOptions opts = EncodeOptions.withFlatten(flatten);
+
+        // Then
+        assertEquals(2, opts.indent());
+        assertEquals(Delimiter.COMMA, opts.delimiter());
+        assertFalse(opts.lengthMarker());
+        assertEquals(KeyFolding.OFF, opts.flatten());
+        assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
+    }
+
+    @Test
     void givenFlattenDepth_whenUsingWithFlattenDepth_thenFlattenDepthIsSetAndFlattenIsTrue() {
         // Given
         int flattenDepth = 3;

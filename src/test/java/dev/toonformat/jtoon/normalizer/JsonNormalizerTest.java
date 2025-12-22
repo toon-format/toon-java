@@ -1315,6 +1315,48 @@ class JsonNormalizerTest {
         }
 
         @Test
+        @DisplayName("Given Long Max Value, When tryConvertToLong is called, Then Optional is returned")
+        void testLongMaxValueReturnsOptional_whenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) Long.MAX_VALUE + 1;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given Long Min Value, When tryConvertToLong is called, Then Optional is returned")
+        void testLongMinValueReturnsOptional_whenTryConvertToLong() throws Exception {
+            // Given
+            Double input = (double) Long.MIN_VALUE -1;
+
+            // When
+            Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
+
+            // Then
+            assertInstanceOf(Optional.class, result);
+            assertFalse(((Optional<?>) result).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Given Long Min Value, When tryConvertToLong is called, Then Optional is returned")
+        void testLongNormalizeBigInteger() throws Exception {
+            // Given
+            BigInteger input = BigInteger.valueOf(Long.MIN_VALUE -1);
+
+            // When
+            Object result = invokePrivateStatic("normalizeBigInteger", new Class[]{BigInteger.class}, input);
+
+            // Then
+            assertInstanceOf(JsonNode.class, result);
+            assertFalse(((JsonNode) result).isBigDecimal());
+        }
+
+        @Test
         @DisplayName("Given negative NonInteger, When tryConvertToLong is called, Then Optional.empty is returned")
         void testNegativeNonIntegerValueReturnsEmptyWhenTryConvertToLong() throws Exception {
             // Given

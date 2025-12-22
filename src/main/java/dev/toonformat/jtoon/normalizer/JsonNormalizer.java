@@ -175,9 +175,7 @@ public final class JsonNormalizer {
             return Optional.empty();
         }
         long longVal = value.longValue();
-        return longVal == value
-            ? Optional.of(LongNode.valueOf(longVal))
-            : Optional.empty();
+        return Optional.of(LongNode.valueOf(longVal));
     }
 
     /**
