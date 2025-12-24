@@ -5,6 +5,8 @@ import dev.toonformat.jtoon.encoder.ValueEncoder;
 import dev.toonformat.jtoon.normalizer.JsonNormalizer;
 import tools.jackson.databind.JsonNode;
 
+import java.util.Map;
+
 /**
  * Main entry point for encoding and decoding TOON (Token-Oriented Object Notation) format.
  * Provides static methods to convert between Java objects, JSON strings, and TOON format.
@@ -116,6 +118,57 @@ public final class JToon {
      */
     public static Object decode(String toon, DecodeOptions options) {
         return ValueDecoder.decode(toon, options);
+    }
+
+    /**
+     * Decodes a TOON-formatted string into a {@code Map<String, Object>} using default options.
+     *
+     * <p>
+     * This method is a convenience wrapper around
+     * {@link #decode(String)} and expects the decoded result to
+     * represent a TOON object. If the decoded value is {@code null} or an invalid {@code String},
+     * an empty map is returned. No deep transformation is applied: the returned map
+     * directly reflects the structure produced by the decoder.
+     * </p>
+     *
+     * <p>
+     * The decoded value must be a {@code Map}; otherwise, a {@link ClassCastException}
+     * will occur due to the unchecked cast.
+     * </p>
+     *
+     * @param toon The TOON-formatted string to decode
+     * @return A {@code Map<String, Object>} representing the decoded TOON object, or an empty map if the
+     *         input decodes to {@code null} or a {@code String}
+     * @throws IllegalArgumentException if strict mode is enabled and the input is invalid
+     */
+    public static Map<String, Object> decodeToMap(String toon) {
+        return decodeToMap(toon, DecodeOptions.DEFAULT);
+    }
+
+    /**
+     * Decodes a TOON-formatted string into a {@code Map<String, Object>} using the provided options.
+     *
+     * <p>
+     * This method is a convenience wrapper around
+     * {@link #decode(String, DecodeOptions)} and expects the decoded result to
+     * represent a TOON object. If the decoded value is {@code null} or is not a
+     * {@code Map}, an empty map is returned. No deep transformation is applied:
+     * the returned map directly reflects the structure produced by the decoder.
+     * </p>
+     *
+     * <p>
+     * The decoded value must be a {@code Map}; otherwise, this method returns an
+     * empty map instead of attempting an invalid cast.
+     * </p>
+     *
+     * @param toon    The TOON-formatted string to decode
+     * @param options Decoding options (indentation, delimiters, strict mode)
+     * @return A {@code Map<String, Object>} representing the decoded TOON object, or an empty map
+     *         if the decoded value is {@code null} or not a {@code Map}
+     * @throws IllegalArgumentException if strict mode is enabled and the input is invalid
+     */
+    public static Map<String, Object> decodeToMap(String toon, DecodeOptions options) {
+        return ValueDecoder.decodeToMap(toon, options);
     }
 
     /**
