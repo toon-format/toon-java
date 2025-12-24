@@ -17,7 +17,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertFalse(opts.flatten());
+        assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -33,7 +33,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertFalse(opts.flatten());
+        assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -49,7 +49,7 @@ class EncodeOptionsTest {
         assertEquals(4, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertFalse(opts.flatten());
+        assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -65,7 +65,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.TAB, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertFalse(opts.flatten());
+        assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -81,7 +81,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertTrue(opts.lengthMarker());
-        assertFalse(opts.flatten());
+        assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -97,7 +97,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertTrue(opts.flatten());
+        assertEquals(KeyFolding.SAFE, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
 
@@ -113,7 +113,7 @@ class EncodeOptionsTest {
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
         assertFalse(opts.lengthMarker());
-        assertTrue(opts.flatten());
+        assertEquals(KeyFolding.SAFE, opts.flatten());
         assertEquals(3, opts.flattenDepth());
     }
 }

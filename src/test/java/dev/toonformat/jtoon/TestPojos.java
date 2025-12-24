@@ -1,7 +1,14 @@
 package dev.toonformat.jtoon;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 import java.util.List;
 import java.util.Map;
@@ -91,38 +98,113 @@ public class TestPojos {
      * Record with @JsonProperty annotation for field name mapping.
      */
     public record AnnotatedProduct(
-            @JsonProperty("product_id") int id,
-            @JsonProperty("product_name") String name,
-            double price) {
+        @JsonProperty("product_id") int id,
+        @JsonProperty("product_name") String name,
+        double price) {
     }
 
     /**
      * Record with @JsonIgnore annotation to exclude fields.
      */
     public record SecureData(
-            String publicField,
-            @JsonIgnore String secretField,
-            int version) {
+        String publicField,
+        @JsonIgnore String secretField,
+        int version) {
     }
 
     /**
      * Record with multiple Jackson annotations.
      */
     public record ComplexAnnotated(
-            @JsonProperty("user_id") int id,
-            String name,
-            @JsonIgnore String internal,
-            @JsonProperty("is_active") boolean active) {
+        @JsonProperty("user_id") int id,
+        String name,
+        @JsonIgnore String internal,
+        @JsonProperty("is_active") boolean active) {
     }
 
     /**
      * Record combining nested structure with annotations.
      */
     public record AnnotatedEmployee(
-            @JsonProperty("emp_id") int id,
-            @JsonProperty("full_name") String name,
-            Address address,
-            @JsonIgnore String ssn) {
+        @JsonProperty("emp_id") int id,
+        @JsonProperty("full_name") String name,
+        Address address,
+        @JsonIgnore String ssn) {
     }
+
+    /**
+     * OrderEmployee record containing a nested Address.
+     */
+    @JsonPropertyOrder({"id", "name"})
+    public record OrderEmployee(String name, int id, Address address) {
+    }
+
+    /**
+     * Class with Jackson Annotations
+     */
+    public static class FullEmployee {
+        public AnnotatedEmployee employee;
+        private final Map<String, String> properties;
+
+        public FullEmployee(AnnotatedEmployee employee, Map<String, String> properties) {
+            this.employee = employee;
+            this.properties = properties;
+        }
+
+        @JsonAnyGetter
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+    }
+
+    /**
+     * Record for checking the field order in the output.
+     */
+    public record HotelInfoLlmRerankDTO(String no,
+                                        String hotelId,
+                                        String hotelName,
+                                        String hotelBrand,
+                                        String hotelCategory,
+                                        String hotelPrice,
+                                        String hotelAddressDistance) {
+    }
+
+    public record UserDTO(Integer id, String firstName, String lastName, java.sql.Date lastLogin) {}
+
+    /**
+     * Custom Serializer for HotelInfoLlmRerankDTO
+     */
+    public static class CustomHotelInfoLlmRerankDTOSerializer extends StdSerializer<HotelInfoLlmRerankDTO> {
+
+        public CustomHotelInfoLlmRerankDTOSerializer() {
+            this(null);
+        }
+
+        public CustomHotelInfoLlmRerankDTOSerializer(Class<HotelInfoLlmRerankDTO> t) {
+            super(t);
+        }
+
+        @Override
+        public void serialize(HotelInfoLlmRerankDTO value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
+            jsonGenerator.writeString(value.hotelId);
+        }
+    }
+
+    /**
+     * POJO with custom serializer
+     */
+    public static class HotelInfoLlmRerankDTOWithSerializer {
+        public String name;
+
+        @JsonSerialize(using = CustomHotelInfoLlmRerankDTOSerializer.class)
+        public HotelInfoLlmRerankDTO hotelInfo;
+
+        public HotelInfoLlmRerankDTOWithSerializer(String name, HotelInfoLlmRerankDTO hotelInfo) {
+            this.name = name;
+            this.hotelInfo = hotelInfo;
+        }
+    }
+
+
 }
 

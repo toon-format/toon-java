@@ -1,17 +1,13 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
-import dev.toonformat.jtoon.PathExpansion;
-import dev.toonformat.jtoon.util.StringEscaper;
+import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Main decoder for converting TOON-formatted strings to Java objects.
@@ -34,27 +30,7 @@ import java.util.regex.Pattern;
  */
 public final class ValueDecoder {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    /**
-     * Matches standalone array headers: [3], [#2], [3\t], [2|]
-     * Group 1: optional # marker, Group 2: digits, Group 3: optional delimiter
-     */
-    private static final Pattern ARRAY_HEADER_PATTERN = Pattern.compile("^\\[(#?)(\\d+)([\\t|])?]");
-
-    /**
-     * Matches tabular array headers with field names: [2]{id,name,role}:
-     * Group 1: optional # marker, Group 2: digits, Group 3: optional delimiter,
-     * Group 4: field spec
-     */
-    private static final Pattern TABULAR_HEADER_PATTERN = Pattern.compile("^\\[(#?)(\\d+)([\\t|])?]\\{(.+)}:");
-
-    /**
-     * Matches keyed array headers: items[2]{id,name}: or tags[3]: or data[4]{id}:
-     * Captures: group(1)=key, group(2)=#marker, group(3)=delimiter,
-     * group(4)=optional field spec
-     */
-    private static final Pattern KEYED_ARRAY_PATTERN = Pattern.compile("^(.+?)\\[(#?)\\d+([\\t|])?](\\{[^}]+})?:.*$");
+    private static final ObjectMapper MAPPER = ObjectMapperSingleton.getInstance();
 
     private ValueDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -82,18 +58,47 @@ public final class ValueDecoder {
 
         // Don't trim leading whitespace - we need it for indentation validation
         // Only trim trailing whitespace to avoid issues with empty lines at the end
-        String processed = toon;
-        while (!processed.isEmpty() && Character.isWhitespace(processed.charAt(processed.length() - 1))) {
-            processed = processed.substring(0, processed.length() - 1);
-        }
+        String processed = Character.isWhitespace(toon.charAt(toon.length() - 1)) ? toon.stripTrailing() : toon;
 
-        Parser parser = new Parser(processed, options);
-        Object result = parser.parseValue();
-        // If result is null (no content), return empty object
-        if (result == null) {
+        //set an own decode context
+        final DecodeContext context = new DecodeContext();
+        context.lines = processed.split("\r?\n", -1);
+        context.options = options;
+        context.delimiter = options.delimiter().toString();
+
+        int lineIndex = context.currentLine;
+        String line = context.lines[lineIndex];
+        int depth = DecodeHelper.getDepth(line, context);
+
+        if (depth > 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException("Unexpected indentation at line " + lineIndex);
+            }
             return new LinkedHashMap<>();
         }
-        return result;
+
+        String content = depth == 0 ? line : line.substring(depth * context.options.indent());
+
+        // Handle standalone arrays: [2]:
+        if (!content.isEmpty() && content.charAt(0) == '[') {
+            return ArrayDecoder.parseArray(content, depth, context);
+        }
+
+        // Handle keyed arrays: items[2]{id,name}:
+        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
+        if (keyedArray.matches()) {
+            return KeyDecoder.parseKeyedArrayValue(keyedArray, content, depth, context);
+        }
+        // Handle key-value pairs: name: Ada
+        int colonIdx = DecodeHelper.findUnquotedColon(content);
+        if (colonIdx > 0) {
+            String key = content.substring(0, colonIdx).trim();
+            String value = content.substring(colonIdx + 1).trim();
+            return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
+        }
+
+        // Bare scalar value
+        return ObjectDecoder.parseBareScalarValue(content, depth, context);
     }
 
     /**
@@ -113,8 +118,8 @@ public final class ValueDecoder {
      */
     public static String decodeToJson(String toon, DecodeOptions options) {
         try {
-            Object decoded = ValueDecoder.decode(toon, options);
-            return OBJECT_MAPPER.writeValueAsString(decoded);
+            Object decoded = decode(toon, options);
+            return MAPPER.writeValueAsString(decoded);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to convert decoded value to JSON: " + e.getMessage(), e);
         }

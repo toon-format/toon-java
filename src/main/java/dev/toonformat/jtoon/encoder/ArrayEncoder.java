@@ -35,7 +35,7 @@ public final class ArrayEncoder {
      */
     public static void encodeArray(String key, ArrayNode value, LineWriter writer, int depth, EncodeOptions options) {
         if (value.isEmpty()) {
-            String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().getValue(),
+            String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString(),
                     options.lengthMarker());
             writer.push(depth, header);
             return;
@@ -133,7 +133,7 @@ public final class ArrayEncoder {
      */
     private static void encodeInlinePrimitiveArray(String prefix, ArrayNode values, LineWriter writer, int depth,
                                                    EncodeOptions options) {
-        String formatted = formatInlineArray(values, options.delimiter().getValue(), prefix, options.lengthMarker());
+        String formatted = formatInlineArray(values, options.delimiter().toString(), prefix, options.lengthMarker());
         writer.push(depth, formatted);
     }
 
@@ -165,13 +165,13 @@ public final class ArrayEncoder {
      */
     private static void encodeArrayOfArraysAsListItems(String prefix, ArrayNode values, LineWriter writer, int depth,
                                                        EncodeOptions options) {
-        String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null, options.delimiter().getValue(),
+        String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null, options.delimiter().toString(),
                 options.lengthMarker());
         writer.push(depth, header);
 
         for (JsonNode arr : values) {
             if (arr.isArray() && isArrayOfPrimitives(arr)) {
-                String inline = formatInlineArray((ArrayNode) arr, options.delimiter().getValue(), null,
+                String inline = formatInlineArray((ArrayNode) arr, options.delimiter().toString(), null,
                         options.lengthMarker());
                 writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
             }
@@ -186,7 +186,7 @@ public final class ArrayEncoder {
                                                     LineWriter writer,
                                                     int depth,
                                                     EncodeOptions options) {
-        String header = PrimitiveEncoder.formatHeader(items.size(), prefix, null, options.delimiter().getValue(),
+        String header = PrimitiveEncoder.formatHeader(items.size(), prefix, null, options.delimiter().toString(),
                 options.lengthMarker());
         writer.push(depth, header);
 
@@ -194,18 +194,18 @@ public final class ArrayEncoder {
             if (item.isValueNode()) {
                 // Direct primitive as list item
                 writer.push(depth + 1,
-                        LIST_ITEM_PREFIX + PrimitiveEncoder.encodePrimitive(item, options.delimiter().getValue()));
+                        LIST_ITEM_PREFIX + PrimitiveEncoder.encodePrimitive(item, options.delimiter().toString()));
             } else if (item.isArray()) {
                 // Direct array as list item
                 if (isArrayOfPrimitives(item)) {
-                    String inline = formatInlineArray((ArrayNode) item, options.delimiter().getValue(), null,
+                    String inline = formatInlineArray((ArrayNode) item, options.delimiter().toString(), null,
                             options.lengthMarker());
                     writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
                 }
                 if (isArrayOfObjects(item)) {
                     ArrayNode arrayItems = (ArrayNode) item;
                     String nestedHeader = PrimitiveEncoder.formatHeader(arrayItems.size(), null, null,
-                            options.delimiter().getValue(), options.lengthMarker());
+                            options.delimiter().toString(), options.lengthMarker());
                     writer.push(depth + 1, LIST_ITEM_PREFIX + nestedHeader);
 
                     arrayItems.elements()

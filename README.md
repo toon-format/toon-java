@@ -4,12 +4,14 @@
 [![Release](https://github.com/toon-format/toon-java/actions/workflows/release.yml/badge.svg)](https://github.com/toon-format/toon-java/actions/workflows/release.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.toonformat/jtoon.svg)](https://central.sonatype.com/artifact/dev.toonformat/jtoon)
 ![Coverage](.github/badges/jacoco.svg)
+[![SPEC v3.0.1](https://img.shields.io/badge/spec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
+[![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE)
 
-> **⚠️ Beta Status (v0.1.x):** This library is in active development and working towards spec compliance. Beta published to Maven Central. API may change before 1.0.0 release.
+> **⚠️ Beta Status (v1.x.x):** This library is in active development and working towards spec compliance. Beta published to Maven Central. API may change before 2.0.0 release.
 
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Working towards full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
 
-**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • Comprehensive test coverage.
+**Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • full [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) Support • Comprehensive test coverage.
 
 ## Installation
 
@@ -21,7 +23,7 @@ JToon is available on Maven Central. Add it to your project using your preferred
 
 ```gradle
 dependencies {
-    implementation 'dev.toonformat:jtoon:0.1.4'
+    implementation 'dev.toonformat:jtoon:1.0.7'
 }
 ```
 
@@ -29,7 +31,7 @@ dependencies {
 
 ```kotlin
 dependencies {
-    implementation("dev.toonformat:jtoon:0.1.4")
+    implementation("dev.toonformat:jtoon:1.0.7")
 }
 ```
 
@@ -39,7 +41,7 @@ dependencies {
 <dependency>
     <groupId>dev.toonformat</groupId>
     <artifactId>jtoon</artifactId>
-    <version>0.1.4</version>
+    <version>1.0.7</version>
 </dependency>
 ```
 
@@ -66,7 +68,7 @@ System.out.println(JToon.encode(data));
 
 **Output:**
 
-```
+```yaml
 user:
   id: 123
   name: Ada
@@ -116,6 +118,8 @@ Converts any Java object or JSON-string to TOON format.
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Delimiter enum for array values and tabular rows: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `lengthMarker` – Boolean to prefix array lengths with `#` (default: `false`)
+  - `flatten` – Boolean to key folding to collapse single-key wrapper chains (default: `OFF`).
+  - `flattenDepth` – maximum number of segments to fold  (default: `Infinity`)
 
 For `encodeJson` overloads:
 
@@ -129,13 +133,14 @@ A TOON-formatted string with no trailing newline or spaces.
 
 ```java
 import dev.toonformat.jtoon.JToon;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
 
-record Item(String sku, int qty, double price) {}
+record Item(String sku, int qty, double price,  @JsonIgnore double internPrice) {}
 record Data(List<Item> items) {}
 
-Item item1 = new Item("A1", 2, 9.99);
-Item item2 = new Item("B2", 1, 14.5);
+Item item1 = new Item("A1", 2, 9.99, 8.50);
+Item item2 = new Item("B2", 1, 14.5, 14.0);
 Data data = new Data(List.of(item1, item2));
 
 System.out.println(JToon.encode(data));
@@ -143,11 +148,13 @@ System.out.println(JToon.encode(data));
 
 **Output:**
 
-```
+```yaml
 items[2]{sku,qty,price}:
   A1,2,9.99
   B2,1,14.5
 ```
+
+The [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) @JsonIgnore will help to keep fields from exposing.
 
 #### Encode a plain JSON string
 
@@ -166,7 +173,7 @@ System.out.println(JToon.encodeJson(json));
 
 Output:
 
-```
+```yaml
 user:
   id: 123
   name: Ada
@@ -193,13 +200,13 @@ Item item1 = new Item("A1", "Widget", 2, 9.99);
 Item item2 = new Item("B2", "Gadget", 1, 14.5);
 Data data = new Data(List.of(item1, item2));
 
-EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false);
+EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
 **Output:**
 
-```
+```yaml
 items[2 ]{sku name qty price}:
   A1 Widget 2 9.99
   B2 Gadget 1 14.5
@@ -222,13 +229,13 @@ Pipe delimiters offer a middle ground between commas and tabs:
 
 ```java
 // Using the same Item and Data records from above
-EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false);
+EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
 **Output:**
 
-```
+```yaml
 items[2|]{sku|name|qty|price}:
   A1|Widget|2|9.99
   B2|Gadget|1|14.5
@@ -250,14 +257,14 @@ Item item1 = new Item("A1", 2, 9.99);
 Item item2 = new Item("B2", 1, 14.5);
 Data data = new Data(List.of("reading", "gaming", "coding"), List.of(item1, item2));
 
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, 3)));
 // tags[#3]: reading,gaming,coding
 // items[#2]{sku,qty,price}:
 //   A1,2,9.99
 //   B2,1,14.5
 
 // Works with custom delimiters
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true)));
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, 3)));
 // tags[#3|]: reading|gaming|coding
 // items[#2|]{sku|qty|price}:
 //   A1|2|9.99
@@ -285,6 +292,7 @@ Converts TOON-formatted strings back to Java objects, JSON or directly into Map<
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Expected delimiter: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
   - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, returns `null` on errors.
+  - `expandPaths` – Boolean Path expansion mode for dotted keys (default: `OFF`).
 
 **Returns:**
 

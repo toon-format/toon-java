@@ -6,7 +6,9 @@ import tools.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Recursively flattens a JSON object or array into a single-level object.
@@ -16,6 +18,8 @@ public class Flatten {
     private Flatten() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
+
+    private static final Pattern SAFE_IDENTIFIER = Pattern.compile("(?i)^[A-Z_]\\w*$");
 
     /**
      * Represents the result of a key-folding operation.
@@ -66,12 +70,12 @@ public class Flatten {
                                              String pathPrefix,
                                              Integer remainingDepth) {
         // Must be an object to begin folding
-        if (!value.isObject()) {
+        if (!value.isObject() || remainingDepth <= 1) {
             return null;
         }
 
         // start chain from absolute key
-        String absKey = (pathPrefix == null) ? key : pathPrefix + "." + key;
+        String absKey = (pathPrefix == null) ? key : String.join(".", pathPrefix, key);
 
         // Collect segments of the single-key chain
         final ChainResult chain = collectSingleKeyChain(absKey, value, remainingDepth);
@@ -87,7 +91,7 @@ public class Flatten {
         //  - Remaining characters must be alphanumeric or underscore
         //  - No dots, hyphens, or special characters are allowed
         for (String seg : chain.segments) {
-            if (seg == null || seg.isEmpty() || !seg.matches("(?i)^[A-Z_]\\w*$")) {
+            if (!SAFE_IDENTIFIER.matcher(seg).matches()) {
                 return null;
             }
         }
@@ -95,16 +99,17 @@ public class Flatten {
         // Build folded key
         String foldedKey = String.join(".", chain.segments);
 
-        // Compute absolute dotted path
-        String absolutePath =
-                (pathPrefix != null && !pathPrefix.isEmpty())
-                        ? pathPrefix + "." + foldedKey
-                        : foldedKey;
-
         // Detect collisions with sibling keys
         if (siblings.contains(foldedKey)) {
             return null;
         }
+
+        // Compute absolute dotted path
+        String absolutePath =
+                (pathPrefix != null && !pathPrefix.isEmpty())
+                        ? String.join(".", pathPrefix, foldedKey)
+                        : foldedKey;
+
 
         // Detect collisions with literal dotted keys at root scope
         if (rootLiteralKeys != null && rootLiteralKeys.contains(absolutePath)) {
@@ -144,37 +149,30 @@ public class Flatten {
         // track depth of folding
         int depthCounter = 1;
 
-        while (true) {
-            if (!currentValue.isObject()
-                    || currentValue.size() != 1
-                    || depthCounter >= maxDepth
-            ) {
-                break;
-            }
-
+        while (currentValue.isObject() && depthCounter < maxDepth) {
             final ObjectNode obj = (ObjectNode) currentValue;
-            final Iterator<String> it = obj.propertyNames().iterator();
+            Iterator<Map.Entry<String, JsonNode>> it = obj.properties().iterator();
 
-            // No keys that mines empty object leaf
+            // empty object leaf
             if (!it.hasNext()) {
                 return new ChainResult(segments, null, currentValue);
             }
 
-            final String nextKey = it.next();
+            Map.Entry<String, JsonNode> entry = it.next();
 
-            // More than one key mines stop chain here
+            // >1 field, this is a tail object
             if (it.hasNext()) {
-                break;
+                return new ChainResult(segments, currentValue, null);
             }
 
-            final JsonNode nextValue = obj.get(nextKey);
-            segments.add(nextKey);
-            currentValue = nextValue;
+            // exactly one key, continue chain
+            segments.add(entry.getKey());
+            currentValue = entry.getValue();
 
             depthCounter++;
         }
 
-        // Determine whether this is a tail or leaf
+        // Determine tail or leaf
         if (currentValue.isObject()) {
             final ObjectNode obj = (ObjectNode) currentValue;
             if (obj.isEmpty()) {
@@ -183,16 +181,16 @@ public class Flatten {
             }
 
             // If the object has exactly ONE key, it should be part of the chain,
-            // not a tail. So treat it as a leaf.
+            // single-key object is treated as a leaf
             if (obj.size() == 1) {
                 return new ChainResult(segments, null, currentValue);
             }
 
-            // Otherwise it has extra keys that mines this is a legitimate tail
+            // object with multiple key it's a tail
             return new ChainResult(segments, currentValue, null);
         }
 
-        // Primitive or array leaf
+        // primitive or array mines it's a leaf
         return new ChainResult(segments, null, currentValue);
     }
 

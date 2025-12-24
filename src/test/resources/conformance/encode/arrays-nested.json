@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "3.0",
   "category": "encode",
   "description": "Nested and mixed array encoding - arrays of arrays, mixed type arrays, root arrays",
   "tests": [

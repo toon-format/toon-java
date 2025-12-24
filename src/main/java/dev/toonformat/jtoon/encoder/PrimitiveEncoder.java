@@ -6,6 +6,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 import static dev.toonformat.jtoon.util.Constants.*;
 
@@ -108,6 +109,7 @@ public final class PrimitiveEncoder {
      */
     public static String joinEncodedValues(List<JsonNode> values, String delimiter) {
         return values.stream()
+            .filter(Objects::nonNull)
                 .map(v -> encodePrimitive(v, delimiter))
                 .reduce((a, b) -> a + delimiter + b)
                 .orElse("");

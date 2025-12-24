@@ -11,8 +11,10 @@ import static dev.toonformat.jtoon.util.Constants.*;
  */
 public final class StringValidator {
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^-?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?$",
-            Pattern.CASE_INSENSITIVE);
+        Pattern.CASE_INSENSITIVE);
+
     private static final Pattern OCTAL_PATTERN = Pattern.compile("^0[0-7]+$");
+    private static final Pattern LEADING_ZERO_PATTERN = Pattern.compile("^0\\d+$");
     private static final Pattern UNQUOTED_KEY_PATTERN = Pattern.compile("^[A-Z_][\\w.]*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern STRUCTURAL_CHARS = Pattern.compile("[\\[\\]{}]");
     private static final Pattern CONTROL_CHARS = Pattern.compile("[\\n\\r\\t]");
@@ -24,7 +26,8 @@ public final class StringValidator {
     /**
      * Checks if a string can be safely written without quotes.
      * Uses guard clauses and early returns for clarity.
-     * @param value the string value to check
+     *
+     * @param value     the string value to check
      * @param delimiter the delimiter being used (for validation)
      * @return true if the string can be safely written without quotes, false otherwise
      */
@@ -70,6 +73,7 @@ public final class StringValidator {
 
     /**
      * Checks if a key can be used without quotes.
+     *
      * @param key the key to validate
      * @return true if the key can be used without quotes, false otherwise
      */
@@ -87,21 +91,21 @@ public final class StringValidator {
 
     private static boolean looksLikeKeyword(String value) {
         return value.equals(TRUE_LITERAL)
-                || value.equals(FALSE_LITERAL)
-                || value.equals(NULL_LITERAL);
+            || value.equals(FALSE_LITERAL)
+            || value.equals(NULL_LITERAL);
     }
 
     private static boolean looksLikeNumber(String value) {
-        return OCTAL_PATTERN.matcher(value).matches() || NUMERIC_PATTERN.matcher(value).matches();
+        return OCTAL_PATTERN.matcher(value).matches() || LEADING_ZERO_PATTERN.matcher(value).matches() || NUMERIC_PATTERN.matcher(value).matches();
     }
 
     private static boolean containsColon(String value) {
         return value.contains(COLON);
     }
 
-    private static boolean containsQuotesOrBackslash(String value) {
+    static boolean containsQuotesOrBackslash(String value) {
         return value.indexOf(DOUBLE_QUOTE) >= 0
-                || value.indexOf(BACKSLASH) >= 0;
+            || value.indexOf(BACKSLASH) >= 0;
     }
 
     private static boolean containsStructuralCharacters(String value) {

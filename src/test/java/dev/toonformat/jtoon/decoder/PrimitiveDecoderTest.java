@@ -23,7 +23,7 @@ class PrimitiveDecoderTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
@@ -39,6 +39,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals("", result);
     }
 
@@ -90,12 +91,10 @@ class PrimitiveDecoderTest {
         assertEquals(false, result);
     }
 
-
     @Test
     void givenQuotedString_whenParse_thenReturnsUnescapedString() {
         // Given
         String input = "\"hello\\nworld\"";
-
 
         // When
         Object result = PrimitiveDecoder.parse(input);
@@ -141,7 +140,6 @@ class PrimitiveDecoderTest {
         assertEquals(42L, result);
     }
 
-
     @Test
     void givenDecimalNumber_whenParse_thenReturnsDouble() {
         // Given
@@ -151,6 +149,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals(3.14, (Double) result, 0.000001);
     }
 
@@ -163,6 +162,7 @@ class PrimitiveDecoderTest {
         Object result = PrimitiveDecoder.parse(input);
 
         // Then
+        assertNotNull(result);
         assertEquals(1000.0, (Long) result, 0.000001);
     }
 

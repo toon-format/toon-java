@@ -7,7 +7,6 @@ import tools.jackson.databind.node.ObjectNode;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Core encoding orchestrator for converting JsonNode values to TOON format.
@@ -29,7 +28,7 @@ public final class ValueEncoder {
     public static String encodeValue(JsonNode value, EncodeOptions options) {
         // Handle primitive values directly
         if (value.isValueNode()) {
-            return PrimitiveEncoder.encodePrimitive(value, options.delimiter().getValue());
+            return PrimitiveEncoder.encodePrimitive(value, options.delimiter().toString());
         }
 
         // Complex values need a LineWriter for indentation
@@ -39,7 +38,7 @@ public final class ValueEncoder {
             ArrayEncoder.encodeArray(null, (ArrayNode) value, writer, 0, options);
         } else if (value.isObject()) {
             Set<String> jsonNodes = new HashSet<>(value.propertyNames());
-            ObjectEncoder.encodeObject((ObjectNode) value, writer, 0, options, jsonNodes, null, null);
+            ObjectEncoder.encodeObject((ObjectNode) value, writer, 0, options, jsonNodes, null, null, new HashSet<>());
         }
 
         return writer.toString();

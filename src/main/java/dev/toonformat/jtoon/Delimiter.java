@@ -29,10 +29,6 @@ public enum Delimiter {
      * Returns the string representation of this delimiter.
      * @return the string value of this delimiter
      */
-    public String getValue() {
-        return value;
-    }
-
     @Override
     public String toString() {
         return value;

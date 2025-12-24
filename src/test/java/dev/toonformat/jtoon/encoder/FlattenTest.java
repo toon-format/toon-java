@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.reflect.Constructor;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test for Flatten
  */
 class FlattenTest {
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
@@ -25,7 +27,7 @@ class FlattenTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
@@ -45,7 +47,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, siblings, rootLiteral, null, 10
+            "a", a, siblings, rootLiteral, null, 10
         );
 
         // Then
@@ -63,7 +65,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "x", value, Set.of(), Set.of(), null, 10
+            "x", value, Set.of(), Set.of(), null, 10
         );
 
         // Then
@@ -78,7 +80,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", node.get("a"), Set.of(), Set.of(), null, 10
+            "a", node.get("a"), Set.of(), Set.of(), null, 10
         );
 
         // Then
@@ -94,7 +96,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, Set.of(), Set.of(), null, 10
+            "a", a, Set.of(), Set.of(), null, 10
         );
 
         // Then
@@ -112,7 +114,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, siblings, Set.of(), null, 2
+            "a", a, siblings, Set.of(), null, 2
         );
 
         // Then
@@ -130,7 +132,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, Set.of(), rootLiteral, "root", 10
+            "a", a, Set.of(), rootLiteral, "root", 10
         );
 
         // Then
@@ -146,11 +148,102 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, Set.of(), Set.of(), null, 1
+            "a", a, Set.of(), Set.of(), null, 1
         );
 
         // Then
         assertNull(result);
+    }
+
+    @Test
+    void testTryFoldKeyChainWithArrayNode() {
+        // Given
+        ArrayNode a = MAPPER.createArrayNode();
+
+        // When
+        Flatten.FoldResult result = Flatten.tryFoldKeyChain("a", a, Set.of(), Set.of(), null, 10);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testTryFoldKeyChainWithSmallRemainingDepth() {
+        // Given
+        ObjectNode a = MAPPER.createObjectNode();
+        ObjectNode b = a.putObject("b");
+        b.put("x", 1);
+        b.put("y", 2);
+
+        // When
+        Flatten.FoldResult result = Flatten.tryFoldKeyChain(
+            "a", a, Set.of(), Set.of(), null, 0
+        );
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testTryFoldKeyChainWithPathPrefix() {
+        // Given
+        ObjectNode a = MAPPER.createObjectNode();
+        ObjectNode b = a.putObject("b");
+        b.put("x", 1);
+        b.put("y", 2);
+
+        // When
+        Flatten.FoldResult result = Flatten.tryFoldKeyChain(
+            "a", a, Set.of(), Set.of(), "items", 10
+        );
+
+        // Then
+        assertNotNull(result);
+        assertEquals("a.b", result.foldedKey());
+        assertNotNull(result.remainder());
+        assertNull(result.leafValue());
+        assertEquals(2, result.segmentCount());
+    }
+
+    @Test
+    void testTryFoldKeyChainWithDotsInKey() {
+        // Given
+        ObjectNode a = MAPPER.createObjectNode();
+        ObjectNode b = a.putObject("b");
+        b.put("x", 1);
+        b.put("y", 2);
+
+        // When
+        Flatten.FoldResult result = Flatten.tryFoldKeyChain(
+            "c.d", a, Set.of(), Set.of(), null, 10
+        );
+
+        // Then
+        assertNotNull(result);
+        assertEquals("d.b", result.foldedKey());
+        assertNotNull(result.remainder());
+        assertNull(result.leafValue());
+        assertEquals(2, result.segmentCount());
+    }
+
+    @Test
+    void testTryFoldKeyChainWithSimpleObjectNode() {
+        // Given
+        ObjectNode a = MAPPER.createObjectNode();
+        a.put("item", 42);
+
+        // When
+        Flatten.FoldResult result = Flatten.tryFoldKeyChain(
+            "a", a, Set.of(), Set.of(), null, 10
+        );
+
+        // Then
+        assertNotNull(result);
+        assertEquals("a.item", result.foldedKey());
+        assertNull(result.remainder());
+        assertNotNull(result.leafValue());
+        assertEquals(42, result.leafValue().asInt());
+        assertEquals(2, result.segmentCount());
     }
 
     @Test
@@ -163,7 +256,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, Set.of(), Set.of(), null, 10
+            "a", a, Set.of(), Set.of(), null, 10
         );
 
         // Then
@@ -182,7 +275,7 @@ class FlattenTest {
 
         // When
         Flatten.FoldResult result = Flatten.tryFoldKeyChain(
-                "a", a, Set.of(), Set.of(), null, 10
+            "a", a, Set.of(), Set.of(), null, 10
         );
 
         // Then
