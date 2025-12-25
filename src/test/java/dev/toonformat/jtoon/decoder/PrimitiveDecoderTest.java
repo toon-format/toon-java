@@ -191,6 +191,98 @@ class PrimitiveDecoderTest {
     }
 
     @Test
+    void givenOctalNumber_whenParse_thenReturnsLong() {
+        // Given
+        String input = "07";
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("07", result.toString());
+    }
+
+    @Test
+    void givenNumberWithLeadingZero_whenParse_thenReturnsLong() {
+        // Given
+        String input = "0.7";
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("0.7", result.toString());
+    }
+
+    @Test
+    void givenNumberWithLeadingZeroOutsideTheOctalRange_whenParse_thenReturnsLong() {
+        // Given
+        String input = "0.9";
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("0.9", result.toString());
+    }
+
+    @Test
+    void givenMinLongNumber_whenParse_thenReturnsLong() {
+        // Given
+        String input = String.valueOf(Long.MIN_VALUE);
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("-9223372036854775808", result.toString());
+    }
+
+    @Test
+    void givenMaxLongNumber_whenParse_thenReturnsLong() {
+        // Given
+        String input = String.valueOf(Long.MAX_VALUE);
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("9223372036854775807", result.toString());
+    }
+
+    @Test
+    void givenSmallerMinLongNumber_whenParse_thenReturnsLong() {
+        // Given
+        String input = String.valueOf(Long.MIN_VALUE -1);
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("9223372036854775807", result.toString());
+    }
+
+    @Test
+    void givenBiggerMaxLongNumber_whenParse_thenReturnsLong() {
+        // Given
+        String input = String.valueOf(Long.MAX_VALUE +1);
+
+        // When
+        Object result = PrimitiveDecoder.parse(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("-9223372036854775808", result.toString());
+    }
+
+
+    @Test
     void givenInvalidNumber_whenParse_thenReturnsOriginalString() {
         // Given
         String input = "123abc";
