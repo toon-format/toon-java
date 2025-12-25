@@ -391,6 +391,6 @@ class ObjectDecoderTest {
     private void setUpContext(String toon) {
         this.context.lines = toon.split("\n");
         this.context.options = DecodeOptions.DEFAULT;
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 }

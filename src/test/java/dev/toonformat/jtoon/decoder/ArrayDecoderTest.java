@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
+import dev.toonformat.jtoon.Delimiter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -76,15 +77,65 @@ class ArrayDecoderTest {
     @Test
     @DisplayName("Should extract the correct comma from delimiter")
     void expectsToExtractCommaFromDelimiter() {
+        // Given
         setUpContext("items[3]: a,b,c");
-        String result = ArrayDecoder.extractDelimiterFromHeader("items[3]: a,b,c", context);
-        assertEquals(",", result);
+
+        // When
+        Delimiter result = ArrayDecoder.extractDelimiterFromHeader("items[3]: a,b,c", context);
+
+        // Then
+        assertEquals(",", result.toString());
+    }
+    @Test
+    @DisplayName("Should extract the correct slash from delimiter")
+    void expectsToExtractSlashFromDelimiter() {
+        // Given
+        setUpContext("items[3|]: a|b|c");
+
+        // When
+        Delimiter result = ArrayDecoder.extractDelimiterFromHeader("[3|]", context);
+
+        // Then
+        assertEquals("|", result.toString());
     }
 
     @Test
     @DisplayName("Should validate array length")
     void validateArrayLength() {
         assertThrows(IllegalArgumentException.class, () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 3));
+    }
+
+    @Test
+    @DisplayName("Should validate array length")
+    void validateArrayLengthWithoutException() {
+        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2));
+    }
+
+    @Test
+    @DisplayName("Should split a array")
+    void parseDelimitedValues() {
+        // When
+        List<String> strings = ArrayDecoder.parseDelimitedValues("1,2,3", Delimiter.COMMA);
+        // Then
+        assertEquals(3, strings.size());
+    }
+
+    @Test
+    void shouldAddEmptyFinalValueWhenInputEndsWithDelimiter() {
+        // When
+        List<String> result = ArrayDecoder.parseDelimitedValues("a,b,", Delimiter.COMMA);
+
+        // Then
+        assertEquals(List.of("a", "b", ""), result);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenInputIsEmpty() {
+        // When
+        List<String> result = ArrayDecoder.parseDelimitedValues("", Delimiter.COMMA);
+
+        // Then
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -129,6 +180,6 @@ class ArrayDecoderTest {
     private void setUpContext(String toon) {
         this.context.lines = toon.split("\n", -1);
         this.context.options = DecodeOptions.DEFAULT;
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 }

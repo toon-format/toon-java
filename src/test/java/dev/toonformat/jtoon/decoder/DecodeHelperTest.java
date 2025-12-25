@@ -498,12 +498,12 @@ class DecodeHelperTest {
     private void setUpContext(String toon) {
         this.context.lines = toon.split("\n", -1);
         this.context.options = DecodeOptions.DEFAULT;
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 
     private void setUpContext(String[] lines, boolean strict, int indent) {
         this.context.lines = lines;
         this.context.options = new DecodeOptions(indent, Delimiter.COMMA, strict, PathExpansion.OFF);
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 }

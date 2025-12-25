@@ -1,5 +1,6 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.util.StringEscaper;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class TabularArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return tabular array converted to JSON format
      */
-    public static List<Object> parseTabularArray(String header, int depth, String arrayDelimiter, DecodeContext context) {
+    public static List<Object> parseTabularArray(String header, int depth, Delimiter arrayDelimiter, DecodeContext context) {
         Matcher matcher = TABULAR_HEADER_PATTERN.matcher(header);
         if (!matcher.find()) {
             return Collections.emptyList();
@@ -71,7 +72,7 @@ public class TabularArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return list of keys
      */
-    private static List<String> parseTabularKeys(String keysStr, String arrayDelimiter, DecodeContext context) {
+    private static List<String> parseTabularKeys(String keysStr, Delimiter arrayDelimiter, DecodeContext context) {
         // Validate delimiter mismatch between bracket and brace fields
         if (context.options.strict()) {
             validateKeysDelimiter(keysStr, arrayDelimiter);
@@ -91,8 +92,8 @@ public class TabularArrayDecoder {
      * @param keysStr           the string representation of keys
      * @param expectedDelimiter the expected delimiter used in the array
      */
-    private static void validateKeysDelimiter(String keysStr, String expectedDelimiter) {
-        char expectedChar = expectedDelimiter.charAt(0);
+    private static void validateKeysDelimiter(String keysStr, Delimiter expectedDelimiter) {
+        char expectedChar = expectedDelimiter.toString().charAt(0);
         boolean inQuotes = false;
         boolean escaped = false;
 
@@ -141,7 +142,7 @@ public class TabularArrayDecoder {
      * @param context          decode an object to deal with lines, delimiter and options
      * @return true if parsing should continue, false if an array should terminate
      */
-    private static boolean processTabularArrayLine(int expectedRowDepth, List<String> keys, String arrayDelimiter,
+    private static boolean processTabularArrayLine(int expectedRowDepth, List<String> keys, Delimiter arrayDelimiter,
                                                    List<Object> result, DecodeContext context) {
         String line = context.lines[context.currentLine];
 
@@ -236,7 +237,7 @@ public class TabularArrayDecoder {
      * @return true if a line was processed and the currentLine should be incremented, false otherwise.
      */
     private static boolean processTabularRow(String line, int lineDepth, int expectedRowDepth, List<String> keys,
-                                             String arrayDelimiter, List<Object> result, DecodeContext context) {
+                                             Delimiter arrayDelimiter, List<Object> result, DecodeContext context) {
         if (lineDepth == expectedRowDepth) {
             String rowContent = line.substring(expectedRowDepth * context.options.indent());
             Map<String, Object> row = parseTabularRow(rowContent, keys, arrayDelimiter, context);
@@ -260,7 +261,7 @@ public class TabularArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return a Map containing the parsed row values
      */
-    private static Map<String, Object> parseTabularRow(String rowContent, List<String> keys, String arrayDelimiter, DecodeContext context) {
+    private static Map<String, Object> parseTabularRow(String rowContent, List<String> keys, Delimiter arrayDelimiter, DecodeContext context) {
         Map<String, Object> row = new LinkedHashMap<>();
         List<Object> values = ArrayDecoder.parseArrayValues(rowContent, arrayDelimiter);
 

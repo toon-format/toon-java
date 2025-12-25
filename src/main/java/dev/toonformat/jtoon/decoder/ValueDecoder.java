@@ -64,7 +64,7 @@ public final class ValueDecoder {
         final DecodeContext context = new DecodeContext();
         context.lines = processed.split("\r?\n", -1);
         context.options = options;
-        context.delimiter = options.delimiter().toString();
+        context.delimiter = options.delimiter();
 
         int lineIndex = context.currentLine;
         String line = context.lines[lineIndex];

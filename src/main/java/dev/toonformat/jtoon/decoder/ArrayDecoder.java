@@ -1,5 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.Delimiter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +29,7 @@ public class ArrayDecoder {
      * @return parsed array with delimiter
      */
     protected static List<Object> parseArray(String header, int depth, DecodeContext context) {
-        String arrayDelimiter = extractDelimiterFromHeader(header, context);
+        Delimiter arrayDelimiter = extractDelimiterFromHeader(header, context);
 
         return parseArrayWithDelimiter(header, depth, arrayDelimiter, context);
     }
@@ -40,15 +42,16 @@ public class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return extracted delimiter from header
      */
-    protected static String extractDelimiterFromHeader(String header, DecodeContext context) {
+    protected static Delimiter extractDelimiterFromHeader(String header, DecodeContext context) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
-        if (matcher.find() && matcher.groupCount() == 3) {
+        if (matcher.find()) {
             String delimiter = matcher.group(3);
             if (delimiter != null) {
                 if ("\t".equals(delimiter)) {
-                    return "\t";
-                } else if ("|".equals(delimiter)) {
-                    return "|";
+                    return Delimiter.TAB;
+                }
+                if ("|".equals(delimiter)) {
+                    return Delimiter.PIPE;
                 }
             }
         }
@@ -67,7 +70,7 @@ public class ArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return parsed array
      */
-    protected static List<Object> parseArrayWithDelimiter(String header, int depth, String arrayDelimiter, DecodeContext context) {
+    protected static List<Object> parseArrayWithDelimiter(String header, int depth, Delimiter arrayDelimiter, DecodeContext context) {
         Matcher tabularMatcher = TABULAR_HEADER_PATTERN.matcher(header);
         Matcher arrayMatcher = ARRAY_HEADER_PATTERN.matcher(header);
 
@@ -147,12 +150,8 @@ public class ArrayDecoder {
      */
     private static Integer extractLengthFromHeader(String header) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
-        if (matcher.find() && matcher.groupCount() > 2) {
-            try {
-                return Integer.parseInt(matcher.group(2));
-            } catch (NumberFormatException e) {
-                return null;
-            }
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(2));
         }
         return null;
     }
@@ -164,7 +163,7 @@ public class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed array values
      */
-    protected static List<Object> parseArrayValues(String values, String arrayDelimiter) {
+    protected static List<Object> parseArrayValues(String values, Delimiter arrayDelimiter) {
         List<Object> result = new ArrayList<>();
         List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
         for (String value : rawValues) {
@@ -181,12 +180,12 @@ public class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed delimited values
      */
-    protected static List<String> parseDelimitedValues(String input, String arrayDelimiter) {
+    protected static List<String> parseDelimitedValues(String input, Delimiter arrayDelimiter) {
         List<String> result = new ArrayList<>();
         StringBuilder stringBuilder = new StringBuilder();
         boolean inQuotes = false;
         boolean escaped = false;
-        char delimiterChar = arrayDelimiter.charAt(0);
+        char delimiterChar = arrayDelimiter.toString().charAt(0);
 
         int i = 0;
         while (i < input.length()) {
@@ -220,7 +219,7 @@ public class ArrayDecoder {
         }
 
         // Add final value
-        if (!stringBuilder.isEmpty() || input.endsWith(arrayDelimiter)) {
+        if (!stringBuilder.isEmpty() || input.endsWith(arrayDelimiter.toString())) {
             result.add(stringBuilder.toString().trim());
         }
 

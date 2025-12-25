@@ -55,7 +55,7 @@ class TabularArrayDecoderTest {
         setUpContext("[2]{id,value}:\n  1,null\n  2,\"test\"");
         List<Object> result = TabularArrayDecoder.parseTabularArray(
             "[2]{id,value}:\n  1,null\n  2,\"test\"", 0,
-            Delimiter.COMMA.toString(), context);
+            Delimiter.COMMA, context);
         assertEquals("[{id=1, value=null}, {id=2, value=test}]", result.toString());
     }
 
@@ -65,7 +65,7 @@ class TabularArrayDecoderTest {
         setUpContext("[2]{id,value}:\n  1,null\n  2,\"test\"");
         assertThrows(IllegalArgumentException.class, () -> TabularArrayDecoder.parseTabularArray(
             "[2]{id,value}:\n  1,null\n  2,\"test\"", 0,
-            Delimiter.TAB.toString(), context));
+            Delimiter.TAB, context));
     }
 
     @Test
@@ -78,7 +78,7 @@ class TabularArrayDecoderTest {
 
         // When
         List<Object> result = TabularArrayDecoder.parseTabularArray(toon, 0,
-            Delimiter.COMMA.toString(), context);
+            Delimiter.COMMA, context);
 
         // Then
         assertEquals(2, result.size(), "Should parse exactly two rows, skipping the deeper-indented line");
@@ -106,14 +106,13 @@ class TabularArrayDecoderTest {
         int expectedRowDepth = 3;       // Ensures we fall to final return
 
         List<String> keys = List.of("a", "b", "c");
-        String arrayDelimiter = ",";
         List<Object> result = new ArrayList<>();
 
         // When
         boolean processed = (boolean) invokePrivateStatic("processTabularRow",
-            new Class[]{String.class, int.class, int.class, List.class, String.class, List.class, DecodeContext.class},
+            new Class[]{String.class, int.class, int.class, List.class, Delimiter.class, List.class, DecodeContext.class},
             line, lineDepth, expectedRowDepth,
-            keys, arrayDelimiter, result, context
+            keys, Delimiter.COMMA, result, context
         );
 
         // Then
@@ -154,10 +153,9 @@ class TabularArrayDecoderTest {
     void validateKeysDelimiter() throws Exception {
         // Given
         String keysStr = "sad\\a\"sd";
-        String expectedDelimiter = ",";
 
         // When / Then
-        invokePrivateStatic("validateKeysDelimiter", new Class[]{String.class, String.class}, keysStr, expectedDelimiter);
+        invokePrivateStatic("validateKeysDelimiter", new Class[]{String.class, Delimiter.class}, keysStr, Delimiter.COMMA);
     }
 
     @Test
@@ -214,7 +212,7 @@ class TabularArrayDecoderTest {
         List<Object> result = TabularArrayDecoder.parseTabularArray(
             "not a header", // DOES NOT MATCH pattern
             0,
-            ",",
+            Delimiter.COMMA,
             context
         );
 
@@ -225,7 +223,7 @@ class TabularArrayDecoderTest {
     private void setUpContext(String toon) {
         this.context.lines = toon.split("\n", -1);
         this.context.options = DecodeOptions.DEFAULT;
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter().toString();
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 
     // Reflection helpers for invoking private static methods

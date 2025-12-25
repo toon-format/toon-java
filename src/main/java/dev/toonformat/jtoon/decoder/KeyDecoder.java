@@ -1,5 +1,6 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.PathExpansion;
 import dev.toonformat.jtoon.util.StringEscaper;
 
@@ -303,7 +304,7 @@ public class KeyDecoder {
         String arrayHeader = fieldContent.substring(keyedArray.group(1).length());
 
         // For nested arrays in list items, default to comma delimiter if not specified
-        String nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);
+        Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);
         var arrayValue = ArrayDecoder.parseArrayWithDelimiter(arrayHeader, depth + 2, nestedArrayDelimiter, context);
 
         // Handle path expansion for array keys
