@@ -21,12 +21,15 @@ class ArrayDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<ArrayDecoder> constructor = ArrayDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -42,32 +45,52 @@ class ArrayDecoderTest {
     @Test
     @DisplayName("Should parse TOON format numerical array to JSON")
     void parseNumericalPrimitiveArray() {
+        // Given
         setUpContext("[3]: 1,2,3");
+
+        // When
         List<Object> result = ArrayDecoder.parseArray("[3]: 1,2,3", 0, context);
+
+        // Then
         assertEquals("[1, 2, 3]", result.toString());
     }
 
     @Test
     @DisplayName("Should parse TOON format string array to JSON")
     void parseStrPrimitiveArray() {
+        // Given
         setUpContext("[3]: reading,gaming,coding");
+
+        // When
         List<Object> result = ArrayDecoder.parseArray("[3]: reading,gaming,coding", 0, context);
+
+        // Then
         assertEquals("[reading, gaming, coding]", result.toString());
     }
 
     @Test
     @DisplayName("Should parse TOON format tabular array to JSON")
     void parseTabularArray() {
+        // Given
         setUpContext("[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5");
+
+        // When
         List<Object> result = ArrayDecoder.parseArray("[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5", 0, context);
+
+        // Then
         assertEquals("[{sku=A1, qty=2, price=9.99}, {sku=B2, qty=1, price=14.5}]", result.toString());
     }
 
     @Test
     @DisplayName("Should parse TOON format list array to JSON")
     void parseListArray() {
+        // Given
         setUpContext("[1]:\n  - first\n  - second\n  -");
+
+        // When
         List<Object> result = ArrayDecoder.parseArray("[1]:\n  - first\n  - second\n  -", 0, context);
+
+        // Then
         assertEquals("""
             [- first
               - second
@@ -86,6 +109,7 @@ class ArrayDecoderTest {
         // Then
         assertEquals(",", result.toString());
     }
+
     @Test
     @DisplayName("Should extract the correct slash from delimiter")
     void expectsToExtractSlashFromDelimiter() {
