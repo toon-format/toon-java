@@ -24,38 +24,38 @@ class LineWriterTest {
         @Test
         @DisplayName("should write single line at depth 0")
         void testSingleLine() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "hello");
 
-            //then
+            // Then
             assertEquals("hello", writer.toString());
         }
 
         @Test
         @DisplayName("should write multiple lines at depth 0")
         void testMultipleLines() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "line1");
             writer.push(0, "line2");
             writer.push(0, "line3");
 
-            //then
+            // Then
             assertEquals("line1\nline2\nline3", writer.toString());
         }
 
         @Test
         @DisplayName("should return empty string for no lines")
         void testNoLines() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //then
+            // Then
             assertEquals("", writer.toString());
         }
     }
@@ -72,29 +72,29 @@ class LineWriterTest {
             "3, '      content'"
         })
         void testIndentationByDepth(int depth, String expected) {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(depth, "content");
 
-            //then
+            // Then
             assertEquals(expected, writer.toString());
         }
 
         @Test
         @DisplayName("should handle mixed depths")
         void testMixedDepths() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "root");
             writer.push(1, "level1");
             writer.push(2, "level2");
             writer.push(1, "level1again");
 
-            //then
+            // Then
             assertEquals("root\n  level1\n    level2\n  level1again", writer.toString());
         }
     }
@@ -106,42 +106,42 @@ class LineWriterTest {
         @Test
         @DisplayName("should indent depth 1 with 4 spaces")
         void testDepth1() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(4);
 
-            //when
+            // When
             writer.push(1, "content");
 
-            //then
+            // Then
             assertEquals("    content", writer.toString());
         }
 
         @Test
         @DisplayName("should indent depth 2 with 8 spaces")
         void testDepth2() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(4);
 
-            //when
+            // When
             writer.push(2, "content");
 
-            //then
+            // Then
             assertEquals("        content", writer.toString());
         }
 
         @Test
         @DisplayName("should handle nested structure")
         void testNestedStructure() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(4);
 
-            //when
+            // When
             writer.push(0, "user:");
             writer.push(1, "id: 1");
             writer.push(1, "address:");
             writer.push(2, "city: NYC");
 
-            //then
+            // Then
             assertEquals("user:\n    id: 1\n    address:\n        city: NYC", writer.toString());
         }
     }
@@ -153,13 +153,13 @@ class LineWriterTest {
         @Test
         @DisplayName("should handle empty content")
         void testEmptyContent() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "");
 
-            //then
+            // Then
             assertEquals("", writer.toString());
         }
 
@@ -172,13 +172,13 @@ class LineWriterTest {
             "Hello 🌍"
         })
         void testVariousContentTypes(String content) {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, content);
 
-            //then
+            // Then
             assertEquals(content, writer.toString());
         }
     }
@@ -190,90 +190,90 @@ class LineWriterTest {
         @Test
         @DisplayName("should build simple object")
         void testSimpleObject() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "id: 123");
             writer.push(0, "name: Ada");
             writer.push(0, "active: true");
 
-            //then
+            // Then
             assertEquals("id: 123\nname: Ada\nactive: true", writer.toString());
         }
 
         @Test
         @DisplayName("should build nested object")
         void testNestedObject() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "user:");
             writer.push(1, "id: 123");
             writer.push(1, "name: Ada");
 
-            //then
+            // Then
             assertEquals("user:\n  id: 123\n  name: Ada", writer.toString());
         }
 
         @Test
         @DisplayName("should build array header with values")
         void testArrayWithValues() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "items[3]{id,name}:");
             writer.push(1, "1,Alice");
             writer.push(1, "2,Bob");
             writer.push(1, "3,Charlie");
 
-            //then
+            // Then
             assertEquals("items[3]{id,name}:\n  1,Alice\n  2,Bob\n  3,Charlie", writer.toString());
         }
 
         @Test
         @DisplayName("should build list items")
         void testListItems() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "items[3]:");
             writer.push(1, "- id: 1");
             writer.push(2, "name: First");
             writer.push(1, "- id: 2");
             writer.push(2, "name: Second");
 
-            //then
+            // Then
             assertEquals("items[3]:\n  - id: 1\n    name: First\n  - id: 2\n    name: Second", writer.toString());
         }
 
         @Test
         @DisplayName("should build deeply nested structure")
         void testDeeplyNested() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "root:");
             writer.push(1, "level1:");
             writer.push(2, "level2:");
             writer.push(3, "level3:");
             writer.push(4, "value: deep");
 
-            //then
+            // Then
             assertEquals("root:\n  level1:\n    level2:\n      level3:\n        value: deep", writer.toString());
         }
 
         @Test
         @DisplayName("should build complex mixed structure")
         void testComplexMixedStructure() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "data:");
             writer.push(1, "users[2]{id,name}:");
             writer.push(2, "1,Alice");
@@ -282,7 +282,7 @@ class LineWriterTest {
             writer.push(1, "config:");
             writer.push(2, "enabled: true");
 
-            //then
+            // Then
             String expected = """
                 data:
                   users[2]{id,name}:
@@ -302,70 +302,70 @@ class LineWriterTest {
         @Test
         @DisplayName("should handle depth 0 correctly")
         void testDepthZero() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(0, "content");
 
-            //then
+            // Then
             assertEquals("content", writer.toString());
         }
 
         @Test
         @DisplayName("should handle very deep nesting")
         void testVeryDeepNesting() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             writer.push(10, "deep");
 
-            //then
+            // Then
             assertEquals("                    deep", writer.toString());
         }
 
         @Test
         @DisplayName("should handle indentation size 1")
         void testIndentSize1() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(1);
 
-            //when
+            // When
             writer.push(0, "root");
             writer.push(1, "child");
             writer.push(2, "grandchild");
 
-            //then
+            // Then
             assertEquals("root\n child\n  grandchild", writer.toString());
         }
 
         @Test
         @DisplayName("should handle indentation size 8")
         void testIndentSize8() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(8);
 
-            //when
+            // When
             writer.push(0, "root");
             writer.push(1, "child");
 
-            //then
+            // Then
             assertEquals("root\n        child", writer.toString());
         }
 
         @Test
         @DisplayName("should handle many lines")
         void testManyLines() {
-            //given
+            // Given
             LineWriter writer = new LineWriter(2);
 
-            //when
+            // When
             for (int i = 0; i < 100; i++) {
                 writer.push(0, "line" + i);
             }
 
-            //then
+            // Then
             String result = writer.toString();
             assertTrue(result.startsWith("line0\nline1\nline2"));
             assertTrue(result.endsWith("line98\nline99"));

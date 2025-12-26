@@ -459,12 +459,15 @@ class ObjectEncoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<ObjectEncoder> constructor = ObjectEncoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -472,7 +475,7 @@ class ObjectEncoderTest {
 
     @Test
     void givenPrimitiveLeaf_whenFlatten_thenWriterReceivesEncodedLine() throws Exception {
-        // given
+        // Given
         String key = "a";
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
@@ -501,7 +504,7 @@ class ObjectEncoderTest {
         );
         flattenMethod.setAccessible(true);
 
-        // when
+        // When
         Object returnValue = flattenMethod.invoke(
             null,  // static method
             key,
@@ -515,7 +518,7 @@ class ObjectEncoderTest {
             5
         );
 
-        // then
+        // Then
         assertNull(returnValue, "Expected null for fully folded primitive case");
         assertEquals(1, writer.toString().lines().count(), "Writer should contain one line");
 
@@ -528,7 +531,7 @@ class ObjectEncoderTest {
 
     @Test
     void givenPartiallyFolded_whenFlatten_thenWriterReceivesFoldedKeyAndObjectIsEncoded() throws Exception {
-        // given
+        // Given
         String key = "a";
 
         EncodeOptions options = EncodeOptions.withFlattenDepth(5);
@@ -561,7 +564,7 @@ class ObjectEncoderTest {
         );
         flattenMethod.setAccessible(true);
 
-        // when
+        // When
         Object result = flattenMethod.invoke(
             null,               // static
             key,                // "a"
@@ -575,7 +578,7 @@ class ObjectEncoderTest {
             1                   // remainingDepth (will go to <=0, disable flattening)
         );
 
-        // then
+        // Then
         assertNull(result);
         assertEquals(2, writer.toString().lines().count(), "Writer should contain two lines");
 
@@ -818,7 +821,6 @@ class ObjectEncoderTest {
     @Test
     void handleFullyFoldedLeafForBokenNodeAsLeaf() throws Exception {
         // Given
-
         abstract class a extends JsonNode {
             protected a() {
             }
@@ -892,11 +894,10 @@ class ObjectEncoderTest {
         assertNull(expectedEncodeOptions);
     }
 
-
     // Reflection helpers for invoking private static methods
     private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
-        Method m = ObjectEncoder.class.getDeclaredMethod(methodName, paramTypes);
-        m.setAccessible(true);
-        return m.invoke(null, args);
+        Method declaredMethod = ObjectEncoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 }
