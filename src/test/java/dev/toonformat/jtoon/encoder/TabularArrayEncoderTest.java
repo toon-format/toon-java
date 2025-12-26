@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TabularArrayEncoderTest {
+class TabularArrayEncoderTest {
 
     private final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
     private final EncodeOptions options = EncodeOptions.DEFAULT;

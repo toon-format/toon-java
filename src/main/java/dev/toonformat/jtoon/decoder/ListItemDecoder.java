@@ -1,5 +1,6 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.util.StringEscaper;
 
 import java.util.LinkedHashMap;
@@ -67,7 +68,7 @@ public class ListItemDecoder {
         // Check for standalone array (e.g., "[2]: 1,2")
         if (itemContent.startsWith("[")) {
             // For nested arrays in list items, default to comma delimiter if not specified
-            String nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(itemContent, context);
+            Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(itemContent, context);
             // parseArrayWithDelimiter handles currentLine increment internally
             // For inline arrays, it increments. For multi-line arrays, parseListArray
             // handles it.
@@ -85,7 +86,7 @@ public class ListItemDecoder {
             String arrayHeader = itemContent.substring(keyedArray.group(1).length());
 
             // For nested arrays in list items, default to comma delimiter if not specified
-            String nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);
+            Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);
             List<Object> arrayValue = ArrayDecoder.parseArrayWithDelimiter(arrayHeader, depth + 2, nestedArrayDelimiter, context);
 
             Map<String, Object> item = new LinkedHashMap<>();

@@ -23,12 +23,15 @@ class KeyDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<KeyDecoder> constructor = KeyDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());

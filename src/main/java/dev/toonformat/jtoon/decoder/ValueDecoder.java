@@ -64,7 +64,7 @@ public final class ValueDecoder {
         final DecodeContext context = new DecodeContext();
         context.lines = processed.split("\r?\n", -1);
         context.options = options;
-        context.delimiter = options.delimiter().toString();
+        context.delimiter = options.delimiter();
 
         int lineIndex = context.currentLine;
         String line = context.lines[lineIndex];
@@ -77,28 +77,26 @@ public final class ValueDecoder {
             return new LinkedHashMap<>();
         }
 
-        String content = depth == 0 ? line : line.substring(depth * context.options.indent());
-
         // Handle standalone arrays: [2]:
-        if (!content.isEmpty() && content.charAt(0) == '[') {
-            return ArrayDecoder.parseArray(content, depth, context);
+        if (!line.isEmpty() && line.charAt(0) == '[') {
+            return ArrayDecoder.parseArray(line, depth, context);
         }
 
         // Handle keyed arrays: items[2]{id,name}:
-        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
+        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(line);
         if (keyedArray.matches()) {
-            return KeyDecoder.parseKeyedArrayValue(keyedArray, content, depth, context);
+            return KeyDecoder.parseKeyedArrayValue(keyedArray, line, depth, context);
         }
         // Handle key-value pairs: name: Ada
-        int colonIdx = DecodeHelper.findUnquotedColon(content);
+        int colonIdx = DecodeHelper.findUnquotedColon(line);
         if (colonIdx > 0) {
-            String key = content.substring(0, colonIdx).trim();
-            String value = content.substring(colonIdx + 1).trim();
+            String key = line.substring(0, colonIdx).trim();
+            String value = line.substring(colonIdx + 1).trim();
             return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
         }
 
         // Bare scalar value
-        return ObjectDecoder.parseBareScalarValue(content, depth, context);
+        return ObjectDecoder.parseBareScalarValue(line, depth, context);
     }
 
     /**
