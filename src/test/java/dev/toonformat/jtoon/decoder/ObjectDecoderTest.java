@@ -25,12 +25,15 @@ class ObjectDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<ObjectDecoder> constructor = ObjectDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -39,16 +42,26 @@ class ObjectDecoderTest {
     @Test
     @DisplayName("Should parse scalar value to JSON")
     void parseBareScalarValue() {
+        // Given
         setUpContext("v: \"true\"");
+
+        // When
         Object result = ObjectDecoder.parseBareScalarValue("v: \"true\"", 0, context);
+
+        // Then
         assertEquals("v: \"true\"", result.toString());
     }
 
     @Test
     @DisplayName("Should parse item value to JSON")
     void parseObjectItemValue() {
+        // Given
         setUpContext("note: \"a,b\"");
+
+        // When
         Object result = ObjectDecoder.parseObjectItemValue("note: \"a,b\"", 0, context);
+
+        // Then
         assertEquals("note: \"a,b\"", result.toString());
     }
 
@@ -130,32 +143,36 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN root kv WHEN parsing THEN map is filled")
         void parseRootObjectFields_basic() {
+            // Given
             setUpContext("""
                 a: 10
                 b: 20
                   nested: IGNORE
                 """);
-
             Map<String, Object> root = new LinkedHashMap<>();
 
+            // When
             ObjectDecoder.parseRootObjectFields(root, 0, context);
 
+            // Then
             assertEquals(10L, root.get("a"));
             assertEquals(3, context.currentLine);
         }
 
         @Test
         void parseRootObjectFields_WithWrongDepth() {
+            // Given
             setUpContext("""
                 a: 10
                 b: 20
                   nested: IGNORE
                 """);
-
             Map<String, Object> root = new LinkedHashMap<>();
 
+            // When
             ObjectDecoder.parseRootObjectFields(root, 25, context);
 
+            // Then
             assertNull(root.get("a"));
             assertEquals(0, context.currentLine);
         }
@@ -183,10 +200,13 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN primitive WHEN parsing THEN returned and currentLine++")
         void parseBareScalarValue_basic() {
+            // Given
             setUpContext("123");
 
+            // When
             Object result = ObjectDecoder.parseBareScalarValue("123", 0, context);
 
+            // Then
             assertEquals(123L, result);
             assertEquals(1, context.currentLine);
         }
@@ -194,13 +214,14 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN strict mode WHEN multiple root primitives THEN exception")
         void parseBareScalarValue_multiple_primitives_strict() {
+            // Given
             setUpContext("""
                 42
                 99
                 """);
-
             context.options = DecodeOptions.withStrict(true);
 
+            // When / then
             assertThrows(IllegalArgumentException.class, () ->
                 ObjectDecoder.parseBareScalarValue("99", 0, context));
         }
@@ -226,19 +247,21 @@ class ObjectDecoderTest {
         @DisplayName("GIVEN empty value + nested => nested map parsed")
         @SuppressWarnings("unchecked")
         void parseFieldValue_nested() {
+            // Given
             setUpContext("""
                 key:
                   a: 1
                   b: 2
                 """);
-
             context.currentLine = 0;
 
+            // When
             Object value = ObjectDecoder.parseFieldValue("", 0, context);
 
+            // Then
             assertInstanceOf(Map.class, value);
-            Map<String, Object> map = (Map<String, Object>) value;
 
+            Map<String, Object> map = (Map<String, Object>) value;
             assertEquals(1L, map.get("a"));
             assertEquals(2L, map.get("b"));
         }
@@ -247,42 +270,51 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN primitive string => primitive returned")
         void parseFieldValue_primitive() {
+            // Given
             setUpContext("key: 15");
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseFieldValue("15", 0, context);
+            // When
+            Object parseFieldValue = ObjectDecoder.parseFieldValue("15", 0, context);
 
-            assertEquals(15L, v);
+            // Then
+            assertEquals(15L, parseFieldValue);
             assertEquals(1L, context.currentLine);
         }
 
         @Test
         @DisplayName("GIVEN empty and no nested => empty map")
         void parseFieldValue_empty_no_nested() {
+            // Given
             setUpContext("""
                 key:
                 next
                 """);
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseFieldValue("", 0, context);
+            // When
+            Object parseFieldValue = ObjectDecoder.parseFieldValue("", 0, context);
 
-            assertInstanceOf(Map.class, v);
+            // Then
+            assertInstanceOf(Map.class, parseFieldValue);
             assertEquals(1, context.currentLine);
         }
 
         @Test
         @DisplayName("GIVEN empty and no nested => empty map")
         void parseFieldValue_empty_no_nestedButBigCurrentLine() {
+            // Given
             setUpContext("""
                 key:
                 next
                 """);
             context.currentLine = 25;
 
-            Object v = ObjectDecoder.parseFieldValue("", 0, context);
+            // When
+            Object parseFieldValue = ObjectDecoder.parseFieldValue("", 0, context);
 
-            assertInstanceOf(Map.class, v);
+            // Then
+            assertInstanceOf(Map.class, parseFieldValue);
             assertEquals(26, context.currentLine);
         }
     }
@@ -307,57 +339,66 @@ class ObjectDecoderTest {
         @DisplayName("GIVEN empty + nested => nested map")
         @SuppressWarnings("unchecked")
         void parseObjectItemValue_nested() {
+            // Given
             setUpContext("""
                 - key:
                     a: 5
                     b: 6
                 """);
-
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseObjectItemValue("", 0, context);
+            // When
+            Object parseObjectItemValue = ObjectDecoder.parseObjectItemValue("", 0, context);
 
-            assertInstanceOf(Map.class, v);
-            Map<String, Object> map = (Map<String, Object>) v;
+            // Then
+            assertInstanceOf(Map.class, parseObjectItemValue);
+            Map<String, Object> map = (Map<String, Object>) parseObjectItemValue;
             assertNull(map.get("a"));
         }
 
         @Test
         @DisplayName("GIVEN primitive => primitive returned")
         void parseObjectItemValue_primitive() {
+            // Given
             setUpContext("- value");
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseObjectItemValue("value", 0, context);
+            // When
+            Object parseObjectItemValue = ObjectDecoder.parseObjectItemValue("value", 0, context);
 
-            assertEquals("value", v);
+            // Then
+            assertEquals("value", parseObjectItemValue);
         }
 
         @Test
         @DisplayName("GIVEN empty and no nested => empty map")
         void parseObjectItemValue_empty() {
+            // Given
             setUpContext("""
                 -
                 
                 """);
-
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseObjectItemValue("", 0, context);
+            // When
+            Object parseObjectItemValue = ObjectDecoder.parseObjectItemValue("", 0, context);
 
-            assertInstanceOf(Map.class, v);
+            // Then
+            assertInstanceOf(Map.class, parseObjectItemValue);
         }
 
         @Test
         @DisplayName("GIVEN empty and no nested => empty map")
         void parseObjectItemValue_emptyContext() {
+            // Given
             setUpContext("\n\n");
-
             context.currentLine = 0;
 
-            Object v = ObjectDecoder.parseObjectItemValue("", 0, context);
+            // When
+            Object parseObjectItemValue = ObjectDecoder.parseObjectItemValue("", 0, context);
 
-            assertInstanceOf(Map.class, v);
+            // Then
+            assertInstanceOf(Map.class, parseObjectItemValue);
         }
     }
 
