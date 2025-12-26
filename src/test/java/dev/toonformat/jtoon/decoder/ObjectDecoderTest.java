@@ -84,7 +84,7 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN nested structure WHEN parsing THEN nested map is returned")
         void parseNestedObject_basic() {
-            // given
+            // Given
             setUpContext("""
                 parent:
                   child1: A
@@ -93,10 +93,10 @@ class ObjectDecoderTest {
 
             context.currentLine = 1; // simulate: parser is already on the nested part
 
-            // when
+            // When
             Map<String, Object> result = ObjectDecoder.parseNestedObject(0, context);
 
-            // then
+            // Then
             assertEquals("A", result.get("child1"));
             assertEquals("B", result.get("child2"));
 
@@ -106,7 +106,7 @@ class ObjectDecoderTest {
         @Test
         @DisplayName("GIVEN deeper indentation WHEN child is not direct child THEN skip line")
         void parseNestedObject_skips_invalid_depth() {
-            // given
+            // Given
             setUpContext("""
                 parent:
                     tooDeep: X
@@ -115,10 +115,10 @@ class ObjectDecoderTest {
 
             context.currentLine = 1;
 
-            // when
+            // When
             Map<String, Object> result = ObjectDecoder.parseNestedObject(0, context);
 
-            // then
+            // Then
             assertEquals("OK", result.get("child"));
             assertEquals(3, context.currentLine);
         }

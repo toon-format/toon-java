@@ -39,6 +39,7 @@ public class StringEscaperTest {
         @MethodSource("basicEscapingCases")
         @DisplayName("should escape basic special characters")
         void testBasicEscaping(String description, String input, String expected) {
+            // Then
             assertEquals(expected, StringEscaper.escape(input));
         }
     }
@@ -59,6 +60,7 @@ public class StringEscaperTest {
         @MethodSource("combinedEscapingCases")
         @DisplayName("should escape combined special characters")
         void testCombinedEscaping(String description, String input, String expected) {
+            // Then
             assertEquals(expected, StringEscaper.escape(input));
         }
     }
@@ -70,6 +72,7 @@ public class StringEscaperTest {
         @Test
         @DisplayName("should return empty string for empty input")
         void testEmptyString() {
+            // Then
             assertEquals("", StringEscaper.escape(""));
         }
 
@@ -81,14 +84,18 @@ public class StringEscaperTest {
             "Hello 世界 🌍"
         })
         void testStringsWithoutSpecialCharacters(String input) {
+            // Then
             assertEquals(input, StringEscaper.escape(input));
         }
 
         @Test
         @DisplayName("should handle consecutive backslashes")
         void testConsecutiveBackslashes() {
+            // Given
             String input = "\\\\\\";
             String expected = "\\\\\\\\\\\\";
+
+            // Then
             assertEquals(expected, StringEscaper.escape(input));
         }
     }
@@ -112,6 +119,7 @@ public class StringEscaperTest {
         @MethodSource("realWorldScenarios")
         @DisplayName("should escape real-world scenarios")
         void testRealWorldScenarios(String scenario, String input, String expected) {
+            // Then
             assertEquals(expected, StringEscaper.escape(input));
         }
     }
@@ -133,6 +141,7 @@ public class StringEscaperTest {
         @MethodSource("basicUnescapingCases")
         @DisplayName("should unescape basic special characters")
         void testBasicUnescaping(String description, String input, String expected) {
+            // Then
             assertEquals(expected, StringEscaper.unescape(input));
         }
     }
@@ -144,24 +153,28 @@ public class StringEscaperTest {
         @Test
         @DisplayName("should remove surrounding quotes")
         void testQuoteRemoval() {
+            // Then
             assertEquals("hello", StringEscaper.unescape("\"hello\""));
         }
 
         @Test
         @DisplayName("should handle quotes with escaped content")
         void testQuotedEscapedContent() {
+            // Then
             assertEquals("hello\nworld", StringEscaper.unescape("\"hello\\nworld\""));
         }
 
         @Test
         @DisplayName("should not remove quotes if not surrounding")
         void testNonSurroundingQuotes() {
+            // Then
             assertEquals("hello\"world", StringEscaper.unescape("hello\"world"));
         }
 
         @Test
         @DisplayName("should handle empty quoted string")
         void testEmptyQuotedString() {
+            // Then
             assertEquals("", StringEscaper.unescape("\"\""));
         }
     }
@@ -186,8 +199,11 @@ public class StringEscaperTest {
         @DisplayName("should preserve content through escape/unescape cycle")
         @MethodSource("roundTripCases")
         void testRoundTrip(String original) {
+            // Given
             String escaped = StringEscaper.escape(original);
             String unescaped = StringEscaper.unescape("\"" + escaped + "\"");
+
+            // Then
             assertEquals(original, unescaped);
         }
     }
@@ -199,56 +215,66 @@ public class StringEscaperTest {
         @Test
         @DisplayName("should handle null input")
         void testNullInput() {
+            // Then
             assertNull(StringEscaper.unescape(null));
         }
 
         @Test
         @DisplayName("should handle empty string")
         void testEmptyString() {
+            // Then
             assertEquals("", StringEscaper.unescape(""));
         }
 
         @Test
         @DisplayName("should handle single character")
         void testSingleCharacter() {
+            // Then
             assertEquals("a", StringEscaper.unescape("a"));
         }
 
         @Test
         @DisplayName("should handle strings without escape sequences")
         void testNoEscapeSequences() {
+            // Then
             assertEquals("hello world", StringEscaper.unescape("hello world"));
         }
 
         @Test
         @DisplayName("should handle unknown escape sequences as literals")
         void testUnknownEscapeSequences() {
+            // Then
             assertEquals("ax", StringEscaper.unescape("\\ax"));
         }
 
         @Test
         void unquotesValueWhenStartsAndEndsWithQuote() {
+            // Then
             assertEquals("abc", StringEscaper.unescape("\"abc\""));
         }
 
         @Test
         void unescapesBackslashSequences() {
+            // Then
             assertEquals("a\"b", StringEscaper.unescape("a\\\"b"));
         }
 
         @Test
         void unescapesMultipleCharacters() {
+            // Then
             assertEquals("a\nb\tc", StringEscaper.unescape("a\\nb\\tc"));
         }
 
         @Test
         void handlesTrailingBackslashCorrectly() {
+            // Then
             // trailing \ will set escaped=true but there is no next char → nothing appended
             assertEquals("abc", StringEscaper.unescape("abc\\"));
         }
 
         @Test
         void handlesDoubleBackslashCorrectly() {
+            // Then
             assertEquals("a\\b", StringEscaper.unescape("a\\\\b"));
         }
     }
@@ -256,12 +282,15 @@ public class StringEscaperTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<StringEscaper> constructor = StringEscaper.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
