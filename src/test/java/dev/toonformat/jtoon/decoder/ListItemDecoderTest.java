@@ -21,12 +21,15 @@ class ListItemDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        //given
         final Constructor<ListItemDecoder> constructor = ListItemDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        //when
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        //then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -34,9 +37,9 @@ class ListItemDecoderTest {
 
     // Reflection helpers for invoking private static methods
     private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
-        Method m = ListItemDecoder.class.getDeclaredMethod(methodName, paramTypes);
-        m.setAccessible(true);
-        return m.invoke(null, args);
+        final Method declaredMethod = ListItemDecoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 
     @Test
