@@ -1,11 +1,13 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.encoder.PrimitiveEncoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +21,7 @@ class PrimitiveDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
-        final Constructor<PrimitiveDecoder> constructor = PrimitiveDecoder.class.getDeclaredConstructor();
+        final Constructor<PrimitiveEncoder> constructor = PrimitiveEncoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
@@ -258,7 +260,7 @@ class PrimitiveDecoderTest {
     @Test
     void givenSmallerMinLongNumber_whenParse_thenReturnsLong() {
         // Given
-        String input = String.valueOf(Long.MIN_VALUE -1);
+        String input = String.valueOf(Long.MIN_VALUE - 1);
 
         // When
         Object result = PrimitiveDecoder.parse(input);
@@ -271,7 +273,7 @@ class PrimitiveDecoderTest {
     @Test
     void givenBiggerMaxLongNumber_whenParse_thenReturnsLong() {
         // Given
-        String input = String.valueOf(Long.MAX_VALUE +1);
+        String input = String.valueOf(Long.MAX_VALUE + 1);
 
         // When
         Object result = PrimitiveDecoder.parse(input);
@@ -292,5 +294,38 @@ class PrimitiveDecoderTest {
 
         // Then
         assertEquals("123abc", result);
+    }
+
+    @Test
+    void testing_SkipTrailingZeros() throws Exception {
+        // Given
+        String input = "10.000";
+
+        // When
+        String result = (String) invokePrivateStatic("stripTrailingZeros", new Class[]{String.class}, input);
+
+        // Then
+        assertEquals("10", result);
+    }
+
+    @Test
+    void testing_SkipTrailingZeros_WithSmallNUmber() throws Exception {
+        // Given
+        String input = "1.0";
+
+        // When
+        String result = (String) invokePrivateStatic("stripTrailingZeros", new Class[]{String.class}, input);
+
+        // Then
+        assertEquals("1", result);
+    }
+
+
+
+    // Reflection helpers for invoking private static methods
+    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+        Method declaredMethod = PrimitiveEncoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 }

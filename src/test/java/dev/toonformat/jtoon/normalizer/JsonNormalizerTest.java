@@ -905,9 +905,9 @@ class JsonNormalizerTest {
 
     // Reflection helpers for invoking private static methods
     private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
-        Method m = JsonNormalizer.class.getDeclaredMethod(methodName, paramTypes);
-        m.setAccessible(true);
-        return m.invoke(null, args);
+        Method declaredMethod = JsonNormalizer.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
     }
 
 
@@ -1332,7 +1332,7 @@ class JsonNormalizerTest {
         @DisplayName("Given Long Min Value, When tryConvertToLong is called, Then Optional is returned")
         void testLongMinValueReturnsOptional_whenTryConvertToLong() throws Exception {
             // Given
-            Double input = (double) Long.MIN_VALUE -1;
+            Double input = (double) Long.MIN_VALUE - 1;
 
             // When
             Object result = invokePrivateStatic("tryConvertToLong", new Class[]{Double.class}, input);
@@ -1346,7 +1346,7 @@ class JsonNormalizerTest {
         @DisplayName("Given Long Min Value, When tryConvertToLong is called, Then Optional is returned")
         void testLongNormalizeBigInteger() throws Exception {
             // Given
-            BigInteger input = BigInteger.valueOf(Long.MIN_VALUE -1);
+            BigInteger input = BigInteger.valueOf(Long.MIN_VALUE - 1);
 
             // When
             Object result = invokePrivateStatic("normalizeBigInteger", new Class[]{BigInteger.class}, input);
@@ -1483,7 +1483,7 @@ class JsonNormalizerTest {
 
         @Test
         @DisplayName("Given Object, When normalizeArray is called, Then ArrayNode get return")
-        void givenException_whenTryNormalizePojo_thenNullNode() throws Exception {
+        void NormalizeArray_thenNullNode() throws Exception {
             // Given
             Object input = new Object();
 
@@ -1492,9 +1492,74 @@ class JsonNormalizerTest {
 
             // Then
             assertInstanceOf(ArrayNode.class, result);
-
-
         }
+    }
+
+    @Nested
+    @DisplayName("NormalizePojo")
+    class NormalizePojo {
+        class ExplodingPojo {
+            public String getValue() {
+                throw new RuntimeException("Boom");
+            }
+        }
+
+        @Test
+        @DisplayName("Given Object, When tryNormalizePojo is called, Then ArrayNode get return")
+        void tryNormalizePojo_thenNullNode() throws Exception {
+            // Given
+            Object input = new Object();
+
+            // When
+            Object result = invokePrivateStatic("tryNormalizePojo", new Class[]{Object.class}, input);
+
+            // Then
+            assertInstanceOf(ObjectNode.class, result);
+        }
+
+        @Test
+        void returnsNullNodeWhenJacksonExceptionOccurs() throws Exception {
+            // Given
+            Object input = new ExplodingPojo();
+            //
+            Object result = invokePrivateStatic("tryNormalizePojo", new Class[]{Object.class}, input);
+
+            assertInstanceOf(NullNode.class, result);
+        }
+    }
+
+    @Nested
+    @DisplayName("parse")
+    class parse {
+        @Test
+        void parseNullAsString() {
+            // Given
+            String input = null;
+
+            // When
+            final IllegalArgumentException thrown =
+                assertThrows(IllegalArgumentException.class, () -> JsonNormalizer.parse(input));
+
+
+            // Then
+            assertEquals("Invalid JSON", thrown.getMessage());
+        }
+
+
+        @Test
+        void parseEmptyString() {
+            // Given
+            String input = " ";
+
+            // When
+            final IllegalArgumentException thrown =
+                assertThrows(IllegalArgumentException.class, () -> JsonNormalizer.parse(input));
+
+
+            // Then
+            assertEquals("Invalid JSON", thrown.getMessage());
+        }
+
     }
 }
 

@@ -28,11 +28,11 @@ public class StringEscaperTest {
 
         static Stream<Arguments> basicEscapingCases() {
             return Stream.of(
-                    Arguments.of("backslashes", "path\\to\\file", "path\\\\to\\\\file"),
-                    Arguments.of("double quotes", "He said \"hello\"", "He said \\\"hello\\\""),
-                    Arguments.of("newlines", "line1\nline2", "line1\\nline2"),
-                    Arguments.of("carriage returns", "line1\rline2", "line1\\rline2"),
-                    Arguments.of("tabs", "col1\tcol2", "col1\\tcol2"));
+                Arguments.of("backslashes", "path\\to\\file", "path\\\\to\\\\file"),
+                Arguments.of("double quotes", "He said \"hello\"", "He said \\\"hello\\\""),
+                Arguments.of("newlines", "line1\nline2", "line1\\nline2"),
+                Arguments.of("carriage returns", "line1\rline2", "line1\\rline2"),
+                Arguments.of("tabs", "col1\tcol2", "col1\\tcol2"));
         }
 
         @ParameterizedTest(name = "should escape {0}")
@@ -49,10 +49,10 @@ public class StringEscaperTest {
 
         static Stream<Arguments> combinedEscapingCases() {
             return Stream.of(
-                    Arguments.of("multiple special characters", "He said \"test\\path\"\nNext line",
-                            "He said \\\"test\\\\path\\\"\\nNext line"),
-                    Arguments.of("all control characters together", "text\n\r\t", "text\\n\\r\\t"),
-                    Arguments.of("backslash before quote", "\\\"", "\\\\\\\""));
+                Arguments.of("multiple special characters", "He said \"test\\path\"\nNext line",
+                    "He said \\\"test\\\\path\\\"\\nNext line"),
+                Arguments.of("all control characters together", "text\n\r\t", "text\\n\\r\\t"),
+                Arguments.of("backslash before quote", "\\\"", "\\\\\\\""));
         }
 
         @ParameterizedTest(name = "should escape {0}")
@@ -76,9 +76,9 @@ public class StringEscaperTest {
         @ParameterizedTest
         @DisplayName("should not modify strings without special characters")
         @ValueSource(strings = {
-                "hello world",
-                "Hello World 123 @#$%^&*()_+-=[]{}|;:',.<>?/",
-                "Hello 世界 🌍"
+            "hello world",
+            "Hello World 123 @#$%^&*()_+-=[]{}|;:',.<>?/",
+            "Hello 世界 🌍"
         })
         void testStringsWithoutSpecialCharacters(String input) {
             assertEquals(input, StringEscaper.escape(input));
@@ -99,13 +99,13 @@ public class StringEscaperTest {
 
         static Stream<Arguments> realWorldScenarios() {
             return Stream.of(
-                    Arguments.of("JSON string", "{\"key\": \"value\"}", "{\\\"key\\\": \\\"value\\\"}"),
-                    Arguments.of("Windows file path", "C:\\Users\\Documents\\file.txt",
-                            "C:\\\\Users\\\\Documents\\\\file.txt"),
-                    Arguments.of("multi-line text", "Line 1\nLine 2\nLine 3", "Line 1\\nLine 2\\nLine 3"),
-                    Arguments.of("SQL query", "SELECT * FROM users WHERE name = \"John\"",
-                            "SELECT * FROM users WHERE name = \\\"John\\\""),
-                    Arguments.of("regex pattern", "\\d+\\.\\d+", "\\\\d+\\\\.\\\\d+"));
+                Arguments.of("JSON string", "{\"key\": \"value\"}", "{\\\"key\\\": \\\"value\\\"}"),
+                Arguments.of("Windows file path", "C:\\Users\\Documents\\file.txt",
+                    "C:\\\\Users\\\\Documents\\\\file.txt"),
+                Arguments.of("multi-line text", "Line 1\nLine 2\nLine 3", "Line 1\\nLine 2\\nLine 3"),
+                Arguments.of("SQL query", "SELECT * FROM users WHERE name = \"John\"",
+                    "SELECT * FROM users WHERE name = \\\"John\\\""),
+                Arguments.of("regex pattern", "\\d+\\.\\d+", "\\\\d+\\\\.\\\\d+"));
         }
 
         @ParameterizedTest(name = "should escape {0}")
@@ -122,11 +122,11 @@ public class StringEscaperTest {
 
         static Stream<Arguments> basicUnescapingCases() {
             return Stream.of(
-                    Arguments.of("backslashes", "path\\\\to\\\\file", "path\\to\\file"),
-                    Arguments.of("double quotes", "He said \\\"hello\\\"", "He said \"hello\""),
-                    Arguments.of("newlines", "line1\\nline2", "line1\nline2"),
-                    Arguments.of("carriage returns", "line1\\rline2", "line1\rline2"),
-                    Arguments.of("tabs", "col1\\tcol2", "col1\tcol2"));
+                Arguments.of("backslashes", "path\\\\to\\\\file", "path\\to\\file"),
+                Arguments.of("double quotes", "He said \\\"hello\\\"", "He said \"hello\""),
+                Arguments.of("newlines", "line1\\nline2", "line1\nline2"),
+                Arguments.of("carriage returns", "line1\\rline2", "line1\rline2"),
+                Arguments.of("tabs", "col1\\tcol2", "col1\tcol2"));
         }
 
         @ParameterizedTest(name = "should unescape {0}")
@@ -172,13 +172,13 @@ public class StringEscaperTest {
 
         static Stream<String> roundTripCases() {
             return Stream.of(
-                    "simple text",
-                    "path\\to\\file",
-                    "He said \"hello\"",
-                    "line1\nline2\nline3",
-                    "col1\tcol2\tcol3",
-                    "C:\\Users\\Documents",
-                    "text\n\r\t\"\\"
+                "simple text",
+                "path\\to\\file",
+                "He said \"hello\"",
+                "line1\nline2\nline3",
+                "col1\tcol2\tcol3",
+                "C:\\Users\\Documents",
+                "text\n\r\t\"\\"
             );
         }
 
@@ -230,6 +230,7 @@ public class StringEscaperTest {
         void unquotesValueWhenStartsAndEndsWithQuote() {
             assertEquals("abc", StringEscaper.unescape("\"abc\""));
         }
+
         @Test
         void unescapesBackslashSequences() {
             assertEquals("a\"b", StringEscaper.unescape("a\\\"b"));
@@ -259,7 +260,7 @@ public class StringEscaperTest {
         constructor.setAccessible(true);
 
         final InvocationTargetException thrown =
-                assertThrows(InvocationTargetException.class, constructor::newInstance);
+            assertThrows(InvocationTargetException.class, constructor::newInstance);
 
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
@@ -275,6 +276,7 @@ public class StringEscaperTest {
         // Then
 
     }
+
     @Test
     void testingValidateString_WithEmptyString() {
         // Given
@@ -284,14 +286,43 @@ public class StringEscaperTest {
         // Then
 
     }
+
     @Test
     void testingValidateString_WithWildStringToThrowsException() {
         // Given
         String input = "\"te\\st\"";
         // When      // Then
-        assertThrows(IllegalArgumentException.class,
-            ()->{
+        final IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            () -> {
                 StringEscaper.validateString(input);
             });
+
+        assertEquals("Invalid escape sequence: \\s", thrown.getMessage());
+    }
+
+    @Test
+    void testingValidateString_WithWildStringOnlyAtTheStartToThrowsException() {
+        // Given
+        String input = "\"te\\st";
+        // When      // Then
+        final IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            () -> {
+                StringEscaper.validateString(input);
+            });
+
+        assertEquals("Unterminated string", thrown.getMessage());
+    }
+
+    @Test
+    void testingValidateString_WithWildStringOnlyAtTheStartAndEndToThrowsException() {
+        // Given
+        String input = "\"abc\\\"";
+        // When      // Then
+        final IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            () -> {
+                StringEscaper.validateString(input);
+            });
+
+        assertEquals("Invalid escape sequence: trailing backslash", thrown.getMessage());
     }
 }
