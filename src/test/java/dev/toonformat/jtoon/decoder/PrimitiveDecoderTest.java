@@ -21,12 +21,15 @@ class PrimitiveDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<PrimitiveEncoder> constructor = PrimitiveEncoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -319,8 +322,6 @@ class PrimitiveDecoderTest {
         // Then
         assertEquals("1", result);
     }
-
-
 
     // Reflection helpers for invoking private static methods
     private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {

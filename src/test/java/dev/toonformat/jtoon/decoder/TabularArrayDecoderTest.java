@@ -38,12 +38,15 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<TabularArrayDecoder> constructor = TabularArrayDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -52,17 +55,24 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse TOON format tabular array to JSON")
     void parseTabularArray() {
+        // Given
         setUpContext("[2]{id,value}:\n  1,null\n  2,\"test\"");
+
+        // When
         List<Object> result = TabularArrayDecoder.parseTabularArray(
             "[2]{id,value}:\n  1,null\n  2,\"test\"", 0,
             Delimiter.COMMA, context);
+
+        // Then
         assertEquals("[{id=1, value=null}, {id=2, value=test}]", result.toString());
     }
 
     @Test
     @DisplayName("Throws an exception if the wrong delimiter is being used")
     void inCaseOfMismatchInDelimiter_ThrowAnException() {
+        // Given
         setUpContext("[2]{id,value}:\n  1,null\n  2,\"test\"");
+        // When / then
         assertThrows(IllegalArgumentException.class, () -> TabularArrayDecoder.parseTabularArray(
             "[2]{id,value}:\n  1,null\n  2,\"test\"", 0,
             Delimiter.TAB, context));
@@ -190,25 +200,30 @@ class TabularArrayDecoderTest {
 
     @Test
     void testTerminateWhenLineDepthLessThanExpected() throws Exception {
+        // Given
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
 
         String line = "    some value"; // Any line works; we won't reach colon logic.
         int lineDepth = 1;              // < expectedRowDepth
         int expectedRowDepth = 3;       // Must be > lineDepth
 
+        // When
         boolean result = (boolean) invokePrivateStatic("shouldTerminateTabularArray",
             new Class[]{String.class, int.class, int.class, DecodeContext.class},
             line, lineDepth, expectedRowDepth, context);
 
+        // Then
         assertTrue(result, "Should terminate when lineDepth < expectedRowDepth");
     }
 
     @Test
     void testParseTabularArray_ReturnsEmptyList_WhenHeaderDoesNotMatchPattern() {
+        // Given
         context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
         context.lines = new String[]{"ignored"};
         context.currentLine = 0;
 
+        // When
         List<Object> result = TabularArrayDecoder.parseTabularArray(
             "not a header", // DOES NOT MATCH pattern
             0,
@@ -216,6 +231,7 @@ class TabularArrayDecoderTest {
             context
         );
 
+        // Then
         assertNotNull(result);
         assertTrue(result.isEmpty(), "Expected empty list for non-matching header");
     }
