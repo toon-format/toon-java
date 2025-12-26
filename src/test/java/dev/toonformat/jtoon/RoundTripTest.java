@@ -11,14 +11,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for round-trip encode/decode symmetry.
  * Verifies that decode(encode(object)) preserves the original data structure.
  */
 @Tag("integration")
-public class RoundTripTest {
+class RoundTripTest {
 
     @Nested
     @DisplayName("Primitives Round-Trip")
@@ -27,39 +27,48 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve null values")
         void testNullRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("value", null);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
 
         @Test
         @DisplayName("should preserve boolean values")
         void testBooleanRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("active", true);
             data.put("enabled", false);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
 
         @Test
         @DisplayName("should preserve integer values")
         void testIntegerRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("count", 42);
             data.put("zero", 0);
             data.put("negative", -100);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             // Integers decode as Long, so compare numeric values
@@ -71,13 +80,16 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve floating point values")
         void testFloatRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("pi", 3.14);
             data.put("price", 99.99);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             assertEquals(3.14, (Double) decodedMap.get("pi"), 0.0001);
@@ -87,28 +99,34 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve string values")
         void testStringRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("name", "Ada");
             data.put("note", "hello, world");
             data.put("empty", "");
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
 
         @Test
         @DisplayName("should preserve strings with special characters")
         void testSpecialCharacterStringRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("text", "line1\nline2");
             data.put("path", "C:\\Users\\Documents");
             data.put("quote", "He said \"hello\"");
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
     }
@@ -120,18 +138,22 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve primitive arrays")
         void testPrimitiveArrayRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("reading", "gaming", "coding"));
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
 
         @Test
         @DisplayName("should preserve tabular arrays")
         void testTabularArrayRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
 
             Map<String, Object> user1 = new LinkedHashMap<>();
@@ -146,9 +168,11 @@ public class RoundTripTest {
 
             data.put("users", Arrays.asList(user1, user2));
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             @SuppressWarnings("unchecked")
@@ -165,12 +189,15 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve empty arrays")
         void testEmptyArrayRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("items", List.of());
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             assertEquals(data, decoded);
         }
     }
@@ -182,6 +209,7 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve nested objects")
         void testNestedObjectRoundTrip() {
+            // Given
             Map<String, Object> contact = new LinkedHashMap<>();
             contact.put("email", "ada@example.com");
             contact.put("phone", "555-1234");
@@ -194,9 +222,11 @@ public class RoundTripTest {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("user", user);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             @SuppressWarnings("unchecked")
@@ -212,6 +242,7 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve deeply nested structures")
         void testDeeplyNestedRoundTrip() {
+            // Given
             Map<String, Object> level3 = new LinkedHashMap<>();
             level3.put("value", 42);
 
@@ -224,9 +255,11 @@ public class RoundTripTest {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("nested", level1);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             // Navigate through nested structure and verify
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
@@ -247,15 +280,18 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve mixed root-level content")
         void testMixedContentRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("id", 123);
             data.put("name", "Ada");
             data.put("tags", Arrays.asList("dev", "admin"));
             data.put("active", true);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             assertEquals(123L, decodedMap.get("id"));  // Integers decode as Long
@@ -269,6 +305,7 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve objects with nested arrays and objects")
         void testComplexNestedRoundTrip() {
+            // Given
             Map<String, Object> contact = new LinkedHashMap<>();
             contact.put("email", "ada@example.com");
 
@@ -281,9 +318,11 @@ public class RoundTripTest {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("user", user);
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             @SuppressWarnings("unchecked")
@@ -306,30 +345,36 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve data with tab delimiter")
         void testTabDelimiterRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
             EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE);
             DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.TAB, true, PathExpansion.OFF);
 
+            // When
             String toon = JToon.encode(data, encodeOpts);
             Object decoded = JToon.decode(toon, decodeOpts);
 
+            // Then
             assertEquals(data, decoded);
         }
 
         @Test
         @DisplayName("should preserve data with pipe delimiter")
         void testPipeDelimiterRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
             EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE);
             DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.PIPE, true, PathExpansion.OFF);
 
+            // When
             String toon = JToon.encode(data, encodeOpts);
             Object decoded = JToon.decode(toon, decodeOpts);
 
+            // Then
             assertEquals(data, decoded);
         }
     }
@@ -341,16 +386,20 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve data through JSON intermediary")
         void testJsonRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("id", 123);
             data.put("name", "Ada");
             data.put("tags", Arrays.asList("dev", "admin"));
 
+            // When
             String toon = JToon.encode(data);
             String json = JToon.decodeToJson(toon);
             String toon2 = JToon.encodeJson(json);
             Object decoded = JToon.decode(toon2);
 
+
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             assertEquals(123L, decodedMap.get("id"));  // Integers decode as Long
@@ -368,11 +417,14 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve empty object")
         void testEmptyObjectRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             // Empty object encodes to empty string, which decodes to empty object
             assertEquals(Collections.emptyMap(), decoded);
         }
@@ -380,13 +432,16 @@ public class RoundTripTest {
         @Test
         @DisplayName("should preserve special character keys")
         void testSpecialKeyRoundTrip() {
+            // Given
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("order:id", 42);
             data.put("full name", "Alice");
 
+            // When
             String toon = JToon.encode(data);
             Object decoded = JToon.decode(toon);
 
+            // Then
             @SuppressWarnings("unchecked")
             Map<String, Object> decodedMap = (Map<String, Object>) decoded;
             assertEquals(42L, decodedMap.get("order:id"));  // Integers decode as Long
