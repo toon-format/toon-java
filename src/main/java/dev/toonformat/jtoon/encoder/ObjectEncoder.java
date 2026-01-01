@@ -110,9 +110,11 @@ public final class ObjectEncoder {
 
         if (value.isValueNode()) {
             writer.push(depth, encodedKey + COLON + SPACE + PrimitiveEncoder.encodePrimitive(value, options.delimiter().toString()));
-        } else if (value.isArray()) {
+        }
+        if (value.isArray()) {
             ArrayEncoder.encodeArray(key, (ArrayNode) value, writer, depth, options);
-        } else if (value.isObject()) {
+        }
+        if (value.isObject()) {
             ObjectNode objValue = (ObjectNode) value;
             writer.push(depth, encodedKey + COLON);
             if (!objValue.isEmpty()) {

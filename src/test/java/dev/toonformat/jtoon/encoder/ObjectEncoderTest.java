@@ -1,13 +1,23 @@
 package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.EncodeOptions;
+import dev.toonformat.jtoon.KeyFolding;
+import dev.toonformat.jtoon.decoder.DecodeContext;
+import dev.toonformat.jtoon.normalizer.JsonNormalizer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.JsonNodeType;
 import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ValueNode;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,6 +49,38 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("x: 10", writer.toString());
+    }
+
+    @Test
+    void givenSimpleObject_withNullRootLiteralKeys_whenEncoding_thenOutputsCorrectLines() {
+        // Given
+        ObjectNode objectNode = MAPPER.createObjectNode();
+        objectNode.put("x", 10);
+
+        EncodeOptions options = EncodeOptions.DEFAULT;
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        ObjectEncoder.encodeObject(objectNode, writer, 0, options, null, null, null, new HashSet<>());
+
+        // Then
+        assertEquals("x: 10", writer.toString());
+    }
+
+    @Test
+    void givenSimpleObject_whenEncoding_thenOutputsInCorrectLines() {
+        // Given
+        ObjectNode objectNode = MAPPER.createObjectNode();
+        objectNode.put("x", 10);
+
+        EncodeOptions options = EncodeOptions.DEFAULT;
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        ObjectEncoder.encodeObject(objectNode, writer, 25, options, new HashSet<>(), null, null, new HashSet<>());
+
+        // Then
+        assertEquals("                                                  x: 10", writer.toString());
     }
 
     @Test
@@ -192,8 +234,8 @@ class ObjectEncoderTest {
         // Then
         assertNull(result);
         String expected = String.join("\n",
-                                      "user.info:",
-                                      "  id: 1"
+            "user.info:",
+            "  id: 1"
         );
         assertEquals(expected, writer.toString());
         assertTrue(blockedKeys.contains("user"));
@@ -269,8 +311,8 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         x:
-                           y: ok""", writer.toString());
+            x:
+              y: ok""", writer.toString());
     }
 
     @Test
@@ -308,9 +350,9 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         a:
-                           b:
-                             z: 1""", writer.toString());
+            a:
+              b:
+                z: 1""", writer.toString());
     }
 
     @Test
@@ -405,24 +447,27 @@ class ObjectEncoderTest {
 
         // Then
         assertEquals("""
-                         items[3]:
-                           - summary
-                           - id: 1
-                             name: Ada
-                           - [2]:
-                             - id: 2
-                             - status: draft""", writer.toString());
+            items[3]:
+              - summary
+              - id: 1
+                name: Ada
+              - [2]:
+                - id: 2
+                - status: draft""", writer.toString());
     }
 
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<ObjectEncoder> constructor = ObjectEncoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -430,7 +475,7 @@ class ObjectEncoderTest {
 
     @Test
     void givenPrimitiveLeaf_whenFlatten_thenWriterReceivesEncodedLine() throws Exception {
-        // given
+        // Given
         String key = "a";
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
@@ -459,7 +504,7 @@ class ObjectEncoderTest {
         );
         flattenMethod.setAccessible(true);
 
-        // when
+        // When
         Object returnValue = flattenMethod.invoke(
             null,  // static method
             key,
@@ -473,7 +518,7 @@ class ObjectEncoderTest {
             5
         );
 
-        // then
+        // Then
         assertNull(returnValue, "Expected null for fully folded primitive case");
         assertEquals(1, writer.toString().lines().count(), "Writer should contain one line");
 
@@ -486,7 +531,7 @@ class ObjectEncoderTest {
 
     @Test
     void givenPartiallyFolded_whenFlatten_thenWriterReceivesFoldedKeyAndObjectIsEncoded() throws Exception {
-        // given
+        // Given
         String key = "a";
 
         EncodeOptions options = EncodeOptions.withFlattenDepth(5);
@@ -519,7 +564,7 @@ class ObjectEncoderTest {
         );
         flattenMethod.setAccessible(true);
 
-        // when
+        // When
         Object result = flattenMethod.invoke(
             null,               // static
             key,                // "a"
@@ -533,7 +578,7 @@ class ObjectEncoderTest {
             1                   // remainingDepth (will go to <=0, disable flattening)
         );
 
-        // then
+        // Then
         assertNull(result);
         assertEquals(2, writer.toString().lines().count(), "Writer should contain two lines");
 
@@ -553,18 +598,18 @@ class ObjectEncoderTest {
 
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
+        Set<String> siblings = new HashSet<>();
 
         // When
-        ObjectEncoder.encodeObject(node, writer, 0, options, rootKeys, null, null, new HashSet<>());
+        ObjectEncoder.encodeObject(node, writer, 0, options, siblings, null, null, new HashSet<>());
 
         // Then
         String expected = String.join("\n",
-                                      "items[1]:",
-                                      "  - matrix[2]:",
-                                      "      - [2]: 1,2",
-                                      "      - [2]: 3,4",
-                                      "    name: grid");
+            "items[1]:",
+            "  - matrix[2]:",
+            "      - [2]: 1,2",
+            "      - [2]: 3,4",
+            "    name: grid");
         assertEquals(expected, writer.toString());
     }
 
@@ -580,21 +625,44 @@ class ObjectEncoderTest {
 
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
+        Set<String> siblings = new HashSet<>();
 
         // When
-        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, rootKeys, null, null, 10, new HashSet<>());
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, 10, new HashSet<>());
 
         // Then
         String expected = String.join("\n",
-                                      "items:",
-                                      "  items[1]:",
-                                      "    - matrix[2]:",
-                                      "        - [2]: 1,2",
-                                      "        - [2]: 3,4",
-                                      "      name: grid");
+            "items:",
+            "  items[1]:",
+            "    - matrix[2]:",
+            "        - [2]: 1,2",
+            "        - [2]: 3,4",
+            "      name: grid");
         assertEquals(expected, writer.toString());
     }
+
+    @Test
+    void testEncodeKeyValuePairWithANullKey() {
+        // Given
+        String json = "{\n" +
+            "        \"items\": [\n" +
+            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
+            "        ]\n" +
+            "      }";
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.withFlatten(true);
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> siblings = new HashSet<>();
+
+        // When
+        ObjectEncoder.encodeKeyValuePair(null, node, writer, 0, options, siblings, null, null, 10, new HashSet<>());
+
+        // Then
+        String expected = "";
+        assertEquals(expected, writer.toString());
+    }
+
     @Test
     void testEncodeKeyValuePairWithNullFlattenDepth() {
         // Given
@@ -607,10 +675,10 @@ class ObjectEncoderTest {
 
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
+        Set<String> siblings = new HashSet<>();
 
         // When
-        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, rootKeys, null, null, null, new HashSet<>());
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, null, new HashSet<>());
 
         // Then
         String expected = String.join("\n",
@@ -622,6 +690,7 @@ class ObjectEncoderTest {
             "      name: grid");
         assertEquals(expected, writer.toString());
     }
+
     @Test
     void testEncodeKeyValuePairWithToSmallFlattenDepth() {
         // Given
@@ -634,10 +703,10 @@ class ObjectEncoderTest {
 
         EncodeOptions options = EncodeOptions.withFlatten(true);
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
+        Set<String> siblings = new HashSet<>();
 
         // When
-        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, rootKeys, null, null, 0, new HashSet<>());
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, 0, new HashSet<>());
 
         // Then
         String expected = String.join("\n",
@@ -662,11 +731,173 @@ class ObjectEncoderTest {
         siblings.add("world");
 
         // When
-        ObjectEncoder.encodeKeyValuePair("", node, writer, 0, options, siblings, null, null, 10, new HashSet<>());
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, null, new HashSet<>());
 
         // Then
         assertFalse(writer.toString().trim().isEmpty());
         //we only get a String with ""
     }
 
+    @Test
+    void testEncodeKeyValuePairWithKeyInBlockedKeysSet() {
+        // Given
+        String json = "{\n" +
+            "        \"items\": [\n" +
+            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
+            "        ]\n" +
+            "      }";
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.withFlatten(true);
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> siblings = Set.of("hello", "world");
+        Set<String> blockedKeys = Set.of("items");
+
+        // When
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, 10, blockedKeys);
+
+        // Then
+        String expected = String.join("\n",
+            "items:",
+            "  items[1]:",
+            "    - matrix[2]:",
+            "        - [2]: 1,2",
+            "        - [2]: 3,4",
+            "      name: grid");
+        assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void testEncodeKeyValuePairWithoutFlattenWithAKey() {
+        // Given
+        String json = "{\n" +
+            "        \"items\": [\n" +
+            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
+            "        ]\n" +
+            "      }";
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+
+        EncodeOptions options = EncodeOptions.withFlatten(false);
+        LineWriter writer = new LineWriter(options.indent());
+        Set<String> siblings = new HashSet<>();
+
+        // When
+        ObjectEncoder.encodeKeyValuePair("items", node, writer, 0, options, siblings, null, null, 10, new HashSet<>());
+
+        // Then
+        String expected = String.join("\n",
+            "items:",
+            "  items[1]:",
+            "    - matrix[2]:",
+            "        - [2]: 1,2",
+            "        - [2]: 3,4",
+            "      name: grid");
+        assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void handleFullyFoldedLeafForObjectNodeAsLeaf() throws Exception {
+        // Given
+        ObjectNode objectLeaf = (ObjectNode) new ObjectMapper().readTree("{\"id\":1}");
+        Flatten.FoldResult foldResult = new Flatten.FoldResult(
+            "user.info",
+            null,
+            objectLeaf,
+            2
+        );
+
+        EncodeOptions options = EncodeOptions.withFlatten(false);
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        invokePrivateStatic("handleFullyFoldedLeaf", new Class[]{Flatten.FoldResult.class, LineWriter.class, int.class, EncodeOptions.class, String.class}, foldResult, writer, 2, options, "item");
+
+        // Then
+        String expected = String.join("\n", "        item:",
+            "      id: 1");
+        assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void handleFullyFoldedLeafForBokenNodeAsLeaf() throws Exception {
+        // Given
+        abstract class a extends JsonNode {
+            protected a() {
+            }
+        }
+   
+
+        ObjectNode objectLeaf = (ObjectNode) new ObjectMapper().readTree("{\"id\":1}");
+        Flatten.FoldResult foldResult = new Flatten.FoldResult(
+            "user.info",
+            null,
+            objectLeaf,
+            2
+        );
+
+        EncodeOptions options = EncodeOptions.withFlatten(false);
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        invokePrivateStatic("handleFullyFoldedLeaf", new Class[]{Flatten.FoldResult.class, LineWriter.class, int.class, EncodeOptions.class, String.class}, foldResult, writer, 2, options, "item");
+
+        // Then
+        String expected = String.join("\n", "        item:",
+            "      id: 1");
+        assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void testingFlattenWithoutPathPrefix() throws Exception {
+        // Given
+        ObjectNode reminder = (ObjectNode) new ObjectMapper().readTree("{\"id\":2}");
+        ObjectNode objectLeaf = (ObjectNode) new ObjectMapper().readTree("{\"id\":1}");
+        Flatten.FoldResult foldResult = new Flatten.FoldResult(
+            "user.info",
+            reminder,
+            objectLeaf,
+            2
+        );
+
+        Set<String> blockedKeys = new HashSet<>();
+
+        EncodeOptions options = EncodeOptions.withFlatten(false);
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        EncodeOptions expectedEncodeOptions = (EncodeOptions) invokePrivateStatic("flatten", new Class[]{String.class, Flatten.FoldResult.class, LineWriter.class, int.class, EncodeOptions.class, Set.class, String.class, Set.class, int.class}, "key", foldResult, writer, 2, options, Set.of(), null, blockedKeys, 3);
+
+        // Then
+        assertNull(expectedEncodeOptions);
+    }
+    @Test
+    void testingFlattenWithPathPrefix() throws Exception {
+        // Given
+        ObjectNode reminder = (ObjectNode) new ObjectMapper().readTree("{\"id\":2}");
+        ObjectNode objectLeaf = (ObjectNode) new ObjectMapper().readTree("{\"id\":1}");
+        Flatten.FoldResult foldResult = new Flatten.FoldResult(
+            "user.info",
+            reminder,
+            objectLeaf,
+            2
+        );
+
+        Set<String> blockedKeys = new HashSet<>();
+
+        EncodeOptions options = EncodeOptions.withFlatten(false);
+        LineWriter writer = new LineWriter(options.indent());
+
+        // When
+        EncodeOptions expectedEncodeOptions = (EncodeOptions) invokePrivateStatic("flatten", new Class[]{String.class, Flatten.FoldResult.class, LineWriter.class, int.class, EncodeOptions.class, Set.class, String.class, Set.class, int.class}, "key", foldResult, writer, 2, options, Set.of(), "user", blockedKeys, 3);
+
+        // Then
+        assertNull(expectedEncodeOptions);
+    }
+
+    // Reflection helpers for invoking private static methods
+    private static Object invokePrivateStatic(String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+        Method declaredMethod = ObjectEncoder.class.getDeclaredMethod(methodName, paramTypes);
+        declaredMethod.setAccessible(true);
+        return declaredMethod.invoke(null, args);
+    }
 }

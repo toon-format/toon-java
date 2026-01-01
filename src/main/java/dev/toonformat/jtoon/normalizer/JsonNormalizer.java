@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.normalizer;
 
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -175,9 +176,7 @@ public final class JsonNormalizer {
             return Optional.empty();
         }
         long longVal = value.longValue();
-        return longVal == value
-            ? Optional.of(LongNode.valueOf(longVal))
-            : Optional.empty();
+        return Optional.of(LongNode.valueOf(longVal));
     }
 
     /**
@@ -283,7 +282,7 @@ public final class JsonNormalizer {
     private static JsonNode tryNormalizePojo(Object value) {
         try {
             return MAPPER.valueToTree(value);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return NullNode.getInstance();
         }
     }

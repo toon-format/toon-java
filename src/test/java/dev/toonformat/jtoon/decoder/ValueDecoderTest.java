@@ -24,12 +24,15 @@ class ValueDecoderTest {
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")
     void throwsOnConstructor() throws NoSuchMethodException {
+        // Given
         final Constructor<ValueDecoder> constructor = ValueDecoder.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
+        // When
         final InvocationTargetException thrown =
             assertThrows(InvocationTargetException.class, constructor::newInstance);
 
+        // Then
         final Throwable cause = thrown.getCause();
         assertInstanceOf(UnsupportedOperationException.class, cause);
         assertEquals("Utility class cannot be instantiated", cause.getMessage());
@@ -164,10 +167,13 @@ class ValueDecoderTest {
 
     @Test
     void decode_keyValuePair_callsKeyDecoder() {
+        // Given
         DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
 
+        // When
         Object result = ValueDecoder.decode("name: Ada", decodeOptions);
 
+        // Then
         // Whatever KeyDecoder returns, you simply assert expected behavior.
         // Usually: { "name" : "Ada" } as a map
         assertInstanceOf(Map.class, result);
@@ -180,15 +186,18 @@ class ValueDecoderTest {
 
     @Test
     void decodeToJson_throwsWrappedException_whenDecodeFails() {
+        // Given
         DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
 
         String invalidIndentedInput = "  badIndent";
 
+        // When
         IllegalArgumentException ex = assertThrows(
             IllegalArgumentException.class,
             () -> ValueDecoder.decodeToJson(invalidIndentedInput, options)
         );
 
+        // Then
         assertTrue(ex.getMessage().contains("Failed to convert decoded value to JSON"));
         assertNotNull(ex.getCause());  // original decode() exception is preserved
         assertInstanceOf(IllegalArgumentException.class, ex.getCause());

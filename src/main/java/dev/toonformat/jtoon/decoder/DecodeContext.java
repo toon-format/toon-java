@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
+import dev.toonformat.jtoon.Delimiter;
 
 /**
  * Deals with the main attributes used to decode TOON to JSON format
@@ -18,7 +19,7 @@ public class DecodeContext {
     /**
      * Delimiter used to split array elements.
      */
-    protected String delimiter;
+    protected Delimiter delimiter;
     /**
      * Current line being decoded.
      */
