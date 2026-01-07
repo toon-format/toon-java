@@ -15,7 +15,7 @@ import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 /**
  * Handles decoding of tabular arrays to JSON format.
  */
-public class TabularArrayDecoder {
+public final class TabularArrayDecoder {
 
     private TabularArrayDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");

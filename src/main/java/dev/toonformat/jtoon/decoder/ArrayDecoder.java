@@ -13,7 +13,7 @@ import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 /**
  * Handles decoding of TOON arrays to JSON format.
  */
-public class ArrayDecoder {
+public final class ArrayDecoder {
 
     private ArrayDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -28,7 +28,7 @@ public class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return parsed array with delimiter
      */
-    protected static List<Object> parseArray(String header, int depth, DecodeContext context) {
+    static List<Object> parseArray(String header, int depth, DecodeContext context) {
         Delimiter arrayDelimiter = extractDelimiterFromHeader(header, context);
 
         return parseArrayWithDelimiter(header, depth, arrayDelimiter, context);
@@ -42,7 +42,7 @@ public class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return extracted delimiter from header
      */
-    protected static Delimiter extractDelimiterFromHeader(String header, DecodeContext context) {
+    static Delimiter extractDelimiterFromHeader(String header, DecodeContext context) {
         Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
             String delimiter = matcher.group(3);
@@ -70,7 +70,7 @@ public class ArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return parsed array
      */
-    protected static List<Object> parseArrayWithDelimiter(String header, int depth, Delimiter arrayDelimiter, DecodeContext context) {
+    static List<Object> parseArrayWithDelimiter(String header, int depth, Delimiter arrayDelimiter, DecodeContext context) {
         Matcher tabularMatcher = TABULAR_HEADER_PATTERN.matcher(header);
         Matcher arrayMatcher = ARRAY_HEADER_PATTERN.matcher(header);
 
@@ -133,7 +133,7 @@ public class ArrayDecoder {
      * @param header       header
      * @param actualLength actual length
      */
-    protected static void validateArrayLength(String header, int actualLength) {
+    static void validateArrayLength(String header, int actualLength) {
         Integer declaredLength = extractLengthFromHeader(header);
         if (declaredLength != null && declaredLength != actualLength) {
             throw new IllegalArgumentException(
@@ -163,7 +163,7 @@ public class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed array values
      */
-    protected static List<Object> parseArrayValues(String values, Delimiter arrayDelimiter) {
+    static List<Object> parseArrayValues(String values, Delimiter arrayDelimiter) {
         List<Object> result = new ArrayList<>();
         List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
         for (String value : rawValues) {
@@ -180,7 +180,7 @@ public class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed delimited values
      */
-    protected static List<String> parseDelimitedValues(String input, Delimiter arrayDelimiter) {
+    static List<String> parseDelimitedValues(String input, Delimiter arrayDelimiter) {
         List<String> result = new ArrayList<>();
         StringBuilder stringBuilder = new StringBuilder();
         boolean inQuotes = false;

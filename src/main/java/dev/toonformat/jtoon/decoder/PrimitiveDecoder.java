@@ -28,7 +28,7 @@ import dev.toonformat.jtoon.util.StringEscaper;
  * parse("")          → "" (empty string)
  * }</pre>
  */
-final class PrimitiveDecoder {
+public final class PrimitiveDecoder {
 
     private PrimitiveDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");

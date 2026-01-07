@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 /**
  * Recursively flattens a JSON object or array into a single-level object.
  */
-public class Flatten {
+public final class Flatten {
 
     private Flatten() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");

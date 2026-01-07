@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.
  */
-public class DecodeHelper {
+public final class DecodeHelper {
 
     private DecodeHelper() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -76,7 +76,7 @@ public class DecodeHelper {
      * @param line the line string to parse
      * @return true or false depending on if the line is blank or not
      */
-    protected static boolean isBlankLine(String line) {
+    static boolean isBlankLine(String line) {
         return line.trim().isEmpty();
     }
 
@@ -87,7 +87,7 @@ public class DecodeHelper {
      * @param content the content string to parse
      * @return the unquoted colon
      */
-    protected static int findUnquotedColon(String content) {
+    static int findUnquotedColon(String content) {
         boolean inQuotes = false;
         boolean escaped = false;
 
@@ -115,7 +115,7 @@ public class DecodeHelper {
      * @param context    decode an object to deal with lines, delimiter, and options
      * @return index aiming for the next non-blank line
      */
-    protected static int findNextNonBlankLine(int startIndex, DecodeContext context) {
+    static int findNextNonBlankLine(int startIndex, DecodeContext context) {
         int index = startIndex;
         while (index < context.lines.length && isBlankLine(context.lines[index])) {
             index++;
@@ -132,7 +132,7 @@ public class DecodeHelper {
      * @param context      decode an object to deal with lines, delimiter, and options
      * @throws IllegalArgumentException in case there's a expansion conflict
      */
-    protected static void checkFinalValueConflict(String finalSegment, Object existing, Object value, DecodeContext context) {
+    static void checkFinalValueConflict(String finalSegment, Object existing, Object value, DecodeContext context) {
         if (existing != null && context.options.strict()) {
             // Check for conflicts in strict mode
             if (existing instanceof Map && !(value instanceof Map)) {
@@ -157,7 +157,7 @@ public class DecodeHelper {
      * @param value   present value in a map
      * @param context decode an object to deal with lines, delimiter, and options
      */
-    protected static void checkPathExpansionConflict(Map<String, Object> map, String key, Object value, DecodeContext context) {
+    static void checkPathExpansionConflict(Map<String, Object> map, String key, Object value, DecodeContext context) {
         if (!context.options.strict()) {
             return;
         }
@@ -172,7 +172,7 @@ public class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter, and options
      * @return the depth of the next non-blank line, or null if none exists
      */
-    protected static Integer findNextNonBlankLineDepth(DecodeContext context) {
+    static Integer findNextNonBlankLineDepth(DecodeContext context) {
         int nextLineIdx = context.currentLine;
         while (nextLineIdx < context.lines.length && isBlankLine(context.lines[nextLineIdx])) {
             nextLineIdx++;
@@ -191,7 +191,7 @@ public class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter, and options
      * @throws IllegalArgumentException in case the next depth is equal to 0
      */
-    protected static void validateNoMultiplePrimitivesAtRoot(DecodeContext context) {
+    static void validateNoMultiplePrimitivesAtRoot(DecodeContext context) {
         int lineIndex = context.currentLine;
         while (lineIndex < context.lines.length && isBlankLine(context.lines[lineIndex])) {
             lineIndex++;

@@ -13,7 +13,7 @@ import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 /**
  * Handles decoding of TOON list item to JSON format.
  */
-public class ListItemDecoder {
+public final class ListItemDecoder {
 
     private ListItemDecoder() {throw new UnsupportedOperationException("Utility class cannot be instantiated");}
 

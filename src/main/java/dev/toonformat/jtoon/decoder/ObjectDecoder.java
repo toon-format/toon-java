@@ -11,7 +11,7 @@ import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 /**
  * Handles decoding of TOON objects to JSON format.
  */
-public class ObjectDecoder {
+public final class ObjectDecoder {
 
     private ObjectDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -24,7 +24,7 @@ public class ObjectDecoder {
      * @param context     decode an object to deal with lines, delimiter and options
      * @return parsed nested object
      */
-    protected static Map<String, Object> parseNestedObject(int parentDepth, DecodeContext context) {
+    static Map<String, Object> parseNestedObject(int parentDepth, DecodeContext context) {
         Map<String, Object> result = new LinkedHashMap<>();
 
         while (context.currentLine < context.lines.length) {
@@ -75,7 +75,7 @@ public class ObjectDecoder {
      * @param depth   the depth of the object field
      * @param context decode an object to deal with lines, delimiter and options
      */
-    protected static void parseRootObjectFields(Map<String, Object> obj, int depth, DecodeContext context) {
+    static void parseRootObjectFields(Map<String, Object> obj, int depth, DecodeContext context) {
         while (context.currentLine < context.lines.length) {
             String line = context.lines[context.currentLine];
             int lineDepth = DecodeHelper.getDepth(line, context);
@@ -144,7 +144,7 @@ public class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return the parsed scalar value
      */
-    protected static Object parseBareScalarValue(String content, int depth, DecodeContext context) {
+    static Object parseBareScalarValue(String content, int depth, DecodeContext context) {
         Object result = PrimitiveDecoder.parse(content);
         context.currentLine++;
 
@@ -164,7 +164,7 @@ public class ObjectDecoder {
      * @param context    decode an object to deal with lines, delimiter and options
      * @return the parsed value (Map, List, or primitive)
      */
-    protected static Object parseFieldValue(String fieldValue, int fieldDepth, DecodeContext context) {
+    static Object parseFieldValue(String fieldValue, int fieldDepth, DecodeContext context) {
         // Check if the next line is nested
         if (context.currentLine + 1 < context.lines.length) {
             int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
@@ -204,7 +204,7 @@ public class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return the parsed value (Map, List, or primitive)
      */
-    protected static Object parseObjectItemValue(String value, int depth, DecodeContext context) {
+    static Object parseObjectItemValue(String value, int depth, DecodeContext context) {
         boolean isEmpty = value.trim().isEmpty();
 
         // Find the next non-blank line and its depth
