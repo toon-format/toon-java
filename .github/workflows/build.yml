@@ -45,7 +45,7 @@ jobs:
         run: ./gradlew build
 
       - name: Upload test results
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         if: always()
         with:
           name: test-results
@@ -71,7 +71,7 @@ jobs:
             core.setFailed('Overall coverage is less than 85%!')
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: build-artifacts
           path: build/libs/*.jar

@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -488,7 +489,8 @@ class JsonNormalizerTest {
 
             // Then
             assertTrue(result.isString());
-            assertEquals("11:40:19", result.asString());
+            String expected = time.toLocalTime().format(DateTimeFormatter.ISO_LOCAL_TIME);
+            assertEquals(expected, result.asString());
         }
 
         @Test
@@ -502,7 +504,8 @@ class JsonNormalizerTest {
 
             // Then
             assertTrue(result.isString());
-            assertEquals("1970-01-21T11:40:19.274", result.asString());
+            String expected = dateTime.toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            assertEquals(expected, result.asString());
         }
 
 
@@ -1569,7 +1572,8 @@ class JsonNormalizerTest {
 
             // Then
             assertInstanceOf(StringNode.class, result);
-            assertEquals("2017-02-16T19:22:28Z", ((JsonNode) result).asString());
+            String expected = input.toInstant().toString();
+            assertEquals(expected, ((JsonNode) result).asString());
         }
 
         @Test
@@ -1583,7 +1587,8 @@ class JsonNormalizerTest {
 
             // Then
             assertInstanceOf(StringNode.class, result);
-            assertEquals("2017-02-16T19:22:28Z", ((JsonNode) result).asString());
+            String expected = input.toInstant().toString();
+            assertEquals(expected, ((JsonNode) result).asString());
         }
 
         @Test
