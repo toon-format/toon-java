@@ -98,12 +98,12 @@ jobs:
           generate-branches-badge: true
           jacoco-csv-file: build/customJacocoReportDir/test/jacocoTestReport.csv
 
-      - name: Update Jacoco Badge
-        uses: test-room-7/action-update-file@v2.0.0
+      - name: Commit and push the badge
+        uses: EndBug/add-and-commit@v9.1.4
         with:
-          file-path: .github/badges/jacoco.svg
-          commit-msg: Update Jacoco Badge
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+            default_author: github_actions
+            message: 'Update the Coverage Badge for the README.md'
+            add: '*.svg'
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6.0.0
