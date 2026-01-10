@@ -279,7 +279,11 @@ System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true,
 
 ### `JToon.decodeToJson(String toon, DecodeOptions options): String`
 
-Converts TOON-formatted strings back to Java objects or JSON.
+### `JToon.decodeToMap(String toon): Map<String, Object>`
+
+### `JToon.decodeToMap(String toon, DecodeOptions options): Map<String, Object>`
+
+Converts TOON-formatted strings back to Java objects, JSON or directly into Map<String, Object>.
 
 **Parameters:**
 
@@ -295,6 +299,8 @@ Converts TOON-formatted strings back to Java objects or JSON.
 For `decode`: A Java object (`Map` for objects, `List` for arrays, primitives for scalars, or `null`)
 
 For `decodeToJson`: A JSON string representation
+
+For `decodeToMap`: A `Map` representing a Java object
 
 **Example:**
 
@@ -312,6 +318,9 @@ Object result = JToon.decode(toon);
 
 // Decode directly to JSON string
 String json = JToon.decodeToJson(toon);
+
+// Decode directly to Map<String, Object> (no cast needed)
+Map<String, Object> map = JToon.decodeToMap(toon);
 ```
 
 #### Round-Trip Conversion
