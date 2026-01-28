@@ -27,6 +27,7 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 jacoco {
@@ -40,12 +41,14 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:6.0.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.awaitility:awaitility:4.2.1'
 }
 
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport // report is always generated after tests run
 }
+
 
 jacocoTestReport {
     dependsOn test
@@ -96,3 +99,4 @@ tasks.register('specsValidation', Test) {
 
     include '**/ConformanceTest.class'
 }
+

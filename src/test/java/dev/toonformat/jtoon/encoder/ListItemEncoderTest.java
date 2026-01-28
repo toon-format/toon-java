@@ -128,7 +128,6 @@ class ListItemEncoderTest {
 
         EncodeOptions options = EncodeOptions.DEFAULT;
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
 
         // When
         ArrayEncoder.encodeArray("items",node, writer, 0, options);
@@ -153,7 +152,6 @@ class ListItemEncoderTest {
 
         EncodeOptions options = EncodeOptions.DEFAULT;
         LineWriter writer = new LineWriter(options.indent());
-        Set<String> rootKeys = new HashSet<>();
 
         // When
         ArrayEncoder.encodeArray("items", node, writer, 0, options);
