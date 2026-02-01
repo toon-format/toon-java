@@ -15,7 +15,7 @@ public final class ObjectMapperSingleton {
     /**
      * Holds the singleton ObjectMapper.
      */
-    private static ObjectMapper INSTANCE;
+    private static volatile ObjectMapper INSTANCE;
 
     private ObjectMapperSingleton() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -27,14 +27,20 @@ public final class ObjectMapperSingleton {
      * @return ObjectMapper
      */
     public static ObjectMapper getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = JsonMapper.builder()
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
-                .addModule(new AfterburnerModule()) // Speeds up Jackson by 20–40% in most real-world cases
-                .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
-                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build();
+        ObjectMapper result = INSTANCE;
+        if (result == null) {
+            synchronized (ObjectMapperSingleton.class) {
+                result = INSTANCE;
+                if (result == null) {
+                    INSTANCE = result = JsonMapper.builder()
+                        .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.ALWAYS))
+                        .addModule(new AfterburnerModule()) // Speeds up Jackson by 20–40% in most real-world cases
+                        .defaultTimeZone(TimeZone.getTimeZone("UTC")) // set a default timezone for dates
+                        .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                        .build();
+                }
+            }
         }
-        return INSTANCE;
+        return result;
     }
 }

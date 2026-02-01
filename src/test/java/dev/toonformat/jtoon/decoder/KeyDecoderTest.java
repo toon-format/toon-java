@@ -156,6 +156,66 @@ class KeyDecoderTest {
         // Then
         Map<String, Object> expectedNestedMap = new LinkedHashMap<>();
         expectedNestedMap.put("bar", expectedArray);
+        assertNull(result.get("bar"));
+        assertEquals(result.size(),  expectedNestedMap.size());
+    }
+
+    @Test
+    @DisplayName("Given basic keyed array line When processed Then value is placed in map")
+    void processKeyedArrayLine_givenBasicKeyedArray_whenProcessed_thenValueInMap() {
+        // Given
+        Map<String, Object> result = new LinkedHashMap<>();
+        String content = "tags[3]: a, b, c";
+        String originalKey = "tags";
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        context.delimiter = Delimiter.COMMA;
+
+        // When
+        KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context);
+
+        // Then
+        List<Object> expected = Arrays.asList("a", "b", "c");
+        assertEquals(expected, result.get("tags"));
+    }
+
+    @Test
+    @DisplayName("Given dotted keyed array line and SAFE expansion When processed Then value is placed in nested map")
+    void processKeyedArrayLine_givenDottedKeyedArray_whenProcessed_thenNestedMapContainsValue() {
+        // Given
+        Map<String, Object> result = new LinkedHashMap<>();
+        String content = "user.tags[2]: dev, test";
+        String originalKey = "user.tags";
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.delimiter = Delimiter.COMMA;
+
+        // When
+        KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context);
+
+        // Then
+        assertTrue(result.containsKey("user"));
+        @SuppressWarnings("unchecked") Map<String, Object> user = (Map<String, Object>) result.get("user");
+        List<Object> expected = Arrays.asList("dev", "test");
+        assertEquals(expected, user.get("tags"));
+    }
+
+    @Test
+    @DisplayName("Given dotted keyed array line and expansion conflict in strict mode When processed Then throws exception")
+    void processKeyedArrayLine_givenExpansionConflictStrict_whenProcessed_thenThrowsException() {
+        // Given
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("user", "not-a-map");
+        String content = "user.tags[1]: dev";
+        String originalKey = "user.tags";
+        DecodeContext context = new DecodeContext();
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.delimiter = Delimiter.COMMA;
+
+        // When / Then
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context));
+        assertTrue(ex.getMessage().contains("Path expansion conflict"));
     }
 
     @Test

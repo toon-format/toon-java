@@ -1075,14 +1075,7 @@ class JsonNormalizerTest {
     @DisplayName("POJOs")
     class POJOs {
 
-        static class SimplePojo {
-            public String name;
-            public int age;
-
-            SimplePojo(String name, int age) {
-                this.name = name;
-                this.age = age;
-            }
+        record SimplePojo(String name, int age) {
         }
 
         record PojoWithGetters(String value) {
