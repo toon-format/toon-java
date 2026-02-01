@@ -35,7 +35,7 @@ jacoco {
 }
 
 dependencies {
-    implementation 'tools.jackson.core:jackson-databind:3.0.3'
+    implementation 'tools.jackson.core:jackson-databind:3.0.4'
     implementation 'tools.jackson.module:jackson-module-afterburner:3.0.4'
     testImplementation platform('org.junit:junit-bom:6.0.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
