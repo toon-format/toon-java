@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
+import static dev.toonformat.jtoon.util.Constants.*;
 import static dev.toonformat.jtoon.util.Headers.ARRAY_HEADER_PATTERN;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
@@ -47,10 +48,10 @@ public final class ArrayDecoder {
         if (matcher.find()) {
             String delimiter = matcher.group(3);
             if (delimiter != null) {
-                if ("\t".equals(delimiter)) {
+                if (Delimiter.TAB.toString().equals(delimiter)) {
                     return Delimiter.TAB;
                 }
-                if ("|".equals(delimiter)) {
+                if (Delimiter.PIPE.toString().equals(delimiter)) {
                     return Delimiter.PIPE;
                 }
             }
@@ -82,7 +83,7 @@ public final class ArrayDecoder {
             int headerEndIdx = arrayMatcher.end();
             String afterHeader = header.substring(headerEndIdx).trim();
 
-            if (afterHeader.startsWith(":")) {
+            if (afterHeader.startsWith(COLON)) {
                 String inlineContent = afterHeader.substring(1).trim();
 
                 if (!inlineContent.isEmpty()) {
@@ -106,7 +107,7 @@ public final class ArrayDecoder {
                     return Collections.emptyList();
                 }
 
-                if (nextContent.startsWith("- ")) {
+                if (nextContent.startsWith(LIST_ITEM_PREFIX)) {
                     context.currentLine--;
                     return parseListArray(depth, header, context);
                 } else {
@@ -195,11 +196,11 @@ public final class ArrayDecoder {
                 stringBuilder.append(currentChar);
                 escaped = false;
                 i++;
-            } else if (currentChar == '\\') {
+            } else if (currentChar == BACKSLASH) {
                 stringBuilder.append(currentChar);
                 escaped = true;
                 i++;
-            } else if (currentChar == '"') {
+            } else if (currentChar == DOUBLE_QUOTE) {
                 stringBuilder.append(currentChar);
                 inQuotes = !inQuotes;
                 i++;

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
+import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
 /**
@@ -101,9 +103,9 @@ public final class TabularArrayDecoder {
             char c = keysStr.charAt(i);
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+            } else if (c == BACKSLASH) {
                 escaped = true;
-            } else if (c == '"') {
+            } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
             } else if (!inQuotes) {
                 checkDelimiterMismatch(expectedChar, c);

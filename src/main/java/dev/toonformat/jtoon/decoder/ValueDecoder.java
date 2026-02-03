@@ -7,6 +7,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 
+import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
+import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
@@ -52,7 +54,7 @@ public final class ValueDecoder {
 
         // Special case: if input is exactly "null", return null
         String trimmed = toon.trim();
-        if ("null".equals(trimmed)) {
+        if (NULL_LITERAL.equals(trimmed)) {
             return null;
         }
 
@@ -78,7 +80,7 @@ public final class ValueDecoder {
         }
 
         // Handle standalone arrays: [2]:
-        if (!line.isEmpty() && line.charAt(0) == '[') {
+        if (!line.isEmpty() && line.charAt(0) == OPEN_BRACKET.charAt(0)) {
             return ArrayDecoder.parseArray(line, depth, context);
         }
 

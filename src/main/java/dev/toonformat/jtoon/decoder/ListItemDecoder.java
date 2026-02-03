@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
+import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
@@ -31,7 +33,7 @@ public final class ListItemDecoder {
         if (lineDepth == depth + 1) {
             String content = line.substring((depth + 1) * context.options.indent());
 
-            if (content.startsWith("-")) {
+            if (content.startsWith(LIST_ITEM_MARKER)) {
                 result.add(parseListItem(content, depth, context));
             } else {
                 context.currentLine++;
@@ -66,7 +68,7 @@ public final class ListItemDecoder {
         }
 
         // Check for standalone array (e.g., "[2]: 1,2")
-        if (itemContent.startsWith("[")) {
+        if (itemContent.startsWith(OPEN_BRACKET)) {
             // For nested arrays in list items, default to comma delimiter if not specified
             Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(itemContent, context);
             // parseArrayWithDelimiter handles currentLine increment internally

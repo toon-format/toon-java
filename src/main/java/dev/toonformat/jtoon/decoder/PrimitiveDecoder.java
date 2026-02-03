@@ -2,6 +2,12 @@ package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.util.StringEscaper;
 
+import static dev.toonformat.jtoon.util.Constants.DOT;
+import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
+import static dev.toonformat.jtoon.util.Constants.TRUE_LITERAL;
+import static dev.toonformat.jtoon.util.Constants.FALSE_LITERAL;
+
+
 /**
  * Handles parsing of primitive TOON values with type inference.
  *
@@ -48,13 +54,13 @@ public final class PrimitiveDecoder {
 
         // Check for null literal
         switch (value) {
-            case "null" -> {
+            case NULL_LITERAL -> {
                 return null;
             }
-            case "true" -> {
+            case TRUE_LITERAL -> {
                 return true;
             }
-            case "false" -> {
+            case FALSE_LITERAL -> {
                 return false;
             }
             default -> {
@@ -78,7 +84,7 @@ public final class PrimitiveDecoder {
         // Try parsing as number
         try {
             // Check if it contains exponent notation or decimal point
-            if (value.contains(".") || value.contains("e") || value.contains("E")) {
+            if (value.contains(DOT) || value.contains("e") || value.contains("E")) {
                 double parsed = Double.parseDouble(value);
                 // Handle negative zero - Java doesn't distinguish, but spec says it should be 0
                 if (parsed == 0.0) {

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+import static dev.toonformat.jtoon.util.Constants.DOT;
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
@@ -156,7 +157,7 @@ public final class KeyDecoder {
             return false;
         }
         // Check if a key contains dots and is a valid identifier pattern
-        if (!key.contains(".")) {
+        if (!key.contains(DOT)) {
             return false;
         }
         // Valid identifier: starts with a letter or underscore, followed by letters,

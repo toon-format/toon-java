@@ -5,6 +5,9 @@ import dev.toonformat.jtoon.Delimiter;
 import java.util.List;
 import java.util.Map;
 
+import static dev.toonformat.jtoon.util.Constants.*;
+
+
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.
  */
@@ -47,7 +50,7 @@ public final class DecodeHelper {
         int lengthOfLine = line.length();
         while (i < lengthOfLine) {
             char c = line.charAt(i);
-            if (c == ' ') {
+            if (c == SPACE.charAt(0)) {
                 leadingSpaces++;
             } else if (c == Delimiter.TAB.getValue()) {
                 if (context.options.strict()) {
@@ -98,11 +101,11 @@ public final class DecodeHelper {
 
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+            } else if (c == BACKSLASH) {
                 escaped = true;
-            } else if (c == '"') {
+            } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
-            } else if (c == ':' && !inQuotes) {
+            } else if (c == COLON.charAt(0) && !inQuotes) {
                 return i;
             }
         }
