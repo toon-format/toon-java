@@ -118,15 +118,16 @@ public final class TabularArrayDecoder {
      * @param actualChar   the actual delimiter character
      */
     private static void checkDelimiterMismatch(char expectedChar, char actualChar) {
-        if (expectedChar == '\t' && actualChar == ',') {
+        if (expectedChar == Delimiter.TAB.getValue() && actualChar == Delimiter.COMMA.getValue()) {
             throw new IllegalArgumentException(
                 "Delimiter mismatch: bracket declares tab, brace fields use comma");
         }
-        if (expectedChar == '|' && actualChar == ',') {
+        if (expectedChar == Delimiter.PIPE.getValue() && actualChar == Delimiter.COMMA.getValue()) {
             throw new IllegalArgumentException(
                 "Delimiter mismatch: bracket declares pipe, brace fields use comma");
         }
-        if (expectedChar == ',' && (actualChar == '\t' || actualChar == '|')) {
+        if (expectedChar == Delimiter.COMMA.getValue() &&
+            (actualChar == Delimiter.TAB.getValue() || actualChar == Delimiter.PIPE.getValue())) {
             throw new IllegalArgumentException(
                 "Delimiter mismatch: bracket declares comma, brace fields use different delimiter");
         }

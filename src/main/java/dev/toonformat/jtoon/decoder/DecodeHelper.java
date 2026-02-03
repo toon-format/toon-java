@@ -1,5 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.Delimiter;
+
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public final class DecodeHelper {
             char c = line.charAt(i);
             if (c == ' ') {
                 leadingSpaces++;
-            } else if (c == '\t') {
+            } else if (c == Delimiter.TAB.getValue()) {
                 if (context.options.strict()) {
                     throw new IllegalArgumentException(
                         "Tab character used in indentation at line " + (context.currentLine + 1));
