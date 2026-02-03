@@ -172,8 +172,8 @@ class TabularArrayDecoderTest {
     @DisplayName("validateKeysDelimiter get called and branches will be checked")
     void checkDelimiterMismatchExecution() {
         // Given
-        String expectedChar = "|";
-        String actualChar = ",";
+        String expectedChar = Delimiter.PIPE.toString();
+        String actualChar = Delimiter.COMMA.toString();
 
         // When
         InvocationTargetException exception = assertThrows(InvocationTargetException.class,
@@ -187,8 +187,8 @@ class TabularArrayDecoderTest {
     @DisplayName("validateKeysDelimiter get called and branches will be checked")
     void checkDelimiterMismatchExecutionWithComa() {
         // Given
-        String expectedChar = ",";
-        String actualChar = "|";
+        String expectedChar = Delimiter.COMMA.toString();
+        String actualChar = Delimiter.PIPE.toString();
 
         // When
         InvocationTargetException exception = assertThrows(InvocationTargetException.class,

@@ -120,7 +120,7 @@ class ArrayDecoderTest {
         Delimiter result = ArrayDecoder.extractDelimiterFromHeader("[3|]", context);
 
         // Then
-        assertEquals("|", result.toString());
+        assertEquals(Delimiter.PIPE.toString(), result.toString());
     }
 
     @Test
