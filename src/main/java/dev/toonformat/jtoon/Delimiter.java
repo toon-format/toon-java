@@ -7,21 +7,21 @@ public enum Delimiter {
     /**
      * Comma delimiter (,) - default option
      */
-    COMMA(','),
+    COMMA(","),
 
     /**
      * Tab delimiter (\t)
      */
-    TAB('\t'),
+    TAB("\t"),
 
     /**
      * Pipe delimiter (|)
      */
-    PIPE('|');
+    PIPE("|");
 
-    private final char value;
+    private final String value;
 
-    Delimiter(char value) {
+    Delimiter(String value) {
         this.value = value;
     }
 
@@ -31,10 +31,10 @@ public enum Delimiter {
      */
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return value;
     }
 
     public char getValue() {
-        return value;
+        return value.charAt(0);
     }
 }
