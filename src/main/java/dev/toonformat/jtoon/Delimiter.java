@@ -19,7 +19,7 @@ public enum Delimiter {
      */
     PIPE('|');
 
-    private char value;
+    private final char value;
 
     Delimiter(char value) {
         this.value = value;
