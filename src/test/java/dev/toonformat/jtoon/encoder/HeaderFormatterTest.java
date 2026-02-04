@@ -26,7 +26,7 @@ public class HeaderFormatterTest {
     @Nested
     @DisplayName("Simple Array Headers")
     class SimpleArrayHeaders {
-//
+
         @Test
         @DisplayName("should format simple array header without key")
         void testSimpleArrayWithoutKey() {

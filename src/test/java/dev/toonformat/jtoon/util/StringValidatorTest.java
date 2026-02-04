@@ -21,7 +21,7 @@ class StringValidatorTest {
     @Nested
     @DisplayName("isSafeUnquoted - Basic Cases")
     class IsSafeUnquotedBasic {
-//
+
         @Test
         @DisplayName("should return false for null")
         void testNullValue() {
