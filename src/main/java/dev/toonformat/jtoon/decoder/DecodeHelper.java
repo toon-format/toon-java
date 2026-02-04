@@ -5,8 +5,10 @@ import dev.toonformat.jtoon.Delimiter;
 import java.util.List;
 import java.util.Map;
 
-import static dev.toonformat.jtoon.util.Constants.*;
-
+import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
+import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
+import static dev.toonformat.jtoon.util.Constants.SPACE;
+import static dev.toonformat.jtoon.util.Constants.COLON;
 
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.

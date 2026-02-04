@@ -7,7 +7,6 @@ import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.TRUE_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.FALSE_LITERAL;
 
-
 /**
  * Handles parsing of primitive TOON values with type inference.
  *

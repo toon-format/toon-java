@@ -7,7 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
-import static dev.toonformat.jtoon.util.Constants.*;
+import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
+import static dev.toonformat.jtoon.util.Constants.COLON;
+import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
+import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
 import static dev.toonformat.jtoon.util.Headers.ARRAY_HEADER_PATTERN;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
