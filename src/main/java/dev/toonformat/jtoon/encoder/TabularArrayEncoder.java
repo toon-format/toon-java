@@ -4,7 +4,6 @@ import dev.toonformat.jtoon.EncodeOptions;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,18 +25,18 @@ public final class TabularArrayEncoder {
      * @param rows The array to analyze
      * @return List of field names for tabular header, or empty list if not tabular
      */
-    public static List<String> detectTabularHeader(ArrayNode rows) {
+    public static List<String> detectTabularHeader(final ArrayNode rows) {
         if (rows.isEmpty()) {
             return Collections.emptyList();
         }
 
-        JsonNode firstRow = rows.get(0);
+        final JsonNode firstRow = rows.get(0);
         if (!firstRow.isObject()) {
             return Collections.emptyList();
         }
 
-        ObjectNode firstObj = (ObjectNode) firstRow;
-        List<String> firstKeys = new ArrayList<>(firstObj.propertyNames());
+        final ObjectNode firstObj = (ObjectNode) firstRow;
+        final List<String> firstKeys = new ArrayList<>(firstObj.propertyNames());
 
         if (firstKeys.isEmpty()) {
             return Collections.emptyList();
@@ -53,22 +52,27 @@ public final class TabularArrayEncoder {
     /**
      * Checks if all rows in the array have the same keys with primitive values.
      */
-    private static boolean isTabularArray(ArrayNode rows, List<String> header) {
+    private static boolean isTabularArray(final Iterable<JsonNode> rows, final Iterable<String> header) {
+        final List<String> headerList = new ArrayList<>();
+        for (String h : header) {
+            headerList.add(h);
+        }
+
         for (JsonNode row : rows) {
             if (!row.isObject()) {
                 return false;
             }
 
-            ObjectNode obj = (ObjectNode) row;
-            List<String> keys = new ArrayList<>(obj.propertyNames());
+            final ObjectNode obj = (ObjectNode) row;
+            final List<String> keys = new ArrayList<>(obj.propertyNames());
 
             // All objects must have the same keys (but order can differ)
-            if (keys.size() != header.size()) {
+            if (keys.size() != headerList.size()) {
                 return false;
             }
 
             // Check that all header keys exist in the row and all values are primitives
-            for (String key : header) {
+            for (String key : headerList) {
                 if (!obj.has(key)) {
                     return false;
                 }
@@ -91,10 +95,11 @@ public final class TabularArrayEncoder {
      * @param depth   Indentation depth
      * @param options Encoding options
      */
-    public static void encodeArrayOfObjectsAsTabular(String prefix, ArrayNode rows, List<String> header,
-                                                     LineWriter writer, int depth, EncodeOptions options) {
-        String headerStr = PrimitiveEncoder.formatHeader(rows.size(), prefix, header, options.delimiter().toString(),
-                options.lengthMarker());
+    public static void encodeArrayOfObjectsAsTabular(final String prefix, final ArrayNode rows,
+            final List<String> header, final LineWriter writer, final int depth,
+            final EncodeOptions options) {
+        final String headerStr = PrimitiveEncoder.formatHeader(rows.size(), prefix, header,
+                options.delimiter().toString(), options.lengthMarker());
         writer.push(depth, headerStr);
 
         writeTabularRows(rows, header, writer, depth + 1, options);
@@ -110,19 +115,25 @@ public final class TabularArrayEncoder {
      * @param depth   Indentation depth
      * @param options Encoding options
      */
-    public static void writeTabularRows(ArrayNode rows, List<String> header, LineWriter writer, int depth,
-                                        EncodeOptions options) {
+    public static void writeTabularRows(final Iterable<JsonNode> rows, final Iterable<String> header,
+            final LineWriter writer, final int depth, final EncodeOptions options) {
+        final List<String> headerList = new ArrayList<>();
+        for (String h : header) {
+            headerList.add(h);
+        }
+        final int headerSize = headerList.size();
+
         for (JsonNode row : rows) {
             //skip non-object rows
             if (!row.isObject()) {
                 continue;
             }
-            ObjectNode obj = (ObjectNode) row;
-            List<JsonNode> values = new ArrayList<>();
-            for (String key : header) {
+            final ObjectNode obj = (ObjectNode) row;
+            final List<JsonNode> values = new ArrayList<>(headerSize);
+            for (String key : headerList) {
                 values.add(obj.get(key));
             }
-            String joinedValue = PrimitiveEncoder.joinEncodedValues(values, options.delimiter().toString());
+            final String joinedValue = PrimitiveEncoder.joinEncodedValues(values, options.delimiter().toString());
             writer.push(depth, joinedValue);
         }
     }

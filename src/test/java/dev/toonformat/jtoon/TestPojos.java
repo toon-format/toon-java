@@ -191,7 +191,7 @@ public class TestPojos {
         }
 
         @Override
-        public void serialize(HotelInfoLlmRerankDTO value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
+        public void serialize(HotelInfoLlmRerankDTO value, JsonGenerator jsonGenerator, SerializationContext provider) {
             jsonGenerator.writeString(value.hotelId);
         }
     }

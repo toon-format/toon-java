@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ArrayEncoderTest {
 
-    private final ObjectMapper MAPPER = new ObjectMapper();
-    private final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
 
     @Test
     void isArrayOfPrimitivesTestWithObjectNode() {

@@ -18,7 +18,7 @@ public record DecodeOptions(
         boolean strict,
         PathExpansion expandPaths) {
     /**
-     * Default decoding options: 2 spaces indent, comma delimiter, strict validation, path expansion off
+     * Default decoding options: 2 spaces indent, comma delimiter, strict validation, path expansion off.
      */
     public static final DecodeOptions DEFAULT = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
 
@@ -35,7 +35,7 @@ public record DecodeOptions(
      * @param indent number of spaces per indentation level
      * @return a new DecodeOptions instance with the specified indent
      */
-    public static DecodeOptions withIndent(int indent) {
+    public static DecodeOptions withIndent(final int indent) {
         return new DecodeOptions(indent, Delimiter.COMMA, true, PathExpansion.OFF);
     }
 
@@ -45,7 +45,7 @@ public record DecodeOptions(
      * @param delimiter the delimiter to use for tabular arrays and inline primitive arrays
      * @return a new DecodeOptions instance with the specified delimiter
      */
-    public static DecodeOptions withDelimiter(Delimiter delimiter) {
+    public static DecodeOptions withDelimiter(final Delimiter delimiter) {
         return new DecodeOptions(2, delimiter, true, PathExpansion.OFF);
     }
 
@@ -55,7 +55,7 @@ public record DecodeOptions(
      * @param strict whether to enable strict validation mode
      * @return a new DecodeOptions instance with the specified strict mode
      */
-    public static DecodeOptions withStrict(boolean strict) {
+    public static DecodeOptions withStrict(final boolean strict) {
         return new DecodeOptions(2, Delimiter.COMMA, strict, PathExpansion.OFF);
     }
 }

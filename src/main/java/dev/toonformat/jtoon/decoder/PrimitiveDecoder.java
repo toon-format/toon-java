@@ -1,7 +1,6 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.util.StringEscaper;
-
 import static dev.toonformat.jtoon.util.Constants.DOT;
 import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.TRUE_LITERAL;
@@ -46,7 +45,7 @@ public final class PrimitiveDecoder {
      * @return The parsed value as {@code Boolean}, {@code Long}, {@code Double},
      * {@code String}, or {@code null}
      */
-    static Object parse(String value) {
+    static Object parse(final String value) {
         if (value == null || value.isEmpty()) {
             return "";
         }
@@ -75,7 +74,7 @@ public final class PrimitiveDecoder {
         }
 
         // Check for leading zeros (treat as string, except for "0", "-0", "0.0", etc.)
-        String trimmed = value.trim();
+        final String trimmed = value.trim();
         if (trimmed.length() > 1 && trimmed.matches("^-?0+[0-7].*")) {
             return value;
         }
@@ -83,17 +82,17 @@ public final class PrimitiveDecoder {
         // Try parsing as number
         try {
             // Check if it contains exponent notation or decimal point
-            if (value.contains(DOT) || value.contains("e") || value.contains("E")) {
-                double parsed = Double.parseDouble(value);
+            if (value.contains("e") || value.contains("E") || value.contains(DOT)) {
+                final double parsed = Double.parseDouble(value);
                 // Handle negative zero - Java doesn't distinguish, but spec says it should be 0
                 if (parsed == 0.0) {
                     return 0L;
                 }
                 // Check if the result is a whole number - if so, return as Long
-                if (parsed == Math.floor(parsed)
-                    && !Double.isInfinite(parsed)
+                if (!Double.isInfinite(parsed)
                     && parsed >= Long.MIN_VALUE
-                    && parsed <= Long.MAX_VALUE) {
+                    && parsed <= Long.MAX_VALUE
+                    && parsed == Math.floor(parsed)) {
                     return (long) parsed;
                 }
 

@@ -1,10 +1,8 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
-
 import java.util.List;
 import java.util.Map;
-
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
@@ -28,7 +26,7 @@ public final class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter, and options
      * @return the depth of a line
      */
-    public static int getDepth(String line, DecodeContext context) {
+    public static int getDepth(final String line, final DecodeContext context) {
         // Blank lines (including lines with only spaces) have depth 0
         if (isBlankLine(line)) {
             return 0;
@@ -44,14 +42,14 @@ public final class DecodeHelper {
      * @param context decode object in order to deal with lines, delimiter and options
      * @return amount of leading spaces
      */
-    private static int computeLeadingSpaces(String line, DecodeContext context) {
-        int indentSize = context.options.indent();
+    private static int computeLeadingSpaces(final String line, final DecodeContext context) {
+        final int indentSize = context.options.indent();
         int leadingSpaces = 0;
 
         int i = 0;
-        int lengthOfLine = line.length();
+        final int lengthOfLine = line.length();
         while (i < lengthOfLine) {
-            char c = line.charAt(i);
+            final char c = line.charAt(i);
             if (c == SPACE.charAt(0)) {
                 leadingSpaces++;
             } else if (c == Delimiter.TAB.getValue()) {
@@ -67,7 +65,7 @@ public final class DecodeHelper {
             i++;
         }
 
-        if (context.options.strict() && leadingSpaces > 0 && indentSize > 0 && leadingSpaces % indentSize != 0) {
+        if (indentSize > 0 && leadingSpaces > 0 && leadingSpaces % indentSize != 0 && context.options.strict()) {
             throw new IllegalArgumentException(
                 String.format("Non-multiple indentation: %d leadingSpaces with indent=%d at line %d",
                     leadingSpaces, indentSize, context.currentLine + 1));
@@ -83,8 +81,8 @@ public final class DecodeHelper {
      * @param line the line string to parse
      * @return true or false depending on if the line is blank or not
      */
-    static boolean isBlankLine(String line) {
-        return line.trim().isEmpty();
+    static boolean isBlankLine(final String line) {
+        return line.isBlank();
     }
 
     /**
@@ -94,21 +92,21 @@ public final class DecodeHelper {
      * @param content the content string to parse
      * @return the unquoted colon
      */
-    static int findUnquotedColon(String content) {
+    static int findUnquotedColon(final String content) {
         boolean inQuotes = false;
         boolean escaped = false;
 
         for (int i = 0; i < content.length(); i++) {
-            char c = content.charAt(i);
+            final char c = content.charAt(i);
 
-            if (escaped) {
+            if (c == COLON.charAt(0) && !inQuotes) {
+                return i;
+            } else if (escaped) {
                 escaped = false;
             } else if (c == BACKSLASH) {
                 escaped = true;
             } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
-            } else if (c == COLON.charAt(0) && !inQuotes) {
-                return i;
             }
         }
 
@@ -122,7 +120,7 @@ public final class DecodeHelper {
      * @param context    decode an object to deal with lines, delimiter, and options
      * @return index aiming for the next non-blank line
      */
-    static int findNextNonBlankLine(int startIndex, DecodeContext context) {
+    static int findNextNonBlankLine(final int startIndex, final DecodeContext context) {
         int index = startIndex;
         while (index < context.lines.length && isBlankLine(context.lines[index])) {
             index++;
@@ -139,7 +137,8 @@ public final class DecodeHelper {
      * @param context      decode an object to deal with lines, delimiter, and options
      * @throws IllegalArgumentException in case there's a expansion conflict
      */
-    static void checkFinalValueConflict(String finalSegment, Object existing, Object value, DecodeContext context) {
+    static void checkFinalValueConflict(final String finalSegment, final Object existing,
+            final Object value, final DecodeContext context) {
         if (existing != null && context.options.strict()) {
             // Check for conflicts in strict mode
             if (existing instanceof Map && !(value instanceof Map)) {
@@ -164,12 +163,13 @@ public final class DecodeHelper {
      * @param value   present value in a map
      * @param context decode an object to deal with lines, delimiter, and options
      */
-    static void checkPathExpansionConflict(Map<String, Object> map, String key, Object value, DecodeContext context) {
+    static void checkPathExpansionConflict(final Map<String, Object> map, final String key,
+            final Object value, final DecodeContext context) {
         if (!context.options.strict()) {
             return;
         }
 
-        Object existing = map.get(key);
+        final Object existing = map.get(key);
         checkFinalValueConflict(key, existing, value, context);
     }
 
@@ -179,7 +179,7 @@ public final class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter, and options
      * @return the depth of the next non-blank line, or null if none exists
      */
-    static Integer findNextNonBlankLineDepth(DecodeContext context) {
+    static Integer findNextNonBlankLineDepth(final DecodeContext context) {
         int nextLineIdx = context.currentLine;
         while (nextLineIdx < context.lines.length && isBlankLine(context.lines[nextLineIdx])) {
             nextLineIdx++;
@@ -198,13 +198,13 @@ public final class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter, and options
      * @throws IllegalArgumentException in case the next depth is equal to 0
      */
-    static void validateNoMultiplePrimitivesAtRoot(DecodeContext context) {
+    static void validateNoMultiplePrimitivesAtRoot(final DecodeContext context) {
         int lineIndex = context.currentLine;
         while (lineIndex < context.lines.length && isBlankLine(context.lines[lineIndex])) {
             lineIndex++;
         }
         if (lineIndex < context.lines.length) {
-            int nextDepth = getDepth(context.lines[lineIndex], context);
+            final int nextDepth = getDepth(context.lines[lineIndex], context);
             if (nextDepth == 0) {
                 throw new IllegalArgumentException(
                     "Multiple primitives at root depth in strict mode at line " + (lineIndex + 1));

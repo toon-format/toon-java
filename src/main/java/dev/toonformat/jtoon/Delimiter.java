@@ -5,24 +5,24 @@ package dev.toonformat.jtoon;
  */
 public enum Delimiter {
     /**
-     * Comma delimiter (,) - default option
+     * Comma delimiter (,) - default option.
      */
     COMMA(","),
 
     /**
-     * Tab delimiter (\t)
+     * Tab delimiter (\t).
      */
     TAB("\t"),
 
     /**
-     * Pipe delimiter (|)
+     * Pipe delimiter (|).
      */
     PIPE("|");
 
     private final String value;
 
-    Delimiter(String value) {
-        this.value = value;
+    Delimiter(final String delimiterValue) {
+        this.value = delimiterValue;
     }
 
     /**
@@ -34,6 +34,11 @@ public enum Delimiter {
         return value;
     }
 
+
+    /**
+     * Returns the character representation of this delimiter.
+     * @return the character value of this delimiter
+     */
     public char getValue() {
         return value.charAt(0);
     }

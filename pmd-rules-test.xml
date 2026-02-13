@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<ruleset name="JToon Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD ruleset for JToon project
+    </description>
+
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="GuardLogStatement" />
+        <exclude name="JUnitAssertionsShouldIncludeMessage" />
+        <exclude name="JUnitTestContainsTooManyAsserts" />
+        <exclude name="JUnitTestsShouldIncludeAssert" />
+        <exclude name="JUnitUseExpected" />
+        <exclude name="LiteralsFirstInComparisons" />
+        <exclude name="JUnit5TestShouldBePackagePrivate" />
+        <exclude name="LooseCoupling" />
+    </rule>
+
+    <!-- Code Style -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor" />
+        <exclude name="CallSuperInConstructor" />
+        <exclude name="CommentDefaultAccessModifier" />
+        <exclude name="ConfusingTernary" />
+        <exclude name="ControlStatementBraces" />
+        <exclude name="FieldNamingConventions" />
+        <exclude name="LinguisticNaming" />
+        <exclude name="LocalVariableCouldBeFinal" />
+        <exclude name="LongVariable" />
+        <exclude name="MethodArgumentCouldBeFinal" />
+        <exclude name="MethodNamingConventions" />
+        <exclude name="OnlyOneReturn" />
+        <exclude name="PrematureDeclaration" />
+        <exclude name="ShortClassName" />
+        <exclude name="ShortVariable" />
+        <exclude name="TooManyStaticImports" />
+        <exclude name="UnnecessaryAnnotationValueElement" />
+        <exclude name="UnnecessaryCast" />
+        <exclude name="UnnecessaryConstructor" />
+        <exclude name="UnnecessaryFullyQualifiedName" />
+        <exclude name="UnnecessaryImport" />
+        <exclude name="UnnecessaryModifier" />
+        <exclude name="UnnecessaryReturn" />
+        <exclude name="UseExplicitTypes" />
+        <exclude name="UselessParentheses" />
+        <exclude name="UselessQualifiedThis" />
+        <exclude name="UseUnderscoresInNumericLiterals" />
+        <exclude name="ClassNamingConventions" />
+    </rule>
+
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <exclude name="AbstractClassWithoutAnyMethod" />
+        <exclude name="AvoidCatchingGenericException" />
+        <exclude name="AvoidDeeplyNestedIfStmts" />
+        <exclude name="CognitiveComplexity" />
+        <exclude name="CollapsibleIfStatements" />
+        <exclude name="CouplingBetweenObjects" />
+        <exclude name="CyclomaticComplexity" />
+        <exclude name="DataClass" />
+        <exclude name="ExcessiveImports" />
+        <exclude name="ExcessivePublicCount" />
+        <exclude name="GodClass" />
+        <exclude name="ImmutableField" />
+        <exclude name="LawOfDemeter" />
+        <exclude name="LoosePackageCoupling" />
+        <exclude name="NPathComplexity" />
+        <exclude name="NcssCount" />
+        <exclude name="SignatureDeclareThrowsException" />
+        <exclude name="SimplifiedTernary" />
+        <exclude name="SimplifyBooleanReturns" />
+        <exclude name="SingularField" />
+        <exclude name="TooManyMethods" />
+        <exclude name="UseObjectForClearerAPI" />
+        <exclude name="UseUtilityClass" />
+    </rule>
+
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidDuplicateLiterals" />
+        <exclude name="AvoidFieldNameMatchingMethodName" />
+        <exclude name="AvoidLiteralsInIfCondition" />
+        <exclude name="AvoidMultipleUnaryOperators" />
+        <exclude name="CheckSkipResult" />
+        <exclude name="ClassCastExceptionWithToArray" />
+        <exclude name="CloseResource" />
+        <exclude name="CompareObjectsWithEquals" />
+        <exclude name="ConstructorCallsOverridableMethod" />
+        <exclude name="DetachedTestCase" />
+        <exclude name="DoNotCallGarbageCollectionExplicitly" />
+        <exclude name="DontImportSun" />
+        <exclude name="DontUseFloatTypeForLoopIndices" />
+        <exclude name="EmptyCatchBlock" />
+        <exclude name="EqualsNull" />
+        <exclude name="JUnitSpelling" />
+        <exclude name="JUnitStaticSuite" />
+        <exclude name="JumbledIncrementer" />
+        <exclude name="MissingSerialVersionUID" />
+        <exclude name="NullAssignment" />
+        <exclude name="ProperCloneImplementation" />
+        <exclude name="ReturnFromFinallyBlock" />
+        <exclude name="SimpleDateFormatNeedsLocale" />
+        <exclude name="SingletonClassReturningNewInstance" />
+        <exclude name="TestClassWithoutTestCases" />
+        <exclude name="UnconditionalIfStatement" />
+        <exclude name="UselessOperationOnImmutable" />
+        <exclude name="AvoidCatchingThrowable" />
+        <exclude name="AvoidAccessibilityAlteration" />
+        <exclude name="UseLocaleWithCaseConversions" />
+    </rule>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops" />
+        <exclude name="ConsecutiveAppendsShouldReuse" />
+        <exclude name="InefficientEmptyStringCheck" />
+        <exclude name="InsufficientStringBufferDeclaration" />
+        <exclude name="OptimizableToArrayCall" />
+        <exclude name="UseArrayListInsteadOfVector" />
+        <exclude name="UseStringBufferForStringAppends" />
+    </rule>
+
+</ruleset>

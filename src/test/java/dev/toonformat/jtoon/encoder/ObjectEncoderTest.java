@@ -33,7 +33,7 @@ class ObjectEncoderTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
+    private static final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
 
     @Test
     void givenSimpleObject_whenEncoding_thenOutputsCorrectLines() {

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ValueEncoderTest {
 
-    private final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
+    private static final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
 
     @Test
     @DisplayName("throws unsupported Operation Exception for calling the constructor")

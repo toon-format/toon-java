@@ -1,12 +1,10 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
-
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
@@ -18,6 +16,8 @@ import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
  * Handles decoding of TOON arrays to JSON format.
  */
 public final class ArrayDecoder {
+
+    private static final int DELIMITER_GROUP_INDEX = 3;
 
     private ArrayDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -32,8 +32,8 @@ public final class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return parsed array with delimiter
      */
-    static List<Object> parseArray(String header, int depth, DecodeContext context) {
-        Delimiter arrayDelimiter = extractDelimiterFromHeader(header, context);
+    static List<Object> parseArray(final String header, final int depth, final DecodeContext context) {
+        final Delimiter arrayDelimiter = extractDelimiterFromHeader(header, context);
 
         return parseArrayWithDelimiter(header, depth, arrayDelimiter, context);
     }
@@ -46,10 +46,10 @@ public final class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return extracted delimiter from header
      */
-    static Delimiter extractDelimiterFromHeader(String header, DecodeContext context) {
-        Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
+    static Delimiter extractDelimiterFromHeader(final String header, final DecodeContext context) {
+        final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
-            String delimiter = matcher.group(3);
+            final String delimiter = matcher.group(DELIMITER_GROUP_INDEX);
             if (delimiter != null) {
                 if (Delimiter.TAB.toString().equals(delimiter)) {
                     return Delimiter.TAB;
@@ -74,23 +74,24 @@ public final class ArrayDecoder {
      * @param context        decode an object to deal with lines, delimiter and options
      * @return parsed array
      */
-    static List<Object> parseArrayWithDelimiter(String header, int depth, Delimiter arrayDelimiter, DecodeContext context) {
-        Matcher tabularMatcher = TABULAR_HEADER_PATTERN.matcher(header);
-        Matcher arrayMatcher = ARRAY_HEADER_PATTERN.matcher(header);
+    static List<Object> parseArrayWithDelimiter(final String header, final int depth, final Delimiter arrayDelimiter,
+                                                final DecodeContext context) {
+        final Matcher tabularMatcher = TABULAR_HEADER_PATTERN.matcher(header);
+        final Matcher arrayMatcher = ARRAY_HEADER_PATTERN.matcher(header);
 
         if (tabularMatcher.find()) {
             return TabularArrayDecoder.parseTabularArray(header, depth, arrayDelimiter, context);
         }
 
         if (arrayMatcher.find()) {
-            int headerEndIdx = arrayMatcher.end();
-            String afterHeader = header.substring(headerEndIdx).trim();
+            final int headerEndIdx = arrayMatcher.end();
+            final String afterHeader = header.substring(headerEndIdx).trim();
 
             if (afterHeader.startsWith(COLON)) {
-                String inlineContent = afterHeader.substring(1).trim();
+                final String inlineContent = afterHeader.substring(1).trim();
 
                 if (!inlineContent.isEmpty()) {
-                    List<Object> result = parseArrayValues(inlineContent, arrayDelimiter);
+                    final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter);
                     validateArrayLength(header, result.size());
                     context.currentLine++;
                     return result;
@@ -99,9 +100,9 @@ public final class ArrayDecoder {
 
             context.currentLine++;
             if (context.currentLine < context.lines.length) {
-                String nextLine = context.lines[context.currentLine];
-                int nextDepth = DecodeHelper.getDepth(nextLine, context);
-                String nextContent = nextLine.substring(nextDepth * context.options.indent());
+                final String nextLine = context.lines[context.currentLine];
+                final int nextDepth = DecodeHelper.getDepth(nextLine, context);
+                final String nextContent = nextLine.substring(nextDepth * context.options.indent());
 
                 if (nextDepth <= depth) {
                     // The next line is not a child of this array,
@@ -115,12 +116,12 @@ public final class ArrayDecoder {
                     return parseListArray(depth, header, context);
                 } else {
                     context.currentLine++;
-                    List<Object> result = parseArrayValues(nextContent, arrayDelimiter);
+                    final List<Object> result = parseArrayValues(nextContent, arrayDelimiter);
                     validateArrayLength(header, result.size());
                     return result;
                 }
             }
-            List<Object> empty = new ArrayList<>();
+            final List<Object> empty = new ArrayList<>();
             validateArrayLength(header, 0);
             return empty;
         }
@@ -137,8 +138,8 @@ public final class ArrayDecoder {
      * @param header       header
      * @param actualLength actual length
      */
-    static void validateArrayLength(String header, int actualLength) {
-        Integer declaredLength = extractLengthFromHeader(header);
+    static void validateArrayLength(final String header, final int actualLength) {
+        final Integer declaredLength = extractLengthFromHeader(header);
         if (declaredLength != null && declaredLength != actualLength) {
             throw new IllegalArgumentException(
                 String.format("Array length mismatch: declared %d, found %d", declaredLength, actualLength));
@@ -150,12 +151,12 @@ public final class ArrayDecoder {
      * Returns the number specified in [n] or null if not found.
      *
      * @param header header string for length check
-     * @return extracted length from header
+     * @return extracted length from header, or null if not found
      */
-    private static Integer extractLengthFromHeader(String header) {
-        Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
+    private static Integer extractLengthFromHeader(final String header) {
+        final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
-            return Integer.parseInt(matcher.group(2));
+            return Integer.valueOf(matcher.group(2));
         }
         return null;
     }
@@ -167,10 +168,10 @@ public final class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed array values
      */
-    static List<Object> parseArrayValues(String values, Delimiter arrayDelimiter) {
-        List<Object> result = new ArrayList<>();
-        List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
-        for (String value : rawValues) {
+    static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter) {
+        final List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
+        final List<Object> result = new ArrayList<>(rawValues.size());
+        for (final String value : rawValues) {
             result.add(PrimitiveDecoder.parse(value));
         }
         return result;
@@ -184,16 +185,16 @@ public final class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed delimited values
      */
-    static List<String> parseDelimitedValues(String input, Delimiter arrayDelimiter) {
-        List<String> result = new ArrayList<>();
-        StringBuilder stringBuilder = new StringBuilder();
+    static List<String> parseDelimitedValues(final String input, final Delimiter arrayDelimiter) {
+        final List<String> result = new ArrayList<>();
+        final StringBuilder stringBuilder = new StringBuilder();
         boolean inQuotes = false;
         boolean escaped = false;
-        char delimiterChar = arrayDelimiter.toString().charAt(0);
+        final char delimiterChar = arrayDelimiter.toString().charAt(0);
 
         int i = 0;
         while (i < input.length()) {
-            char currentChar = input.charAt(i);
+            final char currentChar = input.charAt(i);
 
             if (escaped) {
                 stringBuilder.append(currentChar);
@@ -209,9 +210,9 @@ public final class ArrayDecoder {
                 i++;
             } else if (currentChar == delimiterChar && !inQuotes) {
                 // Found delimiter - add stringBuilder value (trimmed) and reset
-                String value = stringBuilder.toString().trim();
+                final String value = stringBuilder.toString().trim();
                 result.add(value);
-                stringBuilder = new StringBuilder();
+                stringBuilder.setLength(0);
                 // Skip whitespace after delimiter
                 do {
                     i++;
@@ -234,20 +235,20 @@ public final class ArrayDecoder {
      * Parses list an array format where items are prefixed with "- ".
      * Example: items[2]:\n - item1\n - item2
      */
-    private static List<Object> parseListArray(int depth, String header, DecodeContext context) {
-        List<Object> result = new ArrayList<>();
+    private static List<Object> parseListArray(final int depth, final String header, final DecodeContext context) {
+        final List<Object> result = new ArrayList<>();
         context.currentLine++;
 
         boolean shouldContinue = true;
         while (shouldContinue && context.currentLine < context.lines.length) {
-            String line = context.lines[context.currentLine];
+            final String line = context.lines[context.currentLine];
 
             if (DecodeHelper.isBlankLine(line)) {
                 if (handleBlankLineInListArray(depth, context)) {
                     shouldContinue = false;
                 }
             } else {
-                int lineDepth = DecodeHelper.getDepth(line, context);
+                final int lineDepth = DecodeHelper.getDepth(line, context);
                 if (shouldTerminateListArray(lineDepth, depth, line, context)) {
                     shouldContinue = false;
                 } else {
@@ -270,14 +271,14 @@ public final class ArrayDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return true if an array should terminate, false if a line should be skipped
      */
-    private static boolean handleBlankLineInListArray(int depth, DecodeContext context) {
-        int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
+    private static boolean handleBlankLineInListArray(final int depth, final DecodeContext context) {
+        final int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
 
         if (nextNonBlankLine >= context.lines.length) {
             return true; // EOF - terminate array
         }
 
-        int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
+        final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
         if (nextDepth <= depth) {
             return true; // Blank line is outside array - terminate
         }
@@ -299,13 +300,14 @@ public final class ArrayDecoder {
      * @param context   decode an object to deal with lines, delimiter and options
      * @return true if an array should terminate, false otherwise.
      */
-    private static boolean shouldTerminateListArray(int lineDepth, int depth, String line, DecodeContext context) {
+    private static boolean shouldTerminateListArray(final int lineDepth, final int depth,
+            final String line, final DecodeContext context) {
         if (lineDepth < depth + 1) {
             return true; // Line depth is less than expected - terminate
         }
         // Also terminate if line is at expected depth but doesn't start with "-"
         if (lineDepth == depth + 1) {
-            String content = line.substring((depth + 1) * context.options.indent());
+            final String content = line.substring((depth + 1) * context.options.indent());
             return !content.startsWith("-"); // Not an array item - terminate
         }
         return false;

@@ -1,7 +1,6 @@
 package dev.toonformat.jtoon.normalizer;
 
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -15,7 +14,6 @@ import tools.jackson.databind.node.NullNode;
 import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.node.ShortNode;
 import tools.jackson.databind.node.StringNode;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -72,8 +70,8 @@ public final class JsonNormalizer {
      * @return Parsed JsonNode
      * @throws IllegalArgumentException if the input is blank or not valid JSON
      */
-    public static JsonNode parse(String json) {
-        if (json == null || json.trim().isEmpty()) {
+    public static JsonNode parse(final String json) {
+        if (json == null || json.isBlank()) {
             throw new IllegalArgumentException("Invalid JSON");
         }
         try {
@@ -89,7 +87,7 @@ public final class JsonNormalizer {
      * @param value The value to normalize
      * @return The normalized JsonNode
      */
-    public static JsonNode normalize(Object value) {
+    public static JsonNode normalize(final Object value) {
         if (value == null) {
             return NullNode.getInstance();
         } else if (value instanceof JsonNode jsonNode) {
@@ -108,19 +106,19 @@ public final class JsonNormalizer {
     /**
      * Attempts normalization using chain of responsibility pattern.
      */
-    private static JsonNode normalizeWithStrategy(Object value) {
+    private static JsonNode normalizeWithStrategy(final Object value) {
         return NORMALIZERS.stream()
             .map(normalizer -> normalizer.apply(value))
             .filter(Objects::nonNull)
             .findFirst()
-            .orElse(NullNode.getInstance());
+            .orElseGet(NullNode::getInstance);
     }
 
     /**
      * Attempts to normalize primitive types and their wrappers.
      * Returns null if the value is not a primitive type.
      */
-    private static JsonNode tryNormalizePrimitive(Object value) {
+    private static JsonNode tryNormalizePrimitive(final Object value) {
         if (value instanceof String stringValue) {
             return StringNode.valueOf(stringValue);
         } else if (value instanceof Boolean boolValue) {
@@ -145,7 +143,7 @@ public final class JsonNormalizer {
     /**
      * Normalizes Double values handling special cases.
      */
-    private static JsonNode normalizeDouble(Double value) {
+    private static JsonNode normalizeDouble(final Double value) {
         if (!Double.isFinite(value)) {
             return NullNode.getInstance();
         }
@@ -153,13 +151,13 @@ public final class JsonNormalizer {
             return IntNode.valueOf(0);
         }
         return tryConvertToLong(value)
-            .orElse(DoubleNode.valueOf(value));
+            .orElseGet(() -> DoubleNode.valueOf(value));
     }
 
     /**
      * Normalizes Float values handling special cases.
      */
-    private static JsonNode normalizeFloat(Float value) {
+    private static JsonNode normalizeFloat(final Float value) {
         return Float.isFinite(value)
             ? FloatNode.valueOf(value)
             : NullNode.getInstance();
@@ -168,14 +166,14 @@ public final class JsonNormalizer {
     /**
      * Attempts to convert a double to a long if it's a whole number.
      */
-    private static Optional<JsonNode> tryConvertToLong(Double value) {
+    private static Optional<JsonNode> tryConvertToLong(final Double value) {
         if (value != Math.floor(value)) {
             return Optional.empty();
         }
         if (value > Long.MAX_VALUE || value < Long.MIN_VALUE) {
             return Optional.empty();
         }
-        long longVal = value.longValue();
+        final long longVal = value.longValue();
         return Optional.of(LongNode.valueOf(longVal));
     }
 
@@ -183,7 +181,7 @@ public final class JsonNormalizer {
      * Attempts to normalize BigInteger and BigDecimal.
      * Returns null if the value is not a big number type.
      */
-    private static JsonNode tryNormalizeBigNumber(Object value) {
+    private static JsonNode tryNormalizeBigNumber(final Object value) {
         if (value instanceof BigInteger bigInteger) {
             return normalizeBigInteger(bigInteger);
         } else if (value instanceof BigDecimal bigDecimal) {
@@ -196,8 +194,8 @@ public final class JsonNormalizer {
     /**
      * Normalizes BigInteger, converting to long if within range.
      */
-    private static JsonNode normalizeBigInteger(BigInteger value) {
-        boolean fitsInLong = value.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0
+    private static JsonNode normalizeBigInteger(final BigInteger value) {
+        final boolean fitsInLong = value.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0
             && value.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) >= 0;
         return fitsInLong
             ? LongNode.valueOf(value.longValue())
@@ -208,7 +206,7 @@ public final class JsonNormalizer {
      * Attempts to normalize temporal types (date/time) to ISO strings.
      * Returns null if the value is not a temporal type.
      */
-    private static JsonNode tryNormalizeTemporal(Object value) {
+    private static JsonNode tryNormalizeTemporal(final Object value) {
         if (value instanceof LocalDateTime ldt) {
             return formatTemporal(ldt, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } else if (value instanceof LocalDate ld) {
@@ -239,7 +237,7 @@ public final class JsonNormalizer {
     /**
      * Helper method to format temporal values consistently.
      */
-    private static <T> JsonNode formatTemporal(T temporal, DateTimeFormatter formatter) {
+    private static <T> JsonNode formatTemporal(final T temporal, final DateTimeFormatter formatter) {
         return StringNode.valueOf(formatter.format((java.time.temporal.TemporalAccessor) temporal));
     }
 
@@ -247,7 +245,7 @@ public final class JsonNormalizer {
      * Attempts to normalize collections (Collection and Map).
      * Returns null if the value is not a collection type.
      */
-    private static JsonNode tryNormalizeCollection(Object value) {
+    private static JsonNode tryNormalizeCollection(final Object value) {
         if (value instanceof Collection<?>) {
             return normalizeCollection((Collection<?>) value);
         } else if (value instanceof Map<?, ?>) {
@@ -260,8 +258,8 @@ public final class JsonNormalizer {
     /**
      * Normalizes a Collection to an ArrayNode.
      */
-    private static ArrayNode normalizeCollection(Collection<?> collection) {
-        ArrayNode arrayNode = MAPPER.createArrayNode();
+    private static ArrayNode normalizeCollection(final Collection<?> collection) {
+        final ArrayNode arrayNode = MAPPER.createArrayNode();
         collection.forEach(item -> arrayNode.add(normalize(item)));
         return arrayNode;
     }
@@ -269,8 +267,8 @@ public final class JsonNormalizer {
     /**
      * Normalizes a Map to an ObjectNode.
      */
-    private static ObjectNode normalizeMap(Map<?, ?> map) {
-        ObjectNode objectNode = MAPPER.createObjectNode();
+    private static ObjectNode normalizeMap(final Map<?, ?> map) {
+        final ObjectNode objectNode = MAPPER.createObjectNode();
         map.forEach((key, value) -> objectNode.set(String.valueOf(key), normalize(value)));
         return objectNode;
     }
@@ -279,7 +277,7 @@ public final class JsonNormalizer {
      * Attempts to normalize POJOs using Jackson's default conversion.
      * Returns null for non-serializable objects.
      */
-    private static JsonNode tryNormalizePojo(Object value) {
+    private static JsonNode tryNormalizePojo(final Object value) {
         try {
             return MAPPER.valueToTree(value);
         } catch (Exception e) {
@@ -290,7 +288,7 @@ public final class JsonNormalizer {
     /**
      * Normalizes arrays to ArrayNode.
      */
-    private static JsonNode normalizeArray(Object array) {
+    private static JsonNode normalizeArray(final Object array) {
         if (array instanceof int[] intArr) {
             return buildArrayNode(intArr.length, i -> IntNode.valueOf(intArr[i]));
         } else if (array instanceof long[] longArr) {
@@ -317,8 +315,8 @@ public final class JsonNormalizer {
     /**
      * Builds an ArrayNode using a functional approach.
      */
-    private static ArrayNode buildArrayNode(int length, IntFunction<JsonNode> mapper) {
-        ArrayNode arrayNode = MAPPER.createArrayNode();
+    private static ArrayNode buildArrayNode(final int length, final IntFunction<JsonNode> mapper) {
+        final ArrayNode arrayNode = MAPPER.createArrayNode();
         for (int i = 0; i < length; i++) {
             arrayNode.add(mapper.apply(i));
         }
@@ -328,7 +326,7 @@ public final class JsonNormalizer {
     /**
      * Normalizes a single double element from an array.
      */
-    private static JsonNode normalizeDoubleElement(double value) {
+    private static JsonNode normalizeDoubleElement(final double value) {
         return Double.isFinite(value)
             ? DoubleNode.valueOf(value)
             : NullNode.getInstance();
@@ -337,7 +335,7 @@ public final class JsonNormalizer {
     /**
      * Normalizes a single float element from an array.
      */
-    private static JsonNode normalizeFloatElement(float value) {
+    private static JsonNode normalizeFloatElement(final float value) {
         return Float.isFinite(value)
             ? FloatNode.valueOf(value)
             : NullNode.getInstance();

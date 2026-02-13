@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    
+    <!-- Exclude test classes -->
+    <Match>
+        <Class name="~.*Test.*" />
+    </Match>
+    
+    <!-- Exclude JMH benchmark classes -->
+    <Match>
+        <Class name="~.*JToonBenchmark.*" />
+    </Match>
+    
+    <!-- Exclude generated classes -->
+    <Match>
+        <Class name="~.*\.generated\..*" />
+    </Match>
+       
+	<Match>
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+	
+	<Match>
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+	    
+    <!-- Exclude warnings for string concatenation in logging -->
+    <Match>
+        <Method name="~.*log.*|.*info.*|.*debug.*|.*error.*" />
+        <Bug pattern="SBSC_USE_STRINGBUFFER_CONCATENATION" />
+    </Match>
+    
+    <!-- Floating point equality is intentional in PrimitiveDecoder and JsonNormalizer for -0 handling -->
+    <Match>
+        <Class name="dev.toonformat.jtoon.decoder.PrimitiveDecoder" />
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY" />
+    </Match>
+    <Match>
+        <Class name="dev.toonformat.jtoon.normalizer.JsonNormalizer" />
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY" />
+    </Match>
+    
+    <!-- Unchecked casts are intentional and checked via isArray() and isObject() -->
+    <Match>
+        <Class name="dev.toonformat.jtoon.encoder.ObjectEncoder" />
+        <Bug pattern="BC_UNCONFIRMED_CAST" />
+    </Match>
+    
+    <!-- Unchecked cast in KeyDecoder is intentional and checked -->
+    <Match>
+        <Class name="dev.toonformat.jtoon.decoder.KeyDecoder" />
+        <Bug pattern="BC_UNCONFIRMED_CAST" />
+    </Match>
+    
+    <!-- Unchecked cast in ValueEncoder is intentional and checked -->
+    <Match>
+        <Class name="dev.toonformat.jtoon.encoder.ValueEncoder" />
+        <Bug pattern="BC_UNCONFIRMED_CAST" />
+    </Match>
+
+    <!-- Nullable annotation warnings - use JavaDoc instead -->
+    <Match>
+        <Bug pattern="AI_ANNOTATION_ISSUES_NEEDS_NULLABLE" />
+    </Match>
+
+    <!-- Circular dependencies are expected in decoder/encoder classes -->
+    <Match>
+        <Bug pattern="FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY" />
+    </Match>
+
+    <!-- Instanceof checks are intentionally used for type discrimination in decoders/normalizers -->
+    <Match>
+        <Bug pattern="ITC_INHERITANCE_TYPE_CHECKING" />
+    </Match>
+
+    <!-- Exception softening is intentional when wrapping exceptions -->
+    <Match>
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+
+    <!-- Weak exception messaging is acceptable for internal exceptions -->
+    <Match>
+        <Bug pattern="WEM_WEAK_EXCEPTION_MESSAGING" />
+    </Match>
+
+    <!-- Unrelated return values are expected in decoder methods that return different types -->
+    <Match>
+        <Bug pattern="URV_UNRELATED_RETURN_VALUES" />
+    </Match>
+    <Match>
+        <Bug pattern="URV_CHANGE_RETURN_TYPE" />
+    </Match>
+
+    <!-- Overly permissive methods - public API methods used internally -->
+    <Match>
+        <Bug pattern="OPM_OVERLY_PERMISSIVE_METHOD" />
+    </Match>
+
+    <!-- Suboptimal expression order - reordered for performance -->
+    <Match>
+        <Bug pattern="SEO_SUBOPTIMAL_EXPRESSION_ORDER" />
+    </Match>
+
+    <!-- Needlessly boxing boolean/number - minor performance issue -->
+    <Match>
+        <Bug pattern="NAB_NEEDLESS_BOOLEAN_CONSTANT_CONVERSION" />
+    </Match>
+    <Match>
+        <Bug pattern="NAB_NEEDLESS_BOXING_VALUEOF" />
+    </Match>
+
+    <!-- Immature class warnings - records/classes intentionally minimal -->
+    <Match>
+        <Bug pattern="IMC_IMMATURE_CLASS_NO_EQUALS" />
+    </Match>
+    <Match>
+        <Bug pattern="IMC_IMMATURE_CLASS_NO_TOSTRING" />
+    </Match>
+    <Match>
+        <Bug pattern="IMC_IMMATURE_CLASS_WRONG_FIELD_ORDER" />
+    </Match>
+
+    <!-- Enum equals - intentional for comparison -->
+    <Match>
+        <Bug pattern="ENMI_EQUALS_ON_ENUM" />
+    </Match>
+
+    <!-- Overly concrete collection parameter - minor style issue -->
+    <Match>
+        <Bug pattern="OCP_OVERLY_CONCRETE_COLLECTION_PARAMETER" />
+    </Match>
+</FindBugsFilter>

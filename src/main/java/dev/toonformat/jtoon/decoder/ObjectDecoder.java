@@ -1,11 +1,10 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.util.StringEscaper;
-
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
@@ -24,11 +23,11 @@ public final class ObjectDecoder {
      * @param context     decode an object to deal with lines, delimiter and options
      * @return parsed nested object
      */
-    static Map<String, Object> parseNestedObject(int parentDepth, DecodeContext context) {
-        Map<String, Object> result = new LinkedHashMap<>();
+    static Map<String, Object> parseNestedObject(final int parentDepth, final DecodeContext context) {
+        final Map<String, Object> result = new LinkedHashMap<>();
 
         while (context.currentLine < context.lines.length) {
-            String line = context.lines[context.currentLine];
+            final String line = context.lines[context.currentLine];
 
             // Skip blank lines
             if (DecodeHelper.isBlankLine(line)) {
@@ -36,7 +35,7 @@ public final class ObjectDecoder {
                 continue;
             }
 
-            int depth = DecodeHelper.getDepth(line, context);
+            final int depth = DecodeHelper.getDepth(line, context);
 
             if (depth <= parentDepth) {
                 return result;
@@ -57,9 +56,10 @@ public final class ObjectDecoder {
      * Returns true if the line was processed, false if it was a blank line that was
      * skipped.
      */
-    private static void processDirectChildLine(Map<String, Object> result, String line, int parentDepth, int depth, DecodeContext context) {
-        String content = line.substring((parentDepth + 1) * context.options.indent());
-        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
+    private static void processDirectChildLine(final Map<String, Object> result, final String line,
+            final int parentDepth, final int depth, final DecodeContext context) {
+        final String content = line.substring((parentDepth + 1) * context.options.indent());
+        final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
 
         if (keyedArray.find()) {
             KeyDecoder.processKeyedArrayLine(result, content, keyedArray.group(1), parentDepth, context);
@@ -75,10 +75,10 @@ public final class ObjectDecoder {
      * @param depth   the depth of the object field
      * @param context decode an object to deal with lines, delimiter and options
      */
-    static void parseRootObjectFields(Map<String, Object> obj, int depth, DecodeContext context) {
+    static void parseRootObjectFields(final Map<String, Object> obj, final int depth, final DecodeContext context) {
         while (context.currentLine < context.lines.length) {
-            String line = context.lines[context.currentLine];
-            int lineDepth = DecodeHelper.getDepth(line, context);
+            final String line = context.lines[context.currentLine];
+            final int lineDepth = DecodeHelper.getDepth(line, context);
 
             if (lineDepth != depth) {
                 return;
@@ -90,16 +90,16 @@ public final class ObjectDecoder {
                 continue;
             }
 
-            String content = line.substring(depth * context.options.indent());
+            final String content = line.substring(depth * context.options.indent());
 
-            Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
+            final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
             if (keyedArray.matches()) {
                 processRootKeyedArrayLine(obj, content, keyedArray.group(1), depth, context);
             } else {
-                int colonIdx = DecodeHelper.findUnquotedColon(content);
+                final int colonIdx = DecodeHelper.findUnquotedColon(content);
                 if (colonIdx > 0) {
-                    String key = content.substring(0, colonIdx).trim();
-                    String value = content.substring(colonIdx + 1).trim();
+                    final String key = content.substring(0, colonIdx).trim();
+                    final String value = content.substring(colonIdx + 1).trim();
 
                     KeyDecoder.parseKeyValuePairIntoMap(obj, key, value, depth, context);
                 } else {
@@ -118,13 +118,14 @@ public final class ObjectDecoder {
      * @param depth       the depth of the object field
      * @param context     decode an object to deal with lines, delimiter and options
      */
-    private static void processRootKeyedArrayLine(Map<String, Object> objectMap, String content, String originalKey,
-                                                  int depth, DecodeContext context) {
-        String originalKeyTrimmed = originalKey.trim();
-        String key = StringEscaper.unescape(originalKey);
-        String arrayHeader = content.substring(originalKey.length());
+    private static void processRootKeyedArrayLine(final Map<String, Object> objectMap,
+            final String content, final String originalKey, final int depth,
+            final DecodeContext context) {
+        final String originalKeyTrimmed = originalKey.trim();
+        final String key = StringEscaper.unescape(originalKey);
+        final String arrayHeader = content.substring(originalKey.length());
 
-        var arrayValue = ArrayDecoder.parseArray(arrayHeader, depth, context);
+        final List<Object> arrayValue = ArrayDecoder.parseArray(arrayHeader, depth, context);
 
         // Handle path expansion for array keys
         if (KeyDecoder.shouldExpandKey(originalKeyTrimmed, context)) {
@@ -144,12 +145,12 @@ public final class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return the parsed scalar value
      */
-    static Object parseBareScalarValue(String content, int depth, DecodeContext context) {
-        Object result = PrimitiveDecoder.parse(content);
+    static Object parseBareScalarValue(final String content, final int depth, final DecodeContext context) {
+        final Object result = PrimitiveDecoder.parse(content);
         context.currentLine++;
 
         // In strict mode, check if there are more primitives at the root level
-        if (context.options.strict() && depth == 0) {
+        if (depth == 0 && context.options.strict()) {
             DecodeHelper.validateNoMultiplePrimitivesAtRoot(context);
         }
 
@@ -164,17 +165,17 @@ public final class ObjectDecoder {
      * @param context    decode an object to deal with lines, delimiter and options
      * @return the parsed value (Map, List, or primitive)
      */
-    static Object parseFieldValue(String fieldValue, int fieldDepth, DecodeContext context) {
+    static Object parseFieldValue(final String fieldValue, final int fieldDepth, final DecodeContext context) {
         // Check if the next line is nested
         if (context.currentLine + 1 < context.lines.length) {
-            int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
+            final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > fieldDepth) {
                 context.currentLine++;
                 // parseNestedObject manages the currentLine, so we don't increment here
                 return parseNestedObject(fieldDepth, context);
             } else {
                 // If the value is empty, create an empty object; otherwise parse as primitive
-                if (fieldValue.trim().isEmpty()) {
+                if (fieldValue.isBlank()) {
                     context.currentLine++;
                     return new LinkedHashMap<>();
                 } else {
@@ -184,7 +185,7 @@ public final class ObjectDecoder {
             }
         } else {
             // If the value is empty, create an empty object; otherwise parse as primitive
-            if (fieldValue.trim().isEmpty()) {
+            if (fieldValue.isBlank()) {
                 context.currentLine++;
                 return new LinkedHashMap<>();
             } else {
@@ -204,11 +205,11 @@ public final class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      * @return the parsed value (Map, List, or primitive)
      */
-    static Object parseObjectItemValue(String value, int depth, DecodeContext context) {
-        boolean isEmpty = value.trim().isEmpty();
+    static Object parseObjectItemValue(final String value, final int depth, final DecodeContext context) {
+        final boolean isEmpty = value.isBlank();
 
         // Find the next non-blank line and its depth
-        Integer nextDepth = DecodeHelper.findNextNonBlankLineDepth(context);
+        final Integer nextDepth = DecodeHelper.findNextNonBlankLineDepth(context);
         if (nextDepth == null) {
             // No non-blank line found - create an empty object
             return new LinkedHashMap<>();

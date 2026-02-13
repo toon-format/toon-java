@@ -12,7 +12,7 @@ public enum KeyFolding {
     SAFE,
     
     /**
-     * Off mode: default
+     * Off mode: default.
      */
     OFF
 }

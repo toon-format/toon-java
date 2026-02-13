@@ -1,7 +1,7 @@
 package dev.toonformat.jtoon.encoder;
 
+import java.util.Collection;
 import java.util.List;
-
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 import static dev.toonformat.jtoon.util.Constants.COMMA;
@@ -42,8 +42,8 @@ public final class HeaderFormatter {
      * @param config Header configuration
      * @return Formatted header string
      */
-    public static String format(HeaderConfig config) {
-        StringBuilder header = new StringBuilder();
+    static String format(final HeaderConfig config) {
+        final StringBuilder header = new StringBuilder();
 
         appendKeyIfPresent(header, config.key());
         appendArrayLength(header, config.length(), config.delimiter(), config.lengthMarker());
@@ -64,26 +64,26 @@ public final class HeaderFormatter {
      * @return formatted header string
      */
     public static String format(
-            int length,
-            String key,
-            List<String> fields,
-            String delimiter,
-            boolean lengthMarker) {
-        HeaderConfig config = new HeaderConfig(length, key, fields, delimiter, lengthMarker);
+            final int length,
+            final String key,
+            final List<String> fields,
+            final String delimiter,
+            final boolean lengthMarker) {
+        final HeaderConfig config = new HeaderConfig(length, key, fields, delimiter, lengthMarker);
         return format(config);
     }
 
-    private static void appendKeyIfPresent(StringBuilder header, String key) {
+    private static void appendKeyIfPresent(final StringBuilder header, final String key) {
         if (key != null) {
             header.append(PrimitiveEncoder.encodeKey(key));
         }
     }
 
     private static void appendArrayLength(
-            StringBuilder header,
-            int length,
-            String delimiter,
-            boolean lengthMarker) {
+            final StringBuilder header,
+            final int length,
+            final String delimiter,
+            final boolean lengthMarker) {
         header.append(OPEN_BRACKET);
         
         if (lengthMarker) {
@@ -95,27 +95,26 @@ public final class HeaderFormatter {
         header.append(CLOSE_BRACKET);
     }
 
-    private static void appendDelimiterIfNotDefault(StringBuilder header, String delimiter) {
-        if (!delimiter.equals(COMMA)) {
+    private static void appendDelimiterIfNotDefault(final StringBuilder header, final String delimiter) {
+        if (!COMMA.equals(delimiter)) {
             header.append(delimiter);
         }
     }
 
     private static void appendFieldsIfPresent(
-            StringBuilder header,
-            List<String> fields,
-            String delimiter) {
+            final StringBuilder header,
+            final Collection<String> fields,
+            final String delimiter) {
         if (fields == null || fields.isEmpty()) {
             return;
         }
 
         header.append(OPEN_BRACE);
-        String quotedFields = formatFields(fields, delimiter);
-        header.append(quotedFields);
+        header.append(formatFields(fields, delimiter));
         header.append(CLOSE_BRACE);
     }
 
-    private static String formatFields(List<String> fields, String delimiter) {
+    private static String formatFields(final Collection<String> fields, final String delimiter) {
         return fields.stream()
                 .map(PrimitiveEncoder::encodeKey)
                 .reduce((a, b) -> a + delimiter + b)

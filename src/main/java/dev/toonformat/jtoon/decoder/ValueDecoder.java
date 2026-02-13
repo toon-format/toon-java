@@ -3,10 +3,8 @@ package dev.toonformat.jtoon.decoder;
 import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import tools.jackson.databind.ObjectMapper;
-
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
-
 import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
@@ -47,20 +45,22 @@ public final class ValueDecoder {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static Object decode(String toon, DecodeOptions options) {
-        if (toon == null || toon.trim().isEmpty()) {
+    public static Object decode(final String toon, final DecodeOptions options) {
+        if (toon == null || toon.isBlank()) {
             return new LinkedHashMap<>();
         }
 
         // Special case: if input is exactly "null", return null
-        String trimmed = toon.trim();
+        final String trimmed = toon.trim();
         if (NULL_LITERAL.equals(trimmed)) {
             return null;
         }
 
         // Don't trim leading whitespace - we need it for indentation validation
         // Only trim trailing whitespace to avoid issues with empty lines at the end
-        String processed = Character.isWhitespace(toon.charAt(toon.length() - 1)) ? toon.stripTrailing() : toon;
+        final String processed = Character.isWhitespace(toon.charAt(toon.length() - 1))
+            ? toon.stripTrailing()
+            : toon;
 
         //set an own decode context
         final DecodeContext context = new DecodeContext();
@@ -68,9 +68,9 @@ public final class ValueDecoder {
         context.options = options;
         context.delimiter = options.delimiter();
 
-        int lineIndex = context.currentLine;
-        String line = context.lines[lineIndex];
-        int depth = DecodeHelper.getDepth(line, context);
+        final int lineIndex = context.currentLine;
+        final String line = context.lines[lineIndex];
+        final int depth = DecodeHelper.getDepth(line, context);
 
         if (depth > 0) {
             if (context.options.strict()) {
@@ -85,15 +85,15 @@ public final class ValueDecoder {
         }
 
         // Handle keyed arrays: items[2]{id,name}:
-        Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(line);
+        final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(line);
         if (keyedArray.matches()) {
             return KeyDecoder.parseKeyedArrayValue(keyedArray, line, depth, context);
         }
         // Handle key-value pairs: name: Ada
-        int colonIdx = DecodeHelper.findUnquotedColon(line);
+        final int colonIdx = DecodeHelper.findUnquotedColon(line);
         if (colonIdx > 0) {
-            String key = line.substring(0, colonIdx).trim();
-            String value = line.substring(colonIdx + 1).trim();
+            final String key = line.substring(0, colonIdx).trim();
+            final String value = line.substring(colonIdx + 1).trim();
             return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
         }
 
@@ -116,9 +116,9 @@ public final class ValueDecoder {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static String decodeToJson(String toon, DecodeOptions options) {
+    public static String decodeToJson(final String toon, final DecodeOptions options) {
         try {
-            Object decoded = decode(toon, options);
+            final Object decoded = decode(toon, options);
             return MAPPER.writeValueAsString(decoded);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to convert decoded value to JSON: " + e.getMessage(), e);

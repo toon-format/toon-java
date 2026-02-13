@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Size Violations -->
+    <module name="FileLength">
+        <property name="max" value="2000"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+
+    <!-- TreeWalker for detailed checks -->
+    <module name="TreeWalker">
+        <!-- Basic checks -->
+        <module name="OuterTypeFilename"/>
+        <module name="IllegalTokenText"/>
+        <module name="AvoidEscapedUnicodeCharacters"/>
+        
+        <!-- Naming Conventions -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="ClassTypeParameterName"/>
+        <module name="MethodTypeParameterName"/>
+        <module name="InterfaceTypeParameterName"/>
+        
+        <!-- Code blocks -->
+        <module name="EmptyBlock"/>
+        <module name="NeedBraces"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        
+        <!-- Whitespace -->
+        <module name="WhitespaceAround"/>
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="ArrayTypeStyle"/>
+        
+        <!-- Code Quality -->
+        <module name="NoFinalizer"/>
+        <module name="GenericWhitespace"/>
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+        </module>
+        <module name="AbbreviationAsWordInName">
+            <property name="ignoreFinal" value="true"/>
+            <property name="allowedAbbreviationLength" value="1"/>
+        </module>
+        <module name="OverloadMethodsDeclarationOrder"/>
+        <module name="VariableDeclarationUsageDistance"/>
+        <module name="CustomImportOrder"/>
+
+        <module name="FinalParameters">
+            <property name="ignorePrimitiveTypes" value="false"/>
+        </module>
+
+        <!-- Javadoc -->
+        <module name="JavadocMethod">
+            <property name="allowMissingParamTags" value="true"/>
+            <property name="allowMissingReturnTag" value="true"/>
+        </module>
+        <module name="JavadocType"/>
+        <module name="JavadocStyle"/>
+        
+        <!-- Error Prevention -->
+        <module name="EmptyStatement"/>
+        <module name="EqualsHashCode"/>
+        <module name="HiddenField"/>
+        <module name="FinalLocalVariable"/>
+        <module name="MagicNumber">
+            <property name="ignoreNumbers" value="-1, 0, 1, 2"/>
+        </module>
+    </module>
+</module>

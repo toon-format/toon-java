@@ -26,7 +26,7 @@ public final class JToon {
      * @param input The object to encode (can be null)
      * @return The JToon-formatted string
      */
-    public static String encode(Object input) {
+    public static String encode(final Object input) {
         return encode(input, EncodeOptions.DEFAULT);
     }
 
@@ -42,8 +42,8 @@ public final class JToon {
      * @param options Encoding options (indent, delimiter, length marker)
      * @return The JToon-formatted string
      */
-    public static String encode(Object input, EncodeOptions options) {
-        JsonNode normalizedValue = JsonNormalizer.normalize(input);
+    public static String encode(final Object input, final EncodeOptions options) {
+        final JsonNode normalizedValue = JsonNormalizer.normalize(input);
         return ValueEncoder.encodeValue(normalizedValue, options);
     }
 
@@ -60,7 +60,7 @@ public final class JToon {
      * @return The TOON-formatted string
      * @throws IllegalArgumentException if the input is not valid JSON
      */
-    public static String encodeJson(String json) {
+    public static String encodeJson(final String json) {
         return encodeJson(json, EncodeOptions.DEFAULT);
     }
 
@@ -78,8 +78,8 @@ public final class JToon {
      * @return The TOON-formatted string
      * @throws IllegalArgumentException if the input is not valid JSON
      */
-    public static String encodeJson(String json, EncodeOptions options) {
-        JsonNode parsed = JsonNormalizer.parse(json);
+    public static String encodeJson(final String json, final EncodeOptions options) {
+        final JsonNode parsed = JsonNormalizer.parse(json);
         return ValueEncoder.encodeValue(parsed, options);
     }
 
@@ -96,7 +96,7 @@ public final class JToon {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static Object decode(String toon) {
+    public static Object decode(final String toon) {
         return decode(toon, DecodeOptions.DEFAULT);
     }
 
@@ -114,7 +114,7 @@ public final class JToon {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static Object decode(String toon, DecodeOptions options) {
+    public static Object decode(final String toon, final DecodeOptions options) {
         return ValueDecoder.decode(toon, options);
     }
 
@@ -132,7 +132,7 @@ public final class JToon {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static String decodeToJson(String toon) {
+    public static String decodeToJson(final String toon) {
         return decodeToJson(toon, DecodeOptions.DEFAULT);
     }
 
@@ -151,7 +151,7 @@ public final class JToon {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
-    public static String decodeToJson(String toon, DecodeOptions options) {
+    public static String decodeToJson(final String toon, final DecodeOptions options) {
         return ValueDecoder.decodeToJson(toon, options);
     }
 }

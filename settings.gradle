@@ -1,1 +1,15 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'info.solidsoft.pitest') {
+                useModule("info.solidsoft.gradle.pitest:gradle-pitest-plugin:${requested.version}")
+            }
+        }
+    }
+}
+
 rootProject.name = 'JToon'

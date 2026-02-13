@@ -1876,7 +1876,7 @@ class JsonNormalizerTest {
     class NormalizePojo {
         class ExplodingPojo {
             public String getValue() {
-                throw new RuntimeException("Boom");
+                throw new IllegalStateException("Boom");
             }
         }
 

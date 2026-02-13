@@ -17,7 +17,7 @@ public final class StringEscaper {
      * @param value The string to escape
      * @return The escaped string
      */
-    public static String escape(String value) {
+    public static String escape(final String value) {
         return value
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -32,7 +32,7 @@ public final class StringEscaper {
      * @param value The string to validate
      * @throws IllegalArgumentException if the string has invalid escape sequences or is unterminated
      */
-    public static void validateString(String value) {
+    public static void validateString(final String value) {
         if (value == null || value.isEmpty()) {
             return;
         }
@@ -44,7 +44,7 @@ public final class StringEscaper {
 
         // Check for invalid escape sequences in quoted strings
         if (value.startsWith("\"") && value.endsWith("\"")) {
-            String unquoted = value.substring(1, value.length() - 1);
+            final String unquoted = value.substring(1, value.length() - 1);
             boolean escaped = false;
 
             for (char c : unquoted.toCharArray()) {
@@ -69,7 +69,7 @@ public final class StringEscaper {
     /**
      * Checks if a character is a valid escape sequence.
      */
-    private static boolean isValidEscapeChar(char c) {
+    private static boolean isValidEscapeChar(final char c) {
         return c == 'n' || c == 'r' || c == 't' || c == '"' || c == '\\';
     }
 
@@ -80,7 +80,7 @@ public final class StringEscaper {
      * @param value The string to unescape (may be quoted)
      * @return The unescaped string with quotes removed
      */
-    public static String unescape(String value) {
+    public static String unescape(final String value) {
         if (value == null || value.length() < 2) {
             return value;
         }
@@ -90,7 +90,7 @@ public final class StringEscaper {
             unquoted = value.substring(1, value.length() - 1);
         }
 
-        StringBuilder result = new StringBuilder();
+        final StringBuilder result = new StringBuilder();
         boolean escaped = false;
 
         for (char c : unquoted.toCharArray()) {
@@ -113,7 +113,7 @@ public final class StringEscaper {
      * @param c The character following a backslash
      * @return The unescaped character
      */
-    private static char unescapeChar(char c) {
+    private static char unescapeChar(final char c) {
         return switch (c) {
             case 'n' -> '\n';
             case 'r' -> '\r';

@@ -48,6 +48,7 @@ public class ConformanceTest {
                 .map(this::parseFixture);
         }
 
+        @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
         private EncodeTestFile parseFixture(File file) {
             try {
                 EncodeTestFixture fixture = mapper.readValue(file, EncodeTestFixture.class);
@@ -131,6 +132,7 @@ public class ConformanceTest {
                 .map(this::parseFixture);
         }
 
+        @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
         private DecodeTestFile parseFixture(File file) {
             try {
                 var fixture = mapper.readValue(file, DecodeTestFixture.class);
