@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
-    id 'com.github.spotbugs' version '6.0.15'
+    id 'com.github.spotbugs' version '6.4.8'
     id 'pmd'
     id 'checkstyle'
     id 'info.solidsoft.pitest' version '1.19.0-rc.3'
