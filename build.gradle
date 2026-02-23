@@ -130,7 +130,7 @@ dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.0.4'
     implementation 'tools.jackson.module:jackson-module-afterburner:3.0.4'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.8'
-    testImplementation platform('org.junit:junit-bom:6.0.2')
+    testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.awaitility:awaitility:4.3.0'
