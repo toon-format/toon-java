@@ -65,7 +65,7 @@ jobs:
 
       - name: Fail PR if overall coverage is less than 85%
         if: ${{ steps.jacoco.outputs.coverage-overall < 85.0 }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             core.setFailed('Overall coverage is less than 85%!')
