@@ -93,6 +93,13 @@ class JToonTest {
         }
 
         @Test
+        @DisplayName("escapes non-printable control chars as unicode")
+        void escapesUnicodeControlChars() {
+            // Then
+            assertEquals("val: \"a\\u0004b\"", encode(obj("val", "a\u0004b")));
+        }
+
+        @Test
         @DisplayName("quotes strings with structural characters")
         void quotesStructuralChars() {
             // Then
@@ -335,7 +342,7 @@ class JToonTest {
             Map<String, Object> obj = obj("items", List.of());
 
             // Then
-            assertEquals("items[0]:", encode(obj));
+            assertEquals("items: []", encode(obj));
         }
 
         @Test
@@ -641,7 +648,7 @@ class JToonTest {
                 """
                     items[1]:
                       - name: test
-                        data[0]:""",
+                        data: []""",
                 encode(obj));
         }
 
@@ -672,7 +679,7 @@ class JToonTest {
             assertEquals(
                 """
                     items[1]:
-                      - data[0]:
+                      - data: []
                         name: x""",
                 encode(obj));
         }
@@ -799,7 +806,7 @@ class JToonTest {
         @DisplayName("encodes empty arrays at root level")
         void encodesEmptyAtRoot() {
             // Then
-            assertEquals("[0]:", encode(List.of()));
+            assertEquals("[]", encode(List.of()));
         }
 
         @Test
@@ -837,7 +844,7 @@ class JToonTest {
                       name: Ada
                       tags[2]: reading,gaming
                       active: true
-                      prefs[0]:""",
+                      prefs: []""",
                 encode(obj));
         }
     }
@@ -1408,7 +1415,7 @@ class JToonTest {
                 EmptyCollections empty = new EmptyCollections(List.of(), Map.of());
 
                 // Then
-                assertEquals("emptyList[0]:\nemptyMap:", encode(empty));
+            assertEquals("emptyList: []\nemptyMap:", encode(empty));
             }
 
             @Test

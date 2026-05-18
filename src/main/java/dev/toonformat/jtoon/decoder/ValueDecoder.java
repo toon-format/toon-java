@@ -55,6 +55,9 @@ public final class ValueDecoder {
         if (NULL_LITERAL.equals(trimmed)) {
             return null;
         }
+        if ("[]".equals(trimmed)) {
+            return java.util.Collections.emptyList();
+        }
 
         // Don't trim leading whitespace - we need it for indentation validation
         // Only trim trailing whitespace to avoid issues with empty lines at the end

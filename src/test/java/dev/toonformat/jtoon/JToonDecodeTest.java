@@ -114,6 +114,18 @@ public class JToonDecodeTest {
             Map<String, Object> map = (Map<String, Object>) result;
             assertEquals("line1\nline2", map.get("text"));
         }
+
+        @Test
+        @DisplayName("should decode unicode escape sequences")
+        void testUnicodeEscapedStrings() {
+            // Given
+            Object result = JToon.decode("val: \"a\\u0004b\"");
+
+            // Then
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) result;
+            assertEquals("a\u0004b", map.get("val"));
+        }
     }
 
     @Nested
@@ -307,6 +319,20 @@ public class JToonDecodeTest {
             @SuppressWarnings("unchecked")
             List<Object> items = (List<Object>) map.get("items");
             assertEquals(0, items.size());
+        }
+
+        @Test
+        @DisplayName("should decode canonical empty array field")
+        void testCanonicalEmptyArrayField() {
+            // Given
+            Object result = JToon.decode("items: []");
+
+            // Then
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) result;
+            @SuppressWarnings("unchecked")
+            List<Object> items = (List<Object>) map.get("items");
+            assertTrue(items.isEmpty());
         }
     }
 
@@ -591,6 +617,17 @@ public class JToonDecodeTest {
             @SuppressWarnings("unchecked")
             List<Object> tags = (List<Object>) map.get("tags");
             assertEquals(2, tags.size());
+        }
+
+        @Test
+        @DisplayName("should decode canonical empty root array")
+        void testCanonicalEmptyRootArray() {
+            // When
+            Object result = JToon.decode("[]");
+
+            // Then
+            assertInstanceOf(List.class, result);
+            assertEquals(List.of(), result);
         }
     }
 

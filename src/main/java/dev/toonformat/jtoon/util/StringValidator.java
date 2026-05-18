@@ -12,6 +12,7 @@ import static dev.toonformat.jtoon.util.Constants.TRUE_LITERAL;
  * Uses char-by-char validation for performance instead of regex.
  */
 public final class StringValidator {
+    private static final int CONTROL_CHAR_MAX = 0x1F;
 
     private StringValidator() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -59,6 +60,9 @@ public final class StringValidator {
                 case '\t':
                     return false;
                 default:
+                    if (c <= CONTROL_CHAR_MAX) {
+                        return false;
+                    }
                     if (delimiter.length() == 1 && c == delimiter.charAt(0)) {
                         return false;
                     }

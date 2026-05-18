@@ -31,6 +31,17 @@ public final class ArrayEncoder {
     public static void encodeArray(final String key, final ArrayNode value,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         if (value.isEmpty()) {
+            if (!options.lengthMarker()) {
+                if (key == null && depth == 0) {
+                    writer.push(depth, "[]");
+                    return;
+                }
+                if (key != null) {
+                    final String encodedKey = PrimitiveEncoder.encodeKey(key);
+                    writer.push(depth, encodedKey + ": []");
+                    return;
+                }
+            }
             final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString(),
                     options.lengthMarker());
             writer.push(depth, header);
@@ -169,6 +180,9 @@ public final class ArrayEncoder {
 
         // Early return for empty arrays
         if (values.isEmpty()) {
+            if (!lengthMarker && prefix != null) {
+                return PrimitiveEncoder.encodeKey(prefix) + ": []";
+            }
             return header;
         }
 
@@ -245,4 +259,3 @@ public final class ArrayEncoder {
         }
     }
 }
-
