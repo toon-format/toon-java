@@ -108,7 +108,7 @@ class TabularArrayDecoderTest {
     @Test
     void testReturnsTrueWhenLineDepthLessThanExpected() throws Exception {
         // Given
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
 
         String line = "  some text";   // Content irrelevant for this branch
@@ -142,7 +142,7 @@ class TabularArrayDecoderTest {
             "key: value"   // next non-blank (depth 0)
         };
 
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = lines;
         context.currentLine = 0;
 
@@ -201,7 +201,7 @@ class TabularArrayDecoderTest {
     @Test
     void testTerminateWhenLineDepthLessThanExpected() throws Exception {
         // Given
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         String line = "    some value"; // Any line works; we won't reach colon logic.
         int lineDepth = 1;              // < expectedRowDepth
@@ -219,7 +219,7 @@ class TabularArrayDecoderTest {
     @Test
     void testParseTabularArray_ReturnsEmptyList_WhenHeaderDoesNotMatchPattern() {
         // Given
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"ignored"};
         context.currentLine = 0;
 

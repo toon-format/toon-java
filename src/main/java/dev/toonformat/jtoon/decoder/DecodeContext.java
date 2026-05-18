@@ -25,10 +25,25 @@ public class DecodeContext {
      */
     protected int currentLine;
 
+    private int currentDepth;
+
     /**
      * Default constructor.
      */
     public DecodeContext() {
+        this.currentDepth = 0;
+    }
+
+    void incrementDepth() {
+        currentDepth++;
+        if (currentDepth > options.maxDepth()) {
+            throw new IllegalArgumentException(
+                "Maximum nesting depth exceeded: " + options.maxDepth());
+        }
+    }
+
+    void decrementDepth() {
+        currentDepth--;
     }
 
 }

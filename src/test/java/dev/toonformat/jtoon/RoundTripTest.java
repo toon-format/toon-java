@@ -350,7 +350,7 @@ class RoundTripTest {
             data.put("tags", Arrays.asList("a", "b", "c"));
 
             EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE);
-            DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.TAB, true, PathExpansion.OFF);
+            DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.TAB, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
             // When
             String toon = JToon.encode(data, encodeOpts);
@@ -368,7 +368,7 @@ class RoundTripTest {
             data.put("tags", Arrays.asList("a", "b", "c"));
 
             EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE);
-            DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.PIPE, true, PathExpansion.OFF);
+            DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.PIPE, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
             // When
             String toon = JToon.encode(data, encodeOpts);

@@ -214,7 +214,7 @@ public class ConformanceTest {
                 };
             }
 
-            return new DecodeOptions(indent, delimiter, strict, expandPaths);
+            return new DecodeOptions(indent, delimiter, strict, expandPaths, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         }
 
         private record DecodeTestFile(File file, DecodeTestFixture fixture) {

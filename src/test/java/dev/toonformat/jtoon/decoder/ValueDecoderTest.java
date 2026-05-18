@@ -148,7 +148,7 @@ class ValueDecoderTest {
     @Test
     void givenNoLines_whenParse_thenReturnEmptyMap() {
         // Given
-        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
+        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         Object parseValue = ValueDecoder.decode("  indented", decodeOptions);// depth=1
 
         // Then
@@ -159,7 +159,7 @@ class ValueDecoderTest {
     @Test
     void givenIndentedLineAndStrict_whenParse_thenThrow() {
         // Given
-        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> ValueDecoder.decode("  indented", decodeOptions));
@@ -168,7 +168,7 @@ class ValueDecoderTest {
     @Test
     void decode_keyValuePair_callsKeyDecoder() {
         // Given
-        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
+        DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         Object result = ValueDecoder.decode("name: Ada", decodeOptions);
@@ -187,7 +187,7 @@ class ValueDecoderTest {
     @Test
     void decodeToJson_throwsWrappedException_whenDecodeFails() {
         // Given
-        DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         String invalidIndentedInput = "  badIndent";
 

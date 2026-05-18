@@ -14,6 +14,15 @@ import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
 /**
  * Handles decoding of tabular arrays to JSON format.
+ *
+ * <p>In strict mode ({@code DecodeOptions.strict() == true}), each tabular row must contain exactly
+ * the same number of values as the header declares field keys, or an
+ * {@link IllegalArgumentException} is thrown.</p>
+ *
+ * <p>In lenient mode ({@code strict == false}), rows with fewer values than keys will have the
+ * missing keys silently omitted, and rows with more values than keys will have the extra values
+ * silently dropped. This means decoding can produce partial data without error when
+ * strict validation is disabled.</p>
  */
 public final class TabularArrayDecoder {
 
@@ -60,7 +69,7 @@ public final class TabularArrayDecoder {
             }
         }
 
-        ArrayDecoder.validateArrayLength(header, result.size());
+        ArrayDecoder.validateArrayLength(header, result.size(), context.options.maxArraySize());
         return result;
     }
 
@@ -261,6 +270,10 @@ public final class TabularArrayDecoder {
      * Parses a tabular row into a Map using the provided keys.
      * Validates that the row uses the correct delimiter.
      *
+     * <p>In strict mode, the number of values must exactly match the number of keys.
+     * In lenient mode, excess values are silently dropped and missing values
+     * result in omitted keys.</p>
+     *
      * @param rowContent     the row content to parse
      * @param keys           the keys for the tabular array
      * @param arrayDelimiter the type of delimiter used in the array
@@ -270,7 +283,8 @@ public final class TabularArrayDecoder {
     private static Map<String, Object> parseTabularRow(final String rowContent, final List<String> keys,
                                                        final Delimiter arrayDelimiter, final DecodeContext context) {
         final Map<String, Object> row = new LinkedHashMap<>();
-        final List<Object> values = ArrayDecoder.parseArrayValues(rowContent, arrayDelimiter);
+        final List<Object> values = ArrayDecoder.parseArrayValues(rowContent, arrayDelimiter,
+            context.options.maxArraySize(), context.options.maxStringLength());
 
         // Validate value count matches key count
         if (context.options.strict() && values.size() != keys.size()) {

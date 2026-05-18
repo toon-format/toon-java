@@ -91,8 +91,9 @@ public final class ArrayDecoder {
                 final String inlineContent = afterHeader.substring(1).trim();
 
                 if (!inlineContent.isEmpty()) {
-                    final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter);
-                    validateArrayLength(header, result.size());
+                    final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter,
+                        context.options.maxArraySize(), context.options.maxStringLength());
+                    validateArrayLength(header, result.size(), context.options.maxArraySize());
                     context.currentLine++;
                     return result;
                 }
@@ -107,7 +108,7 @@ public final class ArrayDecoder {
                 if (nextDepth <= depth) {
                     // The next line is not a child of this array,
                     // the array is empty
-                    validateArrayLength(header, 0);
+                    validateArrayLength(header, 0, context.options.maxArraySize());
                     return Collections.emptyList();
                 }
 
@@ -116,13 +117,14 @@ public final class ArrayDecoder {
                     return parseListArray(depth, header, context);
                 } else {
                     context.currentLine++;
-                    final List<Object> result = parseArrayValues(nextContent, arrayDelimiter);
-                    validateArrayLength(header, result.size());
+                    final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
+                        context.options.maxArraySize(), context.options.maxStringLength());
+                    validateArrayLength(header, result.size(), context.options.maxArraySize());
                     return result;
                 }
             }
             final List<Object> empty = new ArrayList<>();
-            validateArrayLength(header, 0);
+            validateArrayLength(header, 0, context.options.maxArraySize());
             return empty;
         }
 
@@ -138,8 +140,8 @@ public final class ArrayDecoder {
      * @param header       header
      * @param actualLength actual length
      */
-    static void validateArrayLength(final String header, final int actualLength) {
-        final Integer declaredLength = extractLengthFromHeader(header);
+    static void validateArrayLength(final String header, final int actualLength, final int maxArraySize) {
+        final Integer declaredLength = extractLengthFromHeader(header, maxArraySize);
         if (declaredLength != null && declaredLength != actualLength) {
             throw new IllegalArgumentException(
                 String.format("Array length mismatch: declared %d, found %d", declaredLength, actualLength));
@@ -147,16 +149,27 @@ public final class ArrayDecoder {
     }
 
     /**
-     * Extracts declared length from the array header.
+     * Extracts declared length from the array header with bounds checking.
      * Returns the number specified in [n] or null if not found.
      *
-     * @param header header string for length check
+     * @param header      header string for length check
+     * @param maxArraySize maximum allowed array size
      * @return extracted length from header, or null if not found
      */
-    private static Integer extractLengthFromHeader(final String header) {
+    private static Integer extractLengthFromHeader(final String header, final int maxArraySize) {
         final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
-            return Integer.valueOf(matcher.group(2));
+            final String lengthStr = matcher.group(2);
+            final long longLength = Long.parseLong(lengthStr);
+            if (longLength > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(
+                    "Array size too large: " + longLength);
+            }
+            if (longLength > maxArraySize) {
+                throw new IllegalArgumentException(
+                    "Array size " + longLength + " exceeds maximum allowed " + maxArraySize);
+            }
+            return (int) longLength;
         }
         return null;
     }
@@ -168,11 +181,20 @@ public final class ArrayDecoder {
      * @param arrayDelimiter array delimiter
      * @return parsed array values
      */
-    static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter) {
+    static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter, final int maxArraySize) {
+        return parseArrayValues(values, arrayDelimiter, maxArraySize, Integer.MAX_VALUE);
+    }
+
+    static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter,
+                                          final int maxArraySize, final int maxStringLength) {
         final List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
+        if (rawValues.size() > maxArraySize) {
+            throw new IllegalArgumentException(
+                "Array size " + rawValues.size() + " exceeds maximum allowed " + maxArraySize);
+        }
         final List<Object> result = new ArrayList<>(rawValues.size());
         for (final String value : rawValues) {
-            result.add(PrimitiveDecoder.parse(value));
+            result.add(PrimitiveDecoder.parse(value, maxStringLength));
         }
         return result;
     }
@@ -258,7 +280,7 @@ public final class ArrayDecoder {
         }
 
         if (header != null) {
-            validateArrayLength(header, result.size());
+            validateArrayLength(header, result.size(), context.options.maxArraySize());
         }
         return result;
     }

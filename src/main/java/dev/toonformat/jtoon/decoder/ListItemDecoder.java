@@ -112,7 +112,7 @@ public final class ListItemDecoder {
         // Simple scalar: - value
         if (colonIdx <= 0) {
             context.currentLine++;
-            return PrimitiveDecoder.parse(itemContent);
+            return PrimitiveDecoder.parse(itemContent, context);
         }
 
         // Object item: - key: value
@@ -125,7 +125,7 @@ public final class ListItemDecoder {
         final Object parsedValue;
         // If no next line exists, handle a simple case
         if (context.currentLine >= context.lines.length) {
-            parsedValue = value.isBlank() ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value);
+            parsedValue = value.isBlank() ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value, context);
         } else {
             // List item is at depth + 1, so pass depth + 1 to parseObjectItemValue
             parsedValue = ObjectDecoder.parseObjectItemValue(value, depth + 1, context);

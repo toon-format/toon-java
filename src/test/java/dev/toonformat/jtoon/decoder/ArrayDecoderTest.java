@@ -126,13 +126,13 @@ class ArrayDecoderTest {
     @Test
     @DisplayName("Should validate array length")
     void validateArrayLength() {
-        assertThrows(IllegalArgumentException.class, () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 3));
+        assertThrows(IllegalArgumentException.class, () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 3, 10));
     }
 
     @Test
     @DisplayName("Should validate array length")
     void validateArrayLengthWithoutException() {
-        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2));
+        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2, 10));
     }
 
     @Test
@@ -169,7 +169,7 @@ class ArrayDecoderTest {
         String input = "[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5";
 
         // When
-        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class}, input);
+        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class, int.class}, input, 10_000_000);
 
         // Then
         assertEquals(2, extractLengthFromHeader);
@@ -182,7 +182,7 @@ class ArrayDecoderTest {
         String input = "[T]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5";
 
         // When
-        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class}, input);
+        Integer extractLengthFromHeader = (Integer) invokePrivateStatic("extractLengthFromHeader", new Class[]{String.class, int.class}, input, 10_000_000);
 
         // Then
         assertNull(extractLengthFromHeader);

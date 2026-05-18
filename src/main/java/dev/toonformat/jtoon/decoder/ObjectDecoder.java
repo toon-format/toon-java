@@ -24,6 +24,15 @@ public final class ObjectDecoder {
      * @return parsed nested object
      */
     static Map<String, Object> parseNestedObject(final int parentDepth, final DecodeContext context) {
+        context.incrementDepth();
+        try {
+            return doParseNestedObject(parentDepth, context);
+        } finally {
+            context.decrementDepth();
+        }
+    }
+
+    private static Map<String, Object> doParseNestedObject(final int parentDepth, final DecodeContext context) {
         final Map<String, Object> result = new LinkedHashMap<>();
 
         while (context.currentLine < context.lines.length) {
@@ -146,7 +155,7 @@ public final class ObjectDecoder {
      * @return the parsed scalar value
      */
     static Object parseBareScalarValue(final String content, final int depth, final DecodeContext context) {
-        final Object result = PrimitiveDecoder.parse(content);
+        final Object result = PrimitiveDecoder.parse(content, context);
         context.currentLine++;
 
         // In strict mode, check if there are more primitives at the root level
@@ -180,7 +189,7 @@ public final class ObjectDecoder {
                     return new LinkedHashMap<>();
                 } else {
                     context.currentLine++;
-                    return PrimitiveDecoder.parse(fieldValue);
+                    return PrimitiveDecoder.parse(fieldValue, context);
                 }
             }
         } else {
@@ -190,7 +199,7 @@ public final class ObjectDecoder {
                 return new LinkedHashMap<>();
             } else {
                 context.currentLine++;
-                return PrimitiveDecoder.parse(fieldValue);
+                return PrimitiveDecoder.parse(fieldValue, context);
             }
         }
     }
@@ -224,6 +233,6 @@ public final class ObjectDecoder {
         }
 
         // Handle empty value without nested content or non-empty value
-        return isEmpty ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value);
+        return isEmpty ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value, context);
     }
 }

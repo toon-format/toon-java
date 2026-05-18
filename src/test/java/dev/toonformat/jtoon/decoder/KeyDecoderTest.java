@@ -42,7 +42,7 @@ class KeyDecoderTest {
     void shouldExpandKey_givenSafeAndValidDotted_whenChecked_thenTrue() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         boolean expandable = KeyDecoder.shouldExpandKey("user.name", context);
@@ -56,7 +56,7 @@ class KeyDecoderTest {
     void shouldExpandKeyGivenKeyWithQutesWhenCheckedThenTrue() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         boolean expandable = KeyDecoder.shouldExpandKey("\"user.name\"", context);
@@ -70,7 +70,7 @@ class KeyDecoderTest {
     void shouldExpandKey_givenOff_whenChecked_thenFalse() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         boolean expandable = KeyDecoder.shouldExpandKey("user.name", context);
@@ -84,7 +84,7 @@ class KeyDecoderTest {
     void shouldExpandKey_givenQuoted_whenChecked_thenFalse() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         boolean expandable = KeyDecoder.shouldExpandKey("\"user.name\"", context);
@@ -99,7 +99,7 @@ class KeyDecoderTest {
         // Given
         Map<String, Object> target = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
         // When
         KeyDecoder.expandPathIntoMap(target, "a.b.c", 1, context);
@@ -123,7 +123,7 @@ class KeyDecoderTest {
         root.put("foo", "notAMap");
 
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
 
 
         // When / Then
@@ -145,7 +145,7 @@ class KeyDecoderTest {
         int parentDepth = 0;
 
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{content};
 
         List<Object> expectedArray = Arrays.asList(1, 2, 3);
@@ -168,7 +168,7 @@ class KeyDecoderTest {
         String content = "tags[3]: a, b, c";
         String originalKey = "tags";
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.delimiter = Delimiter.COMMA;
 
         // When
@@ -187,7 +187,7 @@ class KeyDecoderTest {
         String content = "user.tags[2]: dev, test";
         String originalKey = "user.tags";
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.delimiter = Delimiter.COMMA;
 
         // When
@@ -209,7 +209,7 @@ class KeyDecoderTest {
         String content = "user.tags[1]: dev";
         String originalKey = "user.tags";
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.delimiter = Delimiter.COMMA;
 
         // When / Then
@@ -225,7 +225,7 @@ class KeyDecoderTest {
         int depth = 25;
 
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"key:   "};
         context.currentLine = -1;
 
@@ -246,7 +246,7 @@ class KeyDecoderTest {
         int depth = 0;
 
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = fieldContent.split(" ");
         Object parsedValue = "someValue";
 
@@ -268,7 +268,7 @@ class KeyDecoderTest {
         // Given
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"user.name: Ada"};
         context.currentLine = 0;
 
@@ -287,7 +287,7 @@ class KeyDecoderTest {
         // Given
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"invalid line"};
         context.currentLine = 0;
 
@@ -304,7 +304,7 @@ class KeyDecoderTest {
         // Given
         Map<String, Object> result = new LinkedHashMap<>();
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"invalid line"};
         context.currentLine = 0;
 
@@ -319,7 +319,7 @@ class KeyDecoderTest {
     void parseKeyValuePair_givenDottedKey_whenParsed_thenNestedStructure() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         context.lines = new String[]{"a.b: 1"};
         context.currentLine = 0;
 
@@ -338,7 +338,7 @@ class KeyDecoderTest {
     void parseKeyValueField_NoQuotes_givenSafeAndValidDotted_whenChecked_thenTrue() {
         // Given
         DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE);
+        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("user.name", "Ada");
 

@@ -592,9 +592,9 @@ class DecodeHelperTest {
 
         @BeforeEach
         void setup() {
-            ctxStrict2.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF);
-            ctxNonStrict2.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF);
-            ctxStrict4.options = new DecodeOptions(4, Delimiter.COMMA, true, PathExpansion.OFF);
+            ctxStrict2.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
+            ctxNonStrict2.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
+            ctxStrict4.options = new DecodeOptions(4, Delimiter.COMMA, true, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         }
 
         private int invokeCompute(String line, DecodeContext ctx) throws Exception {
@@ -651,7 +651,7 @@ class DecodeHelperTest {
 
     private void setUpContext(String[] lines, boolean strict, int indent) {
         this.context.lines = lines;
-        this.context.options = new DecodeOptions(indent, Delimiter.COMMA, strict, PathExpansion.OFF);
+        this.context.options = new DecodeOptions(indent, Delimiter.COMMA, strict, PathExpansion.OFF, DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
         this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
     }
 }
