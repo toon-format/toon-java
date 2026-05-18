@@ -213,7 +213,7 @@ class SecurityValidationTest {
         @Test
         @DisplayName("should have MAX_DEPTH constant")
         void testMaxDepthConstant() {
-            assertEquals(512, JsonNormalizer.MAX_ALLOWED_NESTING_DEPTH);
+            assertEquals(256, JsonNormalizer.MAX_ALLOWED_NESTING_DEPTH);
         }
     }
 }

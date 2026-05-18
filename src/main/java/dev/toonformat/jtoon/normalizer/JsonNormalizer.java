@@ -49,7 +49,7 @@ public final class JsonNormalizer {
     /**
      * maximal allowed nesting depth of list.
      */
-    public static final int MAX_ALLOWED_NESTING_DEPTH = 512;
+    public static final int MAX_ALLOWED_NESTING_DEPTH = 256;
 
     private static final ThreadLocal<Integer> DEPTH_COUNTER = ThreadLocal.withInitial(() -> 0);
     private static final ThreadLocal<Map<Object, Boolean>> VISITED =

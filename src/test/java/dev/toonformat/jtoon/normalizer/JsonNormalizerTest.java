@@ -1945,9 +1945,9 @@ class JsonNormalizerTest {
     class SecurityDepthLimits {
 
         @Test
-        @DisplayName("MAX_ALLOWED_NESTING_DEPTH constant should be 512")
-        void maxDepthConstantIs512() {
-            assertEquals(512, JsonNormalizer.MAX_ALLOWED_NESTING_DEPTH);
+        @DisplayName("MAX_ALLOWED_NESTING_DEPTH constant should be 256")
+        void constantShouldBe256() {
+            assertEquals(256, JsonNormalizer.MAX_ALLOWED_NESTING_DEPTH);
         }
 
         @Test
@@ -1985,7 +1985,7 @@ class JsonNormalizerTest {
                 () -> JsonNormalizer.normalize(deepMap)
             );
 
-            assertTrue(thrown.getMessage().contains("512"));
+            assertTrue(thrown.getMessage().contains("256"));
             assertTrue(thrown.getMessage().contains("nesting depth"));
         }
     }
