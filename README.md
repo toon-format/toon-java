@@ -7,8 +7,6 @@
 [![SPEC v3.3](https://img.shields.io/badge/spec-v3.3-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
 [![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE)
 
-> **⚠️ Beta Status (v1.x.x):** This library is in active development. Beta published to Maven Central. API may change before 2.0.0 release.
-
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Working towards full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
 
 **Key Features:** Minimal syntax • TOON Encoding and Decoding • Tabular arrays for uniform data • Array length validation • Java 17 • full [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) Support • Comprehensive test coverage.
