@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
-    id 'com.github.spotbugs' version '6.5.5'
+    id 'com.github.spotbugs' version '6.5.6'
     id 'pmd'
     id 'checkstyle'
     id 'info.solidsoft.pitest' version '1.19.0'
@@ -128,8 +128,8 @@ tasks.checkstyleTest {
 
 dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.2.0'
-    implementation 'tools.jackson.module:jackson-module-blackbird:3.1.4'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.8'
+    implementation 'tools.jackson.module:jackson-module-blackbird:3.2.0'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.2'
     testImplementation platform('org.junit:junit-bom:6.1.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
