@@ -6,6 +6,7 @@ plugins {
     id 'com.github.spotbugs' version '6.5.8'
     id 'pmd'
     id 'checkstyle'
+    id 'org.owasp.dependencycheck' version '12.2.2'
     id 'info.solidsoft.pitest' version '1.19.0'
 }
 
@@ -112,6 +113,13 @@ checkstyle {
     configFile = file('checkstyle.xml')
     showViolations = true
     ignoreFailures = true
+}
+
+dependencyCheck {
+    skip = System.getenv('CI') == 'true'
+    formats = ['HTML', 'XML']
+    suppressionFile = file('dependency-check-suppressions.xml')
+    skipTestGroups = false // include test dependencies in analysis
 }
 
 tasks.checkstyleMain {

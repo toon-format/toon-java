@@ -14,10 +14,7 @@ tasks.register('testMavenCentralAuth') {
         }
         
         println "Testing Maven Central Portal authentication..."
-        println "Token length: ${token.length()} characters"
-        println "Token starts with: ${token.take(15)}..."
-        println "Token ends with: ...${token.takeRight(15)}"
-        
+
         // Test with a simple GET request to check authentication
         // Using the deployments list endpoint which is known to work
         def testUrl = 'https://central.sonatype.com/api/v1/publisher/deployments'

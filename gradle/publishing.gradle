@@ -95,10 +95,7 @@ tasks.register('publishToMavenCentral') {
         
         println "Uploading bundle to Maven Central Portal..."
         println "Bundle file: ${bundleFile.absolutePath} (${bundleFile.length()} bytes)"
-        println "Token length: ${token.length()} characters"
-        println "Token starts with: ${token.take(15)}..."
-        println "Token ends with: ...${token.takeRight(15)}"
-        
+
         // Create a temporary file to capture the response
         def responseFile = File.createTempFile("maven-central-response", ".json")
         responseFile.deleteOnExit()
