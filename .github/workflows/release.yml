@@ -66,6 +66,9 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Generate SBOM
+        run: ./gradlew cyclonedxBom
+
       - name: Update README version
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
@@ -85,7 +88,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3.0.1
         with:
-          files: build/libs/*.jar
+          files: |
+            build/libs/*.jar
+            build/reports/jtoon-bom.json
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-') }}
@@ -113,4 +118,5 @@ jobs:
           path: |
             build/libs/*.jar
             build/reports/tests/test/
+            build/reports/jtoon-bom.json
           retention-days: 30

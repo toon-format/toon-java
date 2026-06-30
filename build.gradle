@@ -7,6 +7,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'org.owasp.dependencycheck' version '12.2.2'
+    id 'org.cyclonedx.bom' version '3.2.4'
     id 'info.solidsoft.pitest' version '1.19.0'
 }
 
@@ -120,6 +121,12 @@ dependencyCheck {
     formats = ['HTML', 'XML']
     suppressionFile = file('dependency-check-suppressions.xml')
     skipTestGroups = false // include test dependencies in analysis
+}
+
+tasks.cyclonedxBom {
+    projectType = 'library'
+    jsonOutput.set(file("build/reports/jtoon-bom.json"))
+    xmlOutput.unsetConvention()
 }
 
 tasks.checkstyleMain {
