@@ -33,9 +33,11 @@ jobs:
         run: ./gradlew --write-verification-metadata sha256 build -x test
 
       - name: Commit updated verification metadata
-        run: |
-          git diff --quiet gradle/verification-metadata.xml || {
-            git add gradle/verification-metadata.xml
-            git commit -m "auto: update dependency verification metadata [skip ci]"
-            git push
-          }
+         run: |
+           git diff --quiet gradle/verification-metadata.xml || {
+             git config user.email "github-actions[bot]@users.noreply.github.com"
+             git config user.name "github-actions[bot]"
+             git add gradle/verification-metadata.xml
+             git commit -m "auto: update dependency verification metadata [skip ci]"
+             git push
+           }
