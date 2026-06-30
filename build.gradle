@@ -59,6 +59,7 @@ spotbugs {
 }
 
 tasks.spotbugsMain {
+    ignoreFailures = false
     reports {
         html {
             required = true
