@@ -43,3 +43,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.idea/
+
+### Secrets & Logs ###
+*.log
+*.pem
+*.key
+*.env
