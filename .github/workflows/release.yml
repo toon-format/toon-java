@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     
@@ -26,8 +26,9 @@ jobs:
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
-          echo "version=$VERSION" > gradle.properties
-          echo "gradle.properties criado:"
+          # Version an bestehendes gradle.properties anhängen (nicht überschreiben)
+          echo "version=$VERSION" >> gradle.properties
+          echo "gradle.properties updated:"
           cat gradle.properties
 
       - name: Set up JDK 17
