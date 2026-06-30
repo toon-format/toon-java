@@ -69,11 +69,9 @@ public final class KeyDecoder {
                 final Map<String, Object> nested = new LinkedHashMap<>();
                 currentMap.put(segment, nested);
                 currentMap = nested;
-            } else if (existing instanceof Map) {
-                // Use existing nested object
-                @SuppressWarnings("unchecked")
-                final Map<String, Object> existingMap = (Map<String, Object>) existing;
-                currentMap = existingMap;
+            } else if (existing instanceof Map<?, ?> existingMap) {
+                // Use existing nested object; map was created as LinkedHashMap<String, Object>
+                currentMap = (Map<String, Object>) existingMap;
             } else {
                 // Conflict: existing is not a Map
                 if (context.options.strict()) {
