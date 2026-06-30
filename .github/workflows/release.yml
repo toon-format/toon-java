@@ -44,7 +44,7 @@ jobs:
         run: ./gradlew specsValidation
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build --write-verification-metadata sha256
 
       - name: Validate Maven Central credentials
         run: |
@@ -60,7 +60,7 @@ jobs:
         run: curl --version
 
       - name: Publish to Maven Central
-        run: ./gradlew publishToMavenCentral
+        run: ./gradlew publishToMavenCentral --write-verification-metadata sha256
         env:
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -72,11 +72,11 @@ jobs:
           sed -i "s/jtoon:[0-9]\+\.[0-9]\+\.[0-9]\+/jtoon:$VERSION/g" README.md
           sed -i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>$VERSION<\/version>/g" README.md
 
-      - name: Commit README changes
+      - name: Commit README and verification metadata changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md build.gradle
+          git add README.md build.gradle gradle/verification-metadata.xml
           git diff --staged --quiet || git commit -m "docs: update version to ${{ steps.get_version.outputs.VERSION }} in README"
           git push origin main
         env:
