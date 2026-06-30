@@ -68,7 +68,6 @@
         <exclude name="AvoidMultipleUnaryOperators" />
         <exclude name="CheckSkipResult" />
         <exclude name="ClassCastExceptionWithToArray" />
-        <exclude name="CloseResource" />
         <exclude name="CompareObjectsWithEquals" />
         <exclude name="ConstructorCallsOverridableMethod" />
         <exclude name="DoNotCallGarbageCollectionExplicitly" />
