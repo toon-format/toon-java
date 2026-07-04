@@ -44,7 +44,7 @@ public final class TabularArrayEncoder {
         }
 
         if (isTabularArray(rows, firstKeys)) {
-            return firstKeys;
+            return Collections.unmodifiableList(firstKeys);
         }
 
         return Collections.emptyList();

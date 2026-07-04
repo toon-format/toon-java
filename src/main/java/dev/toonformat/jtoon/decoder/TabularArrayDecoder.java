@@ -70,7 +70,7 @@ public final class TabularArrayDecoder {
         }
 
         ArrayDecoder.validateArrayLength(header, result.size(), context.options.maxArraySize());
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     /**
