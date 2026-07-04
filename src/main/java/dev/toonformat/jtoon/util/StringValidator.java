@@ -48,24 +48,17 @@ public final class StringValidator {
         for (int i = 0; i < len; i++) {
             final char c = value.charAt(i);
             switch (c) {
-                case ':':
-                case '"':
-                case '\\':
-                case '[':
-                case ']':
-                case '{':
-                case '}':
-                case '\n':
-                case '\r':
-                case '\t':
+                case ':', '"', '\\', '[', ']', '{', '}', '\n', '\r', '\t' -> {
                     return false;
-                default:
+                }
+                default -> {
                     if (c <= CONTROL_CHAR_MAX) {
                         return false;
                     }
                     if (delimiter.length() == 1 && c == delimiter.charAt(0)) {
                         return false;
                     }
+                }
             }
         }
 
