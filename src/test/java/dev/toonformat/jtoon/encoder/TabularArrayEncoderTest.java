@@ -206,6 +206,26 @@ class TabularArrayEncoderTest {
     }
 
     @Test
+    void givenUniformObjects_whenDetectHeader_thenReturnsUnmodifiableList() {
+        // Given
+        final ObjectNode a = jsonNodeFactory.objectNode();
+        a.put("id", 1);
+        a.put("name", "Ada");
+
+        final ObjectNode b = jsonNodeFactory.objectNode();
+        b.put("id", 2);
+        b.put("name", "Bob");
+
+        final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
+
+        // When
+        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+
+        // Then
+        assertThrows(UnsupportedOperationException.class, () -> header.add("extra"));
+    }
+
+    @Test
     void testDetectTabularHeaderWithEmptyRow() {
         // Given
         final ArrayNode rows = jsonNodeFactory.arrayNode();
