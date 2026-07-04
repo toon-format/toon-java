@@ -1,5 +1,6 @@
 package dev.toonformat.jtoon.encoder;
 
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
@@ -30,8 +31,8 @@ public final class Flatten {
      * @param segmentCount number of folded segments
      */
     public record FoldResult(String foldedKey,
-                             JsonNode remainder,
-                             JsonNode leafValue,
+                             @Nullable JsonNode remainder,
+                             @Nullable JsonNode leafValue,
                              int segmentCount) {
     }
 
@@ -42,7 +43,7 @@ public final class Flatten {
      * @param tail      the tail node (if any)
      * @param leafValue the leaf JsonValue
      */
-    record ChainResult(List<String> segments, JsonNode tail, JsonNode leafValue) {
+    record ChainResult(List<String> segments, @Nullable JsonNode tail, @Nullable JsonNode leafValue) {
     }
 
     /**
@@ -63,12 +64,13 @@ public final class Flatten {
      * @param remainingDepth  the remaining depth of the object
      * @return a {@link FoldResult}, or null if folding is not possible
      */
+    @Nullable
     public static FoldResult tryFoldKeyChain(final String key,
-                                              final JsonNode value,
-                                              final Set<String> siblings,
-                                              final Set<String> rootLiteralKeys,
-                                              final String pathPrefix,
-                                              final Integer remainingDepth) {
+                                               final JsonNode value,
+                                               final Set<String> siblings,
+                                               @Nullable final Set<String> rootLiteralKeys,
+                                               @Nullable final String pathPrefix,
+                                               final Integer remainingDepth) {
         // Must be an object to begin folding
         if (!value.isObject() || remainingDepth <= 1) {
             return null;

@@ -308,8 +308,7 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                                      "    10,20");
+        final String expected = "    10,20";
         assertEquals(expected, writer.toString());
     }
 }

@@ -32,6 +32,9 @@ public class DecodeContext {
      */
     public DecodeContext() {
         this.currentDepth = 0;
+        this.lines = new String[0];
+        this.options = DecodeOptions.DEFAULT;
+        this.delimiter = Delimiter.COMMA;
     }
 
     void incrementDepth() {

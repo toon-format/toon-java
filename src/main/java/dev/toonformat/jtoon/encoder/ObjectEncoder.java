@@ -2,6 +2,7 @@ package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.EncodeOptions;
 import dev.toonformat.jtoon.KeyFolding;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -35,13 +36,13 @@ public final class ObjectEncoder {
      * @param blockedKeys     contains only keys that have undergone a successful flattening
      */
     public static void encodeObject(final ObjectNode value,
-                                    final LineWriter writer,
-                                    final int depth,
-                                    final EncodeOptions options,
-                                    final Set<String> rootLiteralKeys,
-                                    final String pathPrefix,
-                                    final Integer remainingDepth,
-                                    final Set<String> blockedKeys) {
+                                     final LineWriter writer,
+                                     final int depth,
+                                     final EncodeOptions options,
+                                     @Nullable final Set<String> rootLiteralKeys,
+                                     @Nullable final String pathPrefix,
+                                     @Nullable final Integer remainingDepth,
+                                     @Nullable final Set<String> blockedKeys) {
         final int effectiveFlattenDepth = remainingDepth != null ? remainingDepth : options.flattenDepth();
 
         // Single-pass collection: gather sibling keys and optionally dotted keys at root level
@@ -83,15 +84,15 @@ public final class ObjectEncoder {
      * @param blockedKeys     contains only keys that have undergone a successful flattening
      */
     public static void encodeKeyValuePair(final String key,
-                                           final JsonNode value,
-                                           final LineWriter writer,
-                                           final int depth,
-                                           final EncodeOptions options,
-                                           final Set<String> siblings,
-                                           final Set<String> rootLiteralKeys,
-                                           final String pathPrefix,
-                                           final Integer flattenDepth,
-                                           final Set<String> blockedKeys
+                                            final JsonNode value,
+                                            final LineWriter writer,
+                                            final int depth,
+                                            final EncodeOptions options,
+                                            final Set<String> siblings,
+                                            @Nullable final Set<String> rootLiteralKeys,
+                                            @Nullable final String pathPrefix,
+                                            @Nullable final Integer flattenDepth,
+                                            @Nullable final Set<String> blockedKeys
     ) {
         if (key == null) {
             return;
@@ -151,15 +152,16 @@ public final class ObjectEncoder {
      * @param remainingDepth  the depth that remind to the limit
      * @return EncodeOptions changes for Case 2
      */
+    @Nullable
     private static EncodeOptions flatten(final String key,
-                                         final Flatten.FoldResult foldResult,
-                                         final LineWriter writer,
-                                         final int depth,
-                                         final EncodeOptions options,
-                                         final Set<String> rootLiteralKeys,
-                                         final String pathPrefix,
-                                         final Set<String> blockedKeys,
-                                         final int remainingDepth) {
+                                          final Flatten.FoldResult foldResult,
+                                          final LineWriter writer,
+                                          final int depth,
+                                          final EncodeOptions options,
+                                          @Nullable final Set<String> rootLiteralKeys,
+                                          @Nullable final String pathPrefix,
+                                          final Set<String> blockedKeys,
+                                          final int remainingDepth) {
         final String foldedKey = foldResult.foldedKey();
         EncodeOptions currentOptions = options;
 
@@ -206,6 +208,10 @@ public final class ObjectEncoder {
                                               final EncodeOptions options,
                                               final String encodedFoldedKey) {
         final JsonNode leaf = foldResult.leafValue();
+
+        if (leaf == null) {
+            return;
+        }
 
         // Primitive
         if (leaf.isValueNode()) {

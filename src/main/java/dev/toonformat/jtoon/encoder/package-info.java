@@ -149,5 +149,8 @@
  * @since 0.1.0
  * @see dev.toonformat.jtoon.EncodeOptions
  */
+@NullMarked
 package dev.toonformat.jtoon.encoder;
+
+import org.jspecify.annotations.NullMarked;
 

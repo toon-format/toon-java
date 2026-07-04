@@ -2,6 +2,7 @@ package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.util.StringEscaper;
 import dev.toonformat.jtoon.util.StringValidator;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -160,8 +161,8 @@ public final class PrimitiveEncoder {
      */
     public static String formatHeader(
         final int length,
-        final String key,
-        final List<String> fields,
+        @Nullable final String key,
+        @Nullable final List<String> fields,
         final String delimiter,
         final boolean lengthMarker) {
         return HeaderFormatter.format(length, key, fields, delimiter, lengthMarker);

@@ -101,5 +101,8 @@
  * @see tools.jackson.databind.JsonNode
  * @see tools.jackson.databind.ObjectMapper
  */
+@NullMarked
 package dev.toonformat.jtoon.normalizer;
+
+import org.jspecify.annotations.NullMarked;
 

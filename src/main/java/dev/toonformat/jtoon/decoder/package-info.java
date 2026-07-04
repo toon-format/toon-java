@@ -210,4 +210,7 @@
  * @see dev.toonformat.jtoon.JToon#decode(String)
  * @see dev.toonformat.jtoon.JToon#decodeToJson(String)
  */
+@NullMarked
 package dev.toonformat.jtoon.decoder;
+
+import org.jspecify.annotations.NullMarked;

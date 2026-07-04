@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
@@ -137,7 +138,7 @@ public final class DecodeHelper {
      * @param context      decode an object to deal with lines, delimiter, and options
      * @throws IllegalArgumentException in case there's a expansion conflict
      */
-    static void checkFinalValueConflict(final String finalSegment, final Object existing,
+    static void checkFinalValueConflict(final String finalSegment, @Nullable final Object existing,
             final Object value, final DecodeContext context) {
         if (existing != null && context.options.strict()) {
             // Check for conflicts in strict mode
@@ -195,7 +196,7 @@ public final class DecodeHelper {
      * @param context decode an object to deal with lines, delimiter and options
      * @return the depth of the next non-blank line, or null if none exists
      */
-    static Integer findNextNonBlankLineDepth(final DecodeContext context) {
+    static @Nullable Integer findNextNonBlankLineDepth(final DecodeContext context) {
         int nextLineIdx = context.currentLine;
         while (nextLineIdx < context.lines.length && isBlankLine(context.lines[nextLineIdx])) {
             nextLineIdx++;

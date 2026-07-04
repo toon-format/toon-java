@@ -45,14 +45,17 @@ public final class PrimitiveDecoder {
      * @return The parsed value as {@code Boolean}, {@code Long}, {@code Double},
      * {@code String}, or {@code null}
      */
+    @SuppressWarnings("NullAway")
     static Object parse(final String value) {
         return parse(value, Integer.MAX_VALUE);
     }
 
+    @SuppressWarnings("NullAway")
     static Object parse(final String value, final DecodeContext context) {
         return parse(value, context.options.maxStringLength());
     }
 
+    @SuppressWarnings("NullAway")
     static Object parse(final String value, final int maxStringLength) {
         if (value == null || value.isEmpty()) {
             return "";

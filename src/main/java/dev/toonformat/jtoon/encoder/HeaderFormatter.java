@@ -2,6 +2,7 @@ package dev.toonformat.jtoon.encoder;
 
 import java.util.Collection;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 import static dev.toonformat.jtoon.util.Constants.COMMA;
@@ -30,8 +31,8 @@ public final class HeaderFormatter {
      */
     public record HeaderConfig(
             int length,
-            String key,
-            List<String> fields,
+            @Nullable String key,
+            @Nullable List<String> fields,
             String delimiter,
             boolean lengthMarker) {
     }
@@ -65,15 +66,15 @@ public final class HeaderFormatter {
      */
     public static String format(
             final int length,
-            final String key,
-            final List<String> fields,
+            @Nullable final String key,
+            @Nullable final List<String> fields,
             final String delimiter,
             final boolean lengthMarker) {
         final HeaderConfig config = new HeaderConfig(length, key, fields, delimiter, lengthMarker);
         return format(config);
     }
 
-    private static void appendKeyIfPresent(final StringBuilder header, final String key) {
+    private static void appendKeyIfPresent(final StringBuilder header, @Nullable final String key) {
         if (key != null) {
             header.append(PrimitiveEncoder.encodeKey(key));
         }
@@ -103,7 +104,7 @@ public final class HeaderFormatter {
 
     private static void appendFieldsIfPresent(
             final StringBuilder header,
-            final Collection<String> fields,
+            @Nullable final Collection<String> fields,
             final String delimiter) {
         if (fields == null || fields.isEmpty()) {
             return;

@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -165,6 +166,7 @@ public final class ArrayDecoder {
      * @param maxArraySize maximum allowed array size
      * @return extracted length from header, or null if not found
      */
+    @Nullable
     private static Integer extractLengthFromHeader(final String header, final int maxArraySize) {
         final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
