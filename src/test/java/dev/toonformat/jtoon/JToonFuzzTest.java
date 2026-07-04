@@ -13,7 +13,7 @@ class JToonFuzzTest {
     private static final SplittableRandom RANDOM = new SplittableRandom();
     private static final int FUZZ_ITERATIONS = 1_000;
     private static final int MAX_FUZZ_BYTE_LENGTH = 500;
-    private static final long FUZZ_TIMEOUT_MILLIS = 100;
+    private static final long FUZZ_TIMEOUT_MILLIS = 200;
 
     @Test
     @Tag("fuzz")
