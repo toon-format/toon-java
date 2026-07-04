@@ -150,7 +150,7 @@ dependencies {
 
     // NullAway + Error Prone for compile-time null safety
     errorprone 'com.uber.nullaway:nullaway:0.13.7'
-    errorprone 'com.google.errorprone:error_prone_core:2.42.0'
+    errorprone 'com.google.errorprone:error_prone_core:2.50.0'
     api 'org.jspecify:jspecify:1.0.0'
 
     testImplementation platform('org.junit:junit-bom:6.1.1')
@@ -168,16 +168,16 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 
 tasks.withType(JavaCompile).configureEach {
     options.errorprone {
-        // NullAway als ERROR-Level für main source set
+        // NullAway as ERROR-Level for main source set
         check('NullAway', CheckSeverity.ERROR)
-        // Annotierte Packages
+        // Annotate Packages
         option('NullAway:AnnotatedPackages', 'dev.toonformat')
-        // Generated-Code ignorieren (Jackson, etc.)
+        // Generated-Code ignore (Jackson, etc.)
         option('NullAway:TreatGeneratedAsUnannotated', 'true')
     }
 }
 
-// NullAway für Tests deaktivieren
+// no NullAway for tests
 tasks.compileTestJava {
     options.errorprone {
         disable('NullAway')
