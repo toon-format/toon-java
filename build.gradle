@@ -126,7 +126,7 @@ dependencyCheck {
 }
 
 tasks.cyclonedxBom {
-    projectType = 'library'
+    projectType = Component.Type.LIBRARY
     jsonOutput.set(file("build/reports/jtoon-bom.json"))
     xmlOutput.unsetConvention()
 }
@@ -170,6 +170,7 @@ dependencies {
 
 // ---- NullAway / Error Prone Configuration ----
 import net.ltgt.gradle.errorprone.CheckSeverity
+import org.cyclonedx.model.Component
 
 tasks.withType(JavaCompile).configureEach {
     options.errorprone {
