@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.EncodeOptions;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -28,7 +29,7 @@ public final class ArrayEncoder {
      * @param depth   Indentation depth
      * @param options Encoding options
      */
-    public static void encodeArray(final String key, final ArrayNode value,
+    public static void encodeArray(@Nullable final String key, final ArrayNode value,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         if (value.isEmpty()) {
             // Per spec §9.1: encoders SHOULD emit key: [] for empty arrays.
@@ -158,7 +159,7 @@ public final class ArrayEncoder {
     /**
      * Encodes a primitive array inline: key[N]: v1,v2,v3.
      */
-    private static void encodeInlinePrimitiveArray(final String prefix, final ArrayNode values,
+    private static void encodeInlinePrimitiveArray(@Nullable final String prefix, final ArrayNode values,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         final String formatted = formatInlineArray(values, options.delimiter().toString(), prefix,
                 options.lengthMarker());
@@ -175,7 +176,7 @@ public final class ArrayEncoder {
      * @return the formatted inline array string
      */
     public static String formatInlineArray(final ArrayNode values, final String delimiter,
-            final String prefix, final boolean lengthMarker) {
+            @Nullable final String prefix, final boolean lengthMarker) {
         final String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null, delimiter, lengthMarker);
 
         // Early return for empty arrays
@@ -203,7 +204,7 @@ public final class ArrayEncoder {
     /**
      * Encodes an array of primitive arrays as list items.
      */
-    private static void encodeArrayOfArraysAsListItems(final String prefix, final ArrayNode values,
+    private static void encodeArrayOfArraysAsListItems(@Nullable final String prefix, final ArrayNode values,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         final String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null,
                                                             options.delimiter().toString(), options.lengthMarker());
@@ -221,7 +222,7 @@ public final class ArrayEncoder {
     /**
      * Encodes a mixed array (non-uniform) as list items.
      */
-    private static void encodeMixedArrayAsListItems(final String prefix,
+    private static void encodeMixedArrayAsListItems(@Nullable final String prefix,
                                                     final ArrayNode items,
                                                     final LineWriter writer,
                                                     final int depth,

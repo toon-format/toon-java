@@ -169,10 +169,10 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.encodeArrayOfObjectsAsTabular("users", rows, header, writer, 0, options);
 
         // Then
-        final String expected = String.join("\n",
-                "users[2]{id,name}:",
-                "  1,Ada",
-                "  2,Bob");
+        final String expected = """
+                users[2]{id,name}:
+                  1,Ada
+                  2,Bob""";
         assertEquals(expected, writer.toString());
     }
 
@@ -199,10 +199,30 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                "    10,20",
-                "    11,21");
+        @SuppressWarnings("StringConcatToTextBlock")
+        final String expected = "    10,20\n"
+            + "    11,21";
         assertEquals(expected, writer.toString());
+    }
+
+    @Test
+    void givenUniformObjects_whenDetectHeader_thenReturnsUnmodifiableList() {
+        // Given
+        final ObjectNode a = jsonNodeFactory.objectNode();
+        a.put("id", 1);
+        a.put("name", "Ada");
+
+        final ObjectNode b = jsonNodeFactory.objectNode();
+        b.put("id", 2);
+        b.put("name", "Bob");
+
+        final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
+
+        // When
+        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+
+        // Then
+        assertThrows(UnsupportedOperationException.class, () -> header.add("extra"));
     }
 
     @Test
@@ -279,9 +299,9 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                                      "    10,20",
-                                      "    11");
+        @SuppressWarnings("StringConcatToTextBlock")
+        final String expected = "    10,20\n"
+            + "    11";
         assertEquals(expected, writer.toString());
     }
 
@@ -308,8 +328,7 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                                      "    10,20");
+        final String expected = "    10,20";
         assertEquals(expected, writer.toString());
     }
 }

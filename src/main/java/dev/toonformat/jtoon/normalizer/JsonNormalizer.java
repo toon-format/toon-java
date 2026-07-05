@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.normalizer;
 
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -100,7 +101,7 @@ public final class JsonNormalizer {
      * @return The normalized JsonNode
      * @throws IllegalArgumentException if nesting depth exceeds MAX_DEPTH or circular reference detected
      */
-    public static JsonNode normalize(final Object value) {
+    public static JsonNode normalize(@Nullable final Object value) {
         final int currentDepth = DEPTH_COUNTER.get();
         if (currentDepth > MAX_ALLOWED_NESTING_DEPTH) {
             DEPTH_COUNTER.remove();
@@ -114,7 +115,7 @@ public final class JsonNormalizer {
         }
     }
 
-    private static JsonNode normalizeInternal(final Object value) {
+    private static JsonNode normalizeInternal(@Nullable final Object value) {
         if (value == null) {
             return NullNode.getInstance();
         } else if (value instanceof JsonNode jsonNode) {
@@ -155,6 +156,7 @@ public final class JsonNormalizer {
      * Attempts to normalize primitive types and their wrappers.
      * Returns null if the value is not a primitive type.
      */
+    @Nullable
     private static JsonNode tryNormalizePrimitive(final Object value) {
         if (value instanceof String stringValue) {
             return StringNode.valueOf(stringValue);
@@ -218,6 +220,7 @@ public final class JsonNormalizer {
      * Attempts to normalize BigInteger and BigDecimal.
      * Returns null if the value is not a big number type.
      */
+    @Nullable
     private static JsonNode tryNormalizeBigNumber(final Object value) {
         if (value instanceof BigInteger bigInteger) {
             return normalizeBigInteger(bigInteger);
@@ -243,6 +246,7 @@ public final class JsonNormalizer {
      * Attempts to normalize temporal types (date/time) to ISO strings.
      * Returns null if the value is not a temporal type.
      */
+    @Nullable
     private static JsonNode tryNormalizeTemporal(final Object value) {
         if (value instanceof LocalDateTime ldt) {
             return formatTemporal(ldt, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -284,6 +288,7 @@ public final class JsonNormalizer {
      * Attempts to normalize collections (Collection and Map).
      * Returns null if the value is not a collection type.
      */
+    @Nullable
     private static JsonNode tryNormalizeCollection(final Object value) {
         if (value instanceof Collection<?>) {
             return normalizeCollection((Collection<?>) value);

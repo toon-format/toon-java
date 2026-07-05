@@ -45,6 +45,20 @@ class ArrayDecoderTest {
     }
 
     @Test
+    @DisplayName("Should parse array and return unmodifiable list")
+    void parseArrayReturnsUnmodifiableList() {
+        // Given
+        setUpContext("[3]: 1,2,3");
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[3]: 1,2,3", 0, context);
+
+        // Then
+        final int extraElement = 4;
+        assertThrows(UnsupportedOperationException.class, () -> result.add(extraElement));
+    }
+
+    @Test
     @DisplayName("Should parse TOON format numerical array to JSON")
     void parseNumericalPrimitiveArray() {
         // Given

@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -104,7 +105,7 @@ public final class ArrayDecoder {
                         context.options.maxArraySize(), context.options.maxStringLength());
                     validateArrayLength(header, result.size(), context.options.maxArraySize());
                     context.currentLine++;
-                    return result;
+                    return Collections.unmodifiableList(result);
                 }
             }
 
@@ -123,18 +124,18 @@ public final class ArrayDecoder {
 
                 if (nextContent.startsWith(LIST_ITEM_PREFIX)) {
                     context.currentLine--;
-                    return parseListArray(depth, header, context);
+                    return Collections.unmodifiableList(parseListArray(depth, header, context));
                 } else {
                     context.currentLine++;
                     final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
                         context.options.maxArraySize(), context.options.maxStringLength());
                     validateArrayLength(header, result.size(), context.options.maxArraySize());
-                    return result;
+                    return Collections.unmodifiableList(result);
                 }
             }
             final List<Object> empty = new ArrayList<>();
             validateArrayLength(header, 0, context.options.maxArraySize());
-            return empty;
+            return Collections.unmodifiableList(empty);
         }
 
         if (context.options.strict()) {
@@ -165,6 +166,7 @@ public final class ArrayDecoder {
      * @param maxArraySize maximum allowed array size
      * @return extracted length from header, or null if not found
      */
+    @Nullable
     private static Integer extractLengthFromHeader(final String header, final int maxArraySize) {
         final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {

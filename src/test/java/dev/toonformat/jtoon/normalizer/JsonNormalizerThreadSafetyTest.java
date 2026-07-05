@@ -2,6 +2,7 @@ package dev.toonformat.jtoon.normalizer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,7 +24,7 @@ class JsonNormalizerThreadSafetyTest {
         final String id = UUID.randomUUID().toString();
         final Map<String, Object> input = Map.of(
             "id", id,
-            "timestamp", LocalDateTime.now(),
+            "timestamp", LocalDateTime.now(ZoneOffset.UTC),
             "tags", List.of("a", "b", "c"),
             "nested", Map.of("key", "value")
         );

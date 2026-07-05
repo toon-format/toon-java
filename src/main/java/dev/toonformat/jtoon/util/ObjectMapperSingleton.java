@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -14,6 +15,7 @@ public final class ObjectMapperSingleton {
     /**
      * Holds the singleton ObjectMapper.
      */
+    @Nullable
     private static volatile ObjectMapper instance;
 
     private ObjectMapperSingleton() {

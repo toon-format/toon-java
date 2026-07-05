@@ -56,6 +56,15 @@ This project targets Java 17 and above.
 - Add JavaDoc comments for public APIs
 - Format code consistently (use IDE auto-formatting)
 
+### Null Safety
+
+This project enforces null safety at compile time using **[NullAway](https://github.com/uber/nullaway)** (an Error Prone checker) and **[JSpecify](https://jspecify.dev/)** annotations.
+
+- All packages are annotated `@NullMarked` — types are non-null by default
+- Use `@Nullable` to explicitly mark parameters, fields, or return values that may be `null`
+- The `./gradlew compileJava` build step will fail if NullAway detects any null-safety violations
+- Do **not** suppress NullAway warnings with `@SuppressWarnings("NullAway")` unless there is a well-documented reason (e.g., a third-party API that returns nullable values without annotations)
+
 ### Testing
 
 - All new features must include JUnit tests

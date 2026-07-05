@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.encoder;
 
 import dev.toonformat.jtoon.EncodeOptions;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -43,7 +44,7 @@ public final class TabularArrayEncoder {
         }
 
         if (isTabularArray(rows, firstKeys)) {
-            return firstKeys;
+            return Collections.unmodifiableList(firstKeys);
         }
 
         return Collections.emptyList();
@@ -89,7 +90,7 @@ public final class TabularArrayEncoder {
      * @param depth   Indentation depth
      * @param options Encoding options
      */
-    public static void encodeArrayOfObjectsAsTabular(final String prefix, final ArrayNode rows,
+    public static void encodeArrayOfObjectsAsTabular(@Nullable final String prefix, final ArrayNode rows,
             final List<String> header, final LineWriter writer, final int depth,
             final EncodeOptions options) {
         final String headerStr = PrimitiveEncoder.formatHeader(rows.size(), prefix, header,

@@ -3,6 +3,7 @@ package dev.toonformat.jtoon;
 import dev.toonformat.jtoon.decoder.ValueDecoder;
 import dev.toonformat.jtoon.encoder.ValueEncoder;
 import dev.toonformat.jtoon.normalizer.JsonNormalizer;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import java.util.Objects;
 
@@ -99,6 +100,7 @@ public final class JToon {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
+    @Nullable
     public static Object decode(final String toon) {
         return decode(toon, DecodeOptions.DEFAULT);
     }
@@ -118,6 +120,7 @@ public final class JToon {
      *                                  invalid
      * @throws NullPointerException if options is null
      */
+    @Nullable
     public static Object decode(final String toon, final DecodeOptions options) {
         Objects.requireNonNull(options, "DecodeOptions cannot be null");
         return ValueDecoder.decode(toon, options);

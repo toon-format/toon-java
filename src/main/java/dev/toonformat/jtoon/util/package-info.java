@@ -112,5 +112,8 @@
  * 
  * @since 0.1.0
  */
+@NullMarked
 package dev.toonformat.jtoon.util;
+
+import org.jspecify.annotations.NullMarked;
 

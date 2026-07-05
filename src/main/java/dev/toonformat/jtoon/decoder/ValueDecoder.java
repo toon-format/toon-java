@@ -2,6 +2,7 @@ package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.util.ObjectMapperSingleton;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.ObjectMapper;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
@@ -45,6 +46,7 @@ public final class ValueDecoder {
      * @throws IllegalArgumentException if strict mode is enabled and input is
      *                                  invalid
      */
+    @Nullable
     public static Object decode(final String toon, final DecodeOptions options) {
         try {
             return decodeInternal(toon, options);
@@ -56,6 +58,7 @@ public final class ValueDecoder {
         }
     }
 
+    @Nullable
     private static Object decodeInternal(final String toon, final DecodeOptions options) {
         if (toon == null || toon.isBlank()) {
             return new LinkedHashMap<>();

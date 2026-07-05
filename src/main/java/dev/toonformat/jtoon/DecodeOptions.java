@@ -80,7 +80,7 @@ public record DecodeOptions(
         if (indent > MAX_ALLOWED_INDENT) {
             throw new IllegalArgumentException("indent must be <= " + MAX_ALLOWED_INDENT + ", got: " + indent);
         }
-        delimiter = Objects.requireNonNull(delimiter, "delimiter cannot be null");
+        Objects.requireNonNull(delimiter, "delimiter cannot be null");
         if (maxDepth <= 0) {
             throw new IllegalArgumentException("maxDepth must be positive, got: " + maxDepth);
         }

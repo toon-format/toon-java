@@ -51,6 +51,21 @@ class TabularArrayDecoderTest {
     }
 
     @Test
+    @DisplayName("Parse tabular array and return unmodifiable list")
+    void parseTabularArrayReturnsUnmodifiableList() {
+        // Given
+        setUpContext("[2]{id,value}:\n  1,null\n  2,\"test\"");
+
+        // When
+        final List<Object> result = TabularArrayDecoder.parseTabularArray(
+            "[2]{id,value}:\n  1,null\n  2,\"test\"", 0,
+            Delimiter.COMMA, context);
+
+        // Then
+        assertThrows(UnsupportedOperationException.class, () -> result.add("x"));
+    }
+
+    @Test
     @DisplayName("Parse TOON format tabular array to JSON")
     void parseTabularArray() {
         // Given

@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
@@ -9,6 +9,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '12.2.2'
     id 'org.cyclonedx.bom' version '3.2.4'
     id 'info.solidsoft.pitest' version '1.19.0'
+    id 'net.ltgt.errorprone' version '5.1.0'
 }
 
 group = 'dev.toonformat'
@@ -125,7 +126,7 @@ dependencyCheck {
 }
 
 tasks.cyclonedxBom {
-    projectType = 'library'
+    projectType = Component.Type.LIBRARY
     jsonOutput.set(file("build/reports/jtoon-bom.json"))
     xmlOutput.unsetConvention()
 }
@@ -146,6 +147,17 @@ dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.2.0'
     implementation 'tools.jackson.module:jackson-module-blackbird:3.2.0'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.2'
+
+    // NullAway + Error Prone for compile-time null safety
+    errorprone 'com.uber.nullaway:nullaway:0.13.7'
+    // Pin error_prone_core to 2.42.0 (Java 17 compatible; 2.50.0+ requires Java 21)
+    errorprone('com.google.errorprone:error_prone_core:2.42.0') {
+        version {
+            strictly '2.42.0'
+        }
+    }
+    api 'org.jspecify:jspecify:1.0.0'
+
     testImplementation platform('org.junit:junit-bom:6.1.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -154,6 +166,29 @@ dependencies {
     testImplementation 'org.openjdk.jmh:jmh-core:1.37'
     testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
     testAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
+}
+
+// ---- NullAway / Error Prone Configuration ----
+import net.ltgt.gradle.errorprone.CheckSeverity
+import org.cyclonedx.model.Component
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        // NullAway as ERROR-Level for main source set
+        check('NullAway', CheckSeverity.ERROR)
+        // Annotate Packages
+        option('NullAway:AnnotatedPackages', 'dev.toonformat')
+        // Generated-Code ignore (Jackson, etc.)
+        option('NullAway:TreatGeneratedAsUnannotated', 'true')
+    }
+}
+
+// no NullAway for tests; exclude JMH-generated sources from ErrorProne
+tasks.compileTestJava {
+    options.errorprone {
+        disable('NullAway')
+        excludedPaths = '.*/build/generated/.*'
+    }
 }
 
 // Check if running in CI or coverage is explicitly requested

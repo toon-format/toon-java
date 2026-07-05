@@ -51,10 +51,10 @@ public class JToonJsonStringTest {
             final String result = JToon.encodeJson(json);
 
             // Then
-            final String expected = String.join("\n",
-                    "items[2]{sku,qty,price}:",
-                    "  A1,2,9.99",
-                    "  B2,1,14.5");
+            final String expected = """
+                    items[2]{sku,qty,price}:
+                      A1,2,9.99
+                      B2,1,14.5""";
             assertEquals(expected, result);
         }
 
@@ -69,14 +69,14 @@ public class JToonJsonStringTest {
             final String result = JToon.encodeJson(json);
 
             // Then
-            final String expected = String.join("\n",
-                    "[3]:",
-                    "  - summary",
-                    "  - id: 1",
-                    "    name: Ada",
-                    "  - [2]:",
-                    "    - id: 2",
-                    "    - status: draft");
+            final String expected = """
+                    [3]:
+                      - summary
+                      - id: 1
+                        name: Ada
+                      - [2]:
+                        - id: 2
+                        - status: draft""";
             assertEquals(expected, result);
         }
 
@@ -93,11 +93,11 @@ public class JToonJsonStringTest {
             final String result = JToon.encodeJson(json, options);
 
             // Then
-            final String expected = String.join("\n",
-                    "tags[#3|]: reading|gaming|coding",
-                    "items[#2|]{sku|qty|price}:",
-                    "  A1|2|9.99",
-                    "  B2|1|14.5");
+            final String expected = """
+                    tags[#3|]: reading|gaming|coding
+                    items[#2|]{sku|qty|price}:
+                      A1|2|9.99
+                      B2|1|14.5""";
             assertEquals(expected, result);
         }
 
@@ -105,25 +105,26 @@ public class JToonJsonStringTest {
         @DisplayName("supports custom options in flatten")
         void encodesWithCustomFlattingOptions() {
             // Given
-            final String json = "{\n" +
-                    "        \"a\": {\n" +
-                    "          \"b\": {\n" +
-                    "            \"c\": {\n" +
-                    "              \"d\": 1\n" +
-                    "            }\n" +
-                    "          }\n" +
-                    "        }\n" +
-                    "      }";
+            final String json = """
+                    {
+                            "a": {
+                              "b": {
+                                "c": {
+                                  "d": 1
+                                }
+                              }
+                            }
+                          }""";
             final EncodeOptions options = EncodeOptions.withFlattenDepth(2);
 
             // When
             final String result = JToon.encodeJson(json, options);
 
             // Then
-            final String expected = String.join("\n",
-                    "a.b:",
-                    "  c:",
-                    "    d: 1");
+            final String expected = """
+                    a.b:
+                      c:
+                        d: 1""";
             assertEquals(expected, result);
         }
     }

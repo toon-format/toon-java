@@ -31,7 +31,7 @@ class JToonRaceConditionTest {
         final Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("author", "dev");
         metadata.put("stars", STARS_VALUE);
-        metadata.put("created", java.time.LocalDateTime.now());
+        metadata.put("created", java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
         input.put("metadata", metadata);
 
         final List<Future<Void>> futures = new ArrayList<>();

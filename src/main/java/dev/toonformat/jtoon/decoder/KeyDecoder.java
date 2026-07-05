@@ -3,18 +3,20 @@ package dev.toonformat.jtoon.decoder;
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.PathExpansion;
 import dev.toonformat.jtoon.util.StringEscaper;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
-import static dev.toonformat.jtoon.util.Constants.DOT;
 import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Handles decoding of key values/arrays to JSON format.
  */
 public final class KeyDecoder {
+
+    private static final char DOT = '.';
 
     private KeyDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -56,7 +58,7 @@ public final class KeyDecoder {
      */
     static void expandPathIntoMap(final Map<String, Object> current, final String dottedKey, final Object value,
                                   final DecodeContext context) {
-        final String[] segments = dottedKey.split("\\.");
+        final String[] segments = splitByDot(dottedKey);
         Map<String, Object> currentMap = current;
 
         // Navigate/create nested structure
@@ -71,7 +73,9 @@ public final class KeyDecoder {
                 currentMap = nested;
             } else if (existing instanceof Map<?, ?> existingMap) {
                 // Use existing nested object; map was created as LinkedHashMap<String, Object>
-                currentMap = (Map<String, Object>) existingMap;
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> typedMap = (Map<String, Object>) existingMap;
+                currentMap = typedMap;
             } else {
                 // Conflict: existing is not a Map
                 if (context.options.strict()) {
@@ -160,13 +164,13 @@ public final class KeyDecoder {
             return false;
         }
         // Check if a key contains dots and is a valid identifier pattern
-        if (!key.contains(DOT)) {
+        if (key.indexOf(DOT) < 0) {
             return false;
         }
         // Valid identifier: starts with a letter or underscore, followed by letters,
         // digits, underscores
         // Each segment must match this pattern
-        final String[] segments = key.split("\\.");
+        final String[] segments = splitByDot(key);
         for (String segment : segments) {
             if (!segment.matches("^[a-zA-Z_]\\w*$")) {
                 return false;
@@ -366,5 +370,25 @@ public final class KeyDecoder {
 
         // parseFieldValue manages currentLine appropriately
         return true;
+    }
+
+    /**
+     * Splits a dot-separated string into segments without using regex.
+     * Matching the default behavior of {@code String.split("\\.")}.
+     */
+    private static String[] splitByDot(final String input) {
+        final List<String> result = new ArrayList<>();
+        int start = 0;
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == DOT) {
+                result.add(input.substring(start, i));
+                start = i + 1;
+            }
+        }
+        final String last = input.substring(start);
+        if (!last.isEmpty()) {
+            result.add(last);
+        }
+        return result.toArray(new String[0]);
     }
 }

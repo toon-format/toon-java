@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 class JToonTest {
 
     private static final double EXPECTED_ENCODE_PI = 3.14;
-    private static final double NEG_SEVEN = -7.0;
     private static final double EXPECTED_ENCODE_SMALL = 0.000001;
     private static final long EXPECTED_ENCODE_LARGE_LONG = 9007199254740991L;
 
@@ -917,7 +916,7 @@ class JToonTest {
             final String result = encode(obj);
 
             // Then
-            final String[] lines = result.split("\n");
+            final String[] lines = result.lines().toArray(String[]::new);
             for (String line : lines) {
                 assertFalse(line.matches(".* $"), "Line has trailing space: '" + line + "'");
             }
