@@ -61,8 +61,6 @@ class JsonNormalizerTest {
     private static final long TEST_BIG_LONG = 123456789L;
     private static final int TEST_MAP_SIZE = 3;
     private static final int TEST_ARRAY_SIZE = 3;
-    private static final int TEST_MAX_DEPTH = 256;
-    private static final int DEEP_NESTING_DEPTH = 600;
     private static final double DOUBLE_DELTA = 0.001;
     private static final int TEST_AGE = 30;
     private static final int EXPECTED_SIZE_FOUR = 4;
@@ -146,7 +144,7 @@ class JsonNormalizerTest {
         @DisplayName("should normalize Boolean to BooleanNode")
         void testBoolean() {
             // Given
-            final JsonNode resultTrue = JsonNormalizer.normalize(Boolean.TRUE);
+            final JsonNode resultTrue = JsonNormalizer.normalize(true);
             // Then
             assertTrue(resultTrue.isBoolean());
             assertTrue(resultTrue.asBoolean());
@@ -157,7 +155,7 @@ class JsonNormalizerTest {
         @DisplayName("should normalize Boolean to BooleanNode")
         void testBoolean2() {
             // Given
-            final JsonNode resultFalse = JsonNormalizer.normalize(Boolean.FALSE);
+            final JsonNode resultFalse = JsonNormalizer.normalize(false);
             // Then
             assertTrue(resultFalse.isBoolean());
             assertFalse(resultFalse.asBoolean());
@@ -1471,6 +1469,7 @@ class JsonNormalizerTest {
 
         @Test
         @DisplayName("Given Date, When tryNormalizeTemporal is called, Then an ISO date StringNode is returned")
+        @SuppressWarnings("JavaUtilDate")
         void givenDate_whenTryNormalizeTemporal_thenIsoStringNode() throws Exception {
             // Given
             final Date input = new Date(1764362004);
@@ -1729,7 +1728,7 @@ class JsonNormalizerTest {
     @Nested
     @DisplayName("NormalizePojo")
     class NormalizePojo {
-        class ExplodingPojo {
+        static class ExplodingPojo {
             public String getValue() {
                 throw new IllegalStateException("Boom");
             }

@@ -73,9 +73,9 @@ class ValueEncoderTest {
         final String result = ValueEncoder.encodeValue(obj, options);
 
         // Then
-        final String expected = String.join("\n",
-                "a: 1",
-                "b: x");
+        final String expected = """
+                a: 1
+                b: x""";
         assertEquals(expected, result);
     }
 }

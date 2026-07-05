@@ -133,21 +133,22 @@ class ListItemEncoderTest {
         ArrayEncoder.encodeArray("items",node, writer, 0, opts);
 
         // Then
-        final String expected = String.join("\n",
-                                      "items[1]:",
-                                      "  - users[2]{id,name}:",
-                                      "      1,Ada",
-                                      "      2,Bob",
-                                      "    status: active");
+        final String expected = """
+                items[1]:
+                  - users[2]{id,name}:
+                      1,Ada
+                      2,Bob
+                    status: active""";
         assertEquals(expected, writer.toString());
     }
 
     @Test
     void usesListFormatForNestedObjectArraysWithMismatchedKeys() {
         // Given
-        final String json = "[\n" +
-                "          { \"users\": [{ \"id\": 1, \"name\": \"Ada\" }, { \"id\": 2 }], \"status\": \"active\" }\n" +
-                "        ]";
+        final String json = """
+            [
+                      { "users": [{ "id": 1, "name": "Ada" }, { "id": 2 }], "status": "active" }
+                    ]""";
         final ArrayNode node = (ArrayNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions opts = EncodeOptions.DEFAULT;
@@ -158,18 +159,17 @@ class ListItemEncoderTest {
 
 
         // Then
-        final String expected = String.join("\n",
-                                      "items[1]:",
-                                      "  - users[2]:",
-                                      "      - id: 1",
-                                      "        name: Ada",
-                                      "      - id: 2",
-                                      "    status: active");
+        final String expected = """
+                items[1]:
+                  - users[2]:
+                      - id: 1
+                        name: Ada
+                      - id: 2
+                    status: active""";
         assertEquals(expected, writer.toString());
     }
 
     @Test
-    @DisplayName("given mixed-type array as first value when encoded then writes complex list format")
     void givenMixedTypeArrayAsFirstValue_whenEncoded_thenWritesComplexListFormat() {
         // Given
         final int firstValue = 10;
@@ -193,11 +193,11 @@ class ListItemEncoderTest {
         ListItemEncoder.encodeObjectAsListItem(obj, writer, 0, options);
 
         // Then
-        final String expected = String.join("\n",
-                "- mixed[3]:",
-                "    - 1",
-                "    - [2]: 10,11",
-                "    - a: 5");
+        final String expected = """
+                - mixed[3]:
+                    - 1
+                    - [2]: 10,11
+                    - a: 5""";
         assertEquals(expected, writer.toString());
     }
 }

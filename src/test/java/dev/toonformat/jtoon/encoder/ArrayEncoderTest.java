@@ -62,10 +62,9 @@ class ArrayEncoderTest {
         method.invoke(null, "items", outer, writer, 0, options);
 
         // Then
-        final String expected = String.join("\n",
-                                      "items[3]:",
-                                      "  - [2]: 1,2"
-        );
+        final String expected = """
+                items[3]:
+                  - [2]: 1,2""";
         assertEquals(expected, writer.toString());
     }
 
@@ -133,9 +132,11 @@ class ArrayEncoderTest {
 
         // Then
         assertFalse(lineWriter.toString().isBlank());
-        assertEquals("  \"\"[2]:\n" +
-                         "    - [3]: 1,2,3\n" +
-                         "    - [3]: 4,5,6", lineWriter.toString());
+        @SuppressWarnings("StringConcatToTextBlock")
+        final String expected = "  \"\"[2]:\n"
+            + "    - [3]: 1,2,3\n"
+            + "    - [3]: 4,5,6";
+        assertEquals(expected, lineWriter.toString());
     }
 
     @Test

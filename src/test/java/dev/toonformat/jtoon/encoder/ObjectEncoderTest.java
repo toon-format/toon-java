@@ -237,10 +237,9 @@ class ObjectEncoderTest {
 
         // Then
         assertNull(result);
-        final String expected = String.join("\n",
-            "user.info:",
-            "  id: 1"
-        );
+        final String expected = """
+            user.info:
+              id: 1""";
         assertEquals(expected, writer.toString());
         assertTrue(blockedKeys.contains("user"));
         assertTrue(blockedKeys.contains("user.info"));
@@ -596,11 +595,12 @@ class ObjectEncoderTest {
     @Test
     void usesListFormatForObjectsContainingArraysOfArrays() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(true);
@@ -611,23 +611,24 @@ class ObjectEncoderTest {
         ObjectEncoder.encodeObject(node, writer, 0, options, siblings, null, null, new HashSet<>());
 
         // Then
-        final String expected = String.join("\n",
-            "items[1]:",
-            "  - matrix[2]:",
-            "      - [2]: 1,2",
-            "      - [2]: 3,4",
-            "    name: grid");
+        final String expected = """
+            items[1]:
+              - matrix[2]:
+                  - [2]: 1,2
+                  - [2]: 3,4
+                name: grid""";
         assertEquals(expected, writer.toString());
     }
 
     @Test
     void testEncodeKeyValuePairWithAKey() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(true);
@@ -639,24 +640,25 @@ class ObjectEncoderTest {
             siblings, null, null, REMAINING_DEPTH, new HashSet<>());
 
         // Then
-        final String expected = String.join("\n",
-            "items:",
-            "  items[1]:",
-            "    - matrix[2]:",
-            "        - [2]: 1,2",
-            "        - [2]: 3,4",
-            "      name: grid");
+        final String expected = """
+            items:
+              items[1]:
+                - matrix[2]:
+                    - [2]: 1,2
+                    - [2]: 3,4
+                  name: grid""";
         assertEquals(expected, writer.toString());
     }
 
     @Test
     void testEncodeKeyValuePairWithANullKey() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(true);
@@ -675,11 +677,12 @@ class ObjectEncoderTest {
     @Test
     void testEncodeKeyValuePairWithNullFlattenDepth() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(true);
@@ -691,13 +694,13 @@ class ObjectEncoderTest {
             null, null, null, new HashSet<>());
 
         // Then
-        final String expected = String.join("\n",
-            "items:",
-            "  items[1]:",
-            "    - matrix[2]:",
-            "        - [2]: 1,2",
-            "        - [2]: 3,4",
-            "      name: grid");
+        final String expected = """
+            items:
+              items[1]:
+                - matrix[2]:
+                    - [2]: 1,2
+                    - [2]: 3,4
+                  name: grid""";
         assertEquals(expected, writer.toString());
     }
 
@@ -724,11 +727,12 @@ class ObjectEncoderTest {
     @Test
     void testEncodeKeyValuePairWithKeyInBlockedKeysSet() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(true);
@@ -741,24 +745,25 @@ class ObjectEncoderTest {
             siblings, null, null, REMAINING_DEPTH, blockedKeys);
 
         // Then
-        final String expected = String.join("\n",
-            "items:",
-            "  items[1]:",
-            "    - matrix[2]:",
-            "        - [2]: 1,2",
-            "        - [2]: 3,4",
-            "      name: grid");
+        final String expected = """
+            items:
+              items[1]:
+                - matrix[2]:
+                    - [2]: 1,2
+                    - [2]: 3,4
+                  name: grid""";
         assertEquals(expected, writer.toString());
     }
 
     @Test
     void testEncodeKeyValuePairWithoutFlattenWithAKey() {
         // Given
-        final String json = "{\n" +
-            "        \"items\": [\n" +
-            "          { \"matrix\": [[1, 2], [3, 4]], \"name\": \"grid\" }\n" +
-            "        ]\n" +
-            "      }";
+        final String json = """
+        {
+                "items": [
+                  { "matrix": [[1, 2], [3, 4]], "name": "grid" }
+                ]
+              }""";
         final ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
 
         final EncodeOptions options = EncodeOptions.withFlatten(false);
@@ -770,13 +775,13 @@ class ObjectEncoderTest {
             siblings, null, null, REMAINING_DEPTH, new HashSet<>());
 
         // Then
-        final String expected = String.join("\n",
-            "items:",
-            "  items[1]:",
-            "    - matrix[2]:",
-            "        - [2]: 1,2",
-            "        - [2]: 3,4",
-            "      name: grid");
+        final String expected = """
+            items:
+              items[1]:
+                - matrix[2]:
+                    - [2]: 1,2
+                    - [2]: 3,4
+                  name: grid""";
         assertEquals(expected, writer.toString());
     }
 
@@ -800,20 +805,13 @@ class ObjectEncoderTest {
             foldResult, writer, 2, options, "item");
 
         // Then
-        final String expected = String.join("\n", "        item:",
-            "      id: 1");
+        final String expected = "        item:\n      id: 1";
         assertEquals(expected, writer.toString());
     }
 
     @Test
     void handleFullyFoldedLeafForBokenNodeAsLeaf() throws Exception {
         // Given
-        abstract class A extends JsonNode {
-            protected A() {
-            }
-        }
-   
-
         final ObjectNode objectLeaf = (ObjectNode) new ObjectMapper().readTree("{\"id\":1}");
         final Flatten.FoldResult foldResult = new Flatten.FoldResult(
             "user.info",
@@ -831,8 +829,7 @@ class ObjectEncoderTest {
             foldResult, writer, 2, options, "item");
 
         // Then
-        final String expected = String.join("\n", "        item:",
-            "      id: 1");
+        final String expected = "        item:\n      id: 1";
         assertEquals(expected, writer.toString());
     }
 

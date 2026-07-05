@@ -169,10 +169,10 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.encodeArrayOfObjectsAsTabular("users", rows, header, writer, 0, options);
 
         // Then
-        final String expected = String.join("\n",
-                "users[2]{id,name}:",
-                "  1,Ada",
-                "  2,Bob");
+        final String expected = """
+                users[2]{id,name}:
+                  1,Ada
+                  2,Bob""";
         assertEquals(expected, writer.toString());
     }
 
@@ -199,9 +199,9 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                "    10,20",
-                "    11,21");
+        @SuppressWarnings("StringConcatToTextBlock")
+        final String expected = "    10,20\n"
+            + "    11,21";
         assertEquals(expected, writer.toString());
     }
 
@@ -299,9 +299,9 @@ class TabularArrayEncoderTest {
         TabularArrayEncoder.writeTabularRows(rows, header, writer, 2, options);
 
         // Then
-        final String expected = String.join("\n",
-                                      "    10,20",
-                                      "    11");
+        @SuppressWarnings("StringConcatToTextBlock")
+        final String expected = "    10,20\n"
+            + "    11";
         assertEquals(expected, writer.toString());
     }
 

@@ -3,6 +3,7 @@ package dev.toonformat.jtoon.conformance;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 import dev.toonformat.jtoon.DecodeOptions;
@@ -206,7 +207,7 @@ public class ConformanceTest {
 
             PathExpansion expandPaths = null;
             if (options.expandPaths() != null) {
-                expandPaths = switch (options.expandPaths().toLowerCase()) {
+                expandPaths = switch (options.expandPaths().toLowerCase(Locale.ROOT)) {
                     case "safe" -> PathExpansion.SAFE;
                     default -> PathExpansion.OFF;
                 };

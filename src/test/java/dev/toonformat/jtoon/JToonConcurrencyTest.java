@@ -19,6 +19,7 @@ class JToonConcurrencyTest {
     private static final int AWAIT_TIMEOUT_SECONDS = 10;
 
     @Test
+    @SuppressWarnings("FutureReturnValueIgnored")
     void encodeDecodeStressTest() {
         final int threads = 8;
         final int tasksPerThread = 5_000;
@@ -63,6 +64,7 @@ class JToonConcurrencyTest {
         assertTrue(errors.isEmpty(), "Errors occurred in threads: " + errors);
     }
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     void encodeDecodeJsonStressTest() {
         final int threads = 8;
         final int tasksPerThread = 5_000;
