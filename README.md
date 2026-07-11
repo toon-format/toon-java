@@ -21,7 +21,7 @@ JToon is available on Maven Central. Add it to your project using your preferred
 
 ```gradle
 dependencies {
-    implementation 'dev.toonformat:jtoon:2.0.0'
+    implementation 'dev.toonformat:jtoon:2.0.1'
 }
 ```
 
@@ -29,7 +29,7 @@ dependencies {
 
 ```kotlin
 dependencies {
-    implementation("dev.toonformat:jtoon:2.0.0")
+    implementation("dev.toonformat:jtoon:2.0.1")
 }
 ```
 
@@ -39,7 +39,7 @@ dependencies {
 <dependency>
     <groupId>dev.toonformat</groupId>
     <artifactId>jtoon</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 </dependency>
 ```
 
