@@ -30,7 +30,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Regenerate dependency verification metadata
-        run: ./gradlew --write-verification-metadata sha256 build -x test
+        run: ./gradlew --write-verification-metadata sha256 build cyclonedxBom -x test
+
 
       - name: Commit updated verification metadata
         run: |
