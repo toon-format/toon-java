@@ -68,7 +68,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Generate SBOM
-        run: ./gradlew cyclonedxBom
+        run: ./gradlew cyclonedxBom --write-verification-metadata sha256
 
       - name: Update README version
         run: |
