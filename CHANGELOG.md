@@ -6,6 +6,33 @@ This project adheres to Semantic Versioning and follows a Keep a Changelog-like 
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-07-11
+
+### Added
+
+-   NullAway + Error Prone integration for compile-time null safety checks.
+-   SECURITY.md with vulnerability reporting policy.
+-   OWASP dependency check integration and CycloneDX SBOM generation.
+-   Checkstyle enforcement for test code.
+-   GitHub Actions workflow for dependency validation.
+
+### Changed
+
+-   Upgraded Jackson dependencies to 3.2.1.
+-   Upgraded JUnit BOM to 6.1.1.
+-   Upgraded SpotBugs to 6.5.8, spotbugs-annotations to 4.10.2.
+-   Upgraded Gradle wrapper to 9.6.1.
+-   Stricter PMD rules and SpotBugs configured to fail on warnings in main source set.
+-   Null-safety improvements across the entire codebase.
+-   Fixed catastrophic backtracking in `StringValidator` for random/fuzzy input.
+
+### Security
+
+-   Added dependency verification metadata for reproducible builds.
+-   Enforced SHA-256 checksum verification for Gradle wrapper.
+
+## [2.0.0] - 2026-02-24
+
 ### Added
 
 -   Conformance test suite for TOON Specification 3.1.
@@ -182,7 +209,9 @@ This project adheres to Semantic Versioning and follows a Keep a Changelog-like 
 -   Delimiter options (comma, tab, pipe) and optional length marker.
 -   Comprehensive README with specification overview and examples.
 
-[Unreleased]: https://github.com/toon-format/toon-java/compare/v1.0.9...HEAD
+[Unreleased]: https://github.com/toon-format/toon-java/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/toon-format/toon-java/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/toon-format/toon-java/compare/v1.0.9...v2.0.0
 [1.0.9]: https://github.com/toon-format/toon-java/releases/tag/v1.0.9
 [1.0.8]: https://github.com/toon-format/toon-java/releases/tag/v1.0.8
 [1.0.7]: https://github.com/toon-format/toon-java/releases/tag/v1.0.7
