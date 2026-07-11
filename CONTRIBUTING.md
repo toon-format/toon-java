@@ -99,6 +99,22 @@ Common Gradle tasks you'll use:
 ./gradlew clean
 ```
 
+### Dependency Verification
+
+This project uses [Gradle Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html) to ensure build reproducibility. All dependency checksums are stored in `gradle/verification-metadata.xml`.
+
+When you **add or update dependencies**, you must regenerate the verification metadata before pushing:
+
+```bash
+# Regenerate verification metadata (includes all configurations)
+./gradlew build --write-verification-metadata sha256
+
+# If you also use CycloneDX SBOM generation, update that too
+./gradlew cyclonedxBom --write-verification-metadata sha256
+```
+
+Commit the updated `gradle/verification-metadata.xml` with your dependency changes. The CI build will **fail** if checksums are missing.
+
 ## SPEC Compliance
 
 All implementations must comply with the [TOON specification](https://github.com/toon-format/spec/blob/main/SPEC.md).
