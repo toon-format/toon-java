@@ -106,11 +106,8 @@ This project uses [Gradle Dependency Verification](https://docs.gradle.org/curre
 When you **add or update dependencies**, you must regenerate the verification metadata before pushing:
 
 ```bash
-# Regenerate verification metadata (includes all configurations)
-./gradlew build --write-verification-metadata sha256
-
-# If you also use CycloneDX SBOM generation, update that too
-./gradlew cyclonedxBom --write-verification-metadata sha256
+# Regenerate verification metadata (includes build and CycloneDX SBOM configurations)
+./gradlew --write-verification-metadata sha256 build cyclonedxBom -x test
 ```
 
 Commit the updated `gradle/verification-metadata.xml` with your dependency changes. The CI build will **fail** if checksums are missing.

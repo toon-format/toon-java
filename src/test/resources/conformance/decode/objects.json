@@ -123,6 +123,50 @@
       "specSection": "8"
     },
     {
+      "name": "parses quoted object value shaped like an inline array header",
+      "input": "a: \"[2]: x\"",
+      "expected": {
+        "a": "[2]: x"
+      },
+      "specSection": "8",
+      "note": "Quoted value is opaque (§4); the bracket-and-colon shape inside the quotes is data, not an array header (§6)"
+    },
+    {
+      "name": "parses quoted object value shaped like a count-matching inline array header",
+      "input": "a: \"[1]: x\"",
+      "expected": {
+        "a": "[1]: x"
+      },
+      "specSection": "8",
+      "note": "Quoting makes the value opaque (§4), so it is never parsed as a header – the matching count is irrelevant because a quoted scalar is never a header candidate"
+    },
+    {
+      "name": "parses unquoted value shaped like an inline array header after the key",
+      "input": "key: foo [2]: bar",
+      "expected": {
+        "key": "foo [2]: bar"
+      },
+      "specSection": "6",
+      "note": "An unquoted key cannot contain a colon, so the first colon ends the key; the bracket-and-colon shape in the remainder is value text, not an array header"
+    },
+    {
+      "name": "parses unquoted value shaped like a tabular array header after the key",
+      "input": "a: b [2]{x,y}: 1,2",
+      "expected": {
+        "a": "b [2]{x,y}: 1,2"
+      },
+      "specSection": "6",
+      "note": "An unquoted key cannot contain a colon, so the first colon ends the key; the tabular-header shape in the remainder is value text, not an array header"
+    },
+    {
+      "name": "parses quoted object value with bracket text and a later colon",
+      "input": "content: \"accept (process.argv[2]) and greet: name\"",
+      "expected": {
+        "content": "accept (process.argv[2]) and greet: name"
+      },
+      "specSection": "8"
+    },
+    {
       "name": "parses quoted key with colon",
       "input": "\"order:id\": 7",
       "expected": {
@@ -283,6 +327,14 @@
       "input": "\"tab\\there\": 2",
       "expected": {
         "tab\there": 2
+      },
+      "specSection": "8"
+    },
+    {
+      "name": "unescapes tab in key immediately followed by a colon",
+      "input": "\"\\t:x\": v",
+      "expected": {
+        "\t:x": "v"
       },
       "specSection": "8"
     },
