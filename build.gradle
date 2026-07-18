@@ -3,11 +3,11 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
-    id 'com.github.spotbugs' version '6.5.8'
+    id 'com.github.spotbugs' version '6.5.9'
     id 'pmd'
     id 'checkstyle'
     id 'org.owasp.dependencycheck' version '12.2.2'
-    id 'org.cyclonedx.bom' version '3.2.4'
+    id 'org.cyclonedx.bom' version '3.3.0'
     id 'info.solidsoft.pitest' version '1.19.0'
     id 'net.ltgt.errorprone' version '5.1.0'
 }
@@ -146,7 +146,7 @@ tasks.checkstyleTest {
 dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.2.1'
     implementation 'tools.jackson.module:jackson-module-blackbird:3.2.1'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.2'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.3'
 
     // NullAway + Error Prone for compile-time null safety
     errorprone 'com.uber.nullaway:nullaway:0.13.7'
@@ -158,7 +158,7 @@ dependencies {
     }
     api 'org.jspecify:jspecify:1.0.0'
 
-    testImplementation platform('org.junit:junit-bom:6.1.1')
+    testImplementation platform('org.junit:junit-bom:6.1.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.awaitility:awaitility:4.3.0'
