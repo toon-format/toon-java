@@ -102,9 +102,15 @@ public final class ValueDecoder {
         }
 
         // Handle keyed arrays: items[2]{id,name}:
+        // Only match if the key part (before the bracket) doesn't contain a colon,
+        // because a colon indicates a key-value pair (e.g. 'a: "[2]: x"')
         final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(line);
         if (keyedArray.matches()) {
-            return KeyDecoder.parseKeyedArrayValue(keyedArray, line, depth, context);
+            final String keyPart = keyedArray.group(1);
+            final int colonInKey = DecodeHelper.findUnquotedColon(keyPart);
+            if (colonInKey <= 0) {
+                return KeyDecoder.parseKeyedArrayValue(keyedArray, line, depth, context);
+            }
         }
         // Handle key-value pairs: name: Ada
         final int colonIdx = DecodeHelper.findUnquotedColon(line);
