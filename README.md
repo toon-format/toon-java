@@ -351,11 +351,24 @@ Object result2 = JToon.decode(invalidToon, lenient);
 
 **CI/CD:** GitHub Actions • Java 17 • Coverage enforcement • PR coverage comments
 
+## Development
+
+```bash
+# Build (includes tests, checks, coverage)
+./gradlew build
+
+# Run tests only
+./gradlew test
+
+# Update dependency verification metadata (required when adding/updating dependencies)
+./gradlew --write-verification-metadata sha256 build cyclonedxBom -x test
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
+
 ## Project Status
 
 This project is 100% compliant with TOON specification. Release conformance enforced on CI/CD.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Documentation
 
