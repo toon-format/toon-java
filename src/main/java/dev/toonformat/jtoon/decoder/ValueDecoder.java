@@ -138,8 +138,8 @@ public final class ValueDecoder {
         // interpretation. A tab before '#' disqualifies the line, and a '#'
         // anywhere else is data, not a comment.
         final List<String> contentLines = new ArrayList<>(rawLines.length);
-        for (int i = 0; i < rawLines.length; i++) {
-            final String stripped = rawLines[i].stripTrailing();
+        for (String rawLine : rawLines) {
+            final String stripped = rawLine.stripTrailing();
             if (!isCommentLine(stripped)) {
                 contentLines.add(stripped);
             }
@@ -196,7 +196,7 @@ public final class ValueDecoder {
             // KEYED_ARRAY_PATTERN. This catches:
             //   - extra brackets between bracket segment and colon (foo[1][bar])
             //   - text between bracket segment and colon (foo[2]extra)
-            //   - non-integer bracket segment (foo[bar])
+            //   - noninteger bracket segment (foo[bar])
             //   - negative bracket length (items[-1])
             //   - whitespace between bracket segment and colon/fields segment
             //     (items[2] :, items[2] {a,b}:)

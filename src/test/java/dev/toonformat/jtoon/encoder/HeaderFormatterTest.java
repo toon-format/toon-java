@@ -3,6 +3,7 @@ package dev.toonformat.jtoon.encoder;
 import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import dev.toonformat.jtoon.Delimiter;
@@ -22,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class HeaderFormatterTest {
 
     private static List<TabularField> leafFields(final String... names) {
-        return java.util.Arrays.stream(names).map(TabularField::leaf).toList();
+        return Arrays.stream(names).map(TabularField::leaf).toList();
     }
 
     @Nested
