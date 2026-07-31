@@ -254,4 +254,36 @@ public final class DecodeHelper {
         }
     }
 
+    /**
+     * Ensures no unconsumed lines remain after the root form was parsed.
+     * The root form spans the whole document (§5); trailing content must not be
+     * silently discarded. In strict mode any leftover line is an error. In
+     * non-strict mode a scalar line outside root primitive position is still an
+     * error in both modes alike (§5.2), while leftover key-value lines are ignored.
+     *
+     * @param context decode an object to deal with lines, delimiter and options
+     */
+    static void validateNoTrailingContent(final DecodeContext context) {
+        while (context.currentLine < context.lines.length) {
+            final String line = context.lines[context.currentLine];
+            if (isBlankLine(line)) {
+                context.currentLine++;
+                continue;
+            }
+            if (context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Unexpected content after root form at line " + (context.currentLine + 1));
+            }
+            final int depth = getDepth(line, context);
+            final String content = line.substring(depth * context.options.indent());
+            if (findUnquotedColon(content) < 0) {
+                // Spec §5.2: a scalar line outside root primitive position is
+                // an error in strict and non-strict mode alike.
+                throw new FatalDecodeException(
+                    "Bare token line outside root primitive position at line " + (context.currentLine + 1));
+            }
+            context.currentLine++;
+        }
+    }
+
 }

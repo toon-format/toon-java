@@ -45,6 +45,11 @@ public final class StringValidator {
             return false;
         }
 
+        // Spec §7.2: tokens starting with '#' must be quoted (comment marker).
+        if (value.charAt(0) == '#') {
+            return false;
+        }
+
         for (int i = 0; i < len; i++) {
             final char c = value.charAt(i);
             switch (c) {
@@ -79,24 +84,27 @@ public final class StringValidator {
         final int len = key.length();
         final char first = key.charAt(0);
 
-        if (!Character.isJavaIdentifierStart(first) && first != '_') {
+        // Spec §7.3: unquoted keys must match ^[A-Za-z_][A-Za-z0-9_.]*$ (ASCII only).
+        if (!isAsciiLetter(first) && first != '_') {
             return false;
         }
 
         for (int i = 1; i < len; i++) {
             final char c = key.charAt(i);
-            // Reject control characters (U+0000-U+001F) even though
-            // Character.isJavaIdentifierPart returns true for identifier-ignorable
-            // control chars like U+0004. These must be escaped in TOON output.
-            if (c <= CONTROL_CHAR_MAX) {
-                return false;
-            }
-            if (!Character.isJavaIdentifierPart(c) && c != '.') {
+            if (!isAsciiLetterOrDigit(c) && c != '_' && c != '.') {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private static boolean isAsciiLetter(final char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    private static boolean isAsciiLetterOrDigit(final char c) {
+        return isAsciiLetter(c) || (c >= '0' && c <= '9');
     }
 
     private static boolean isKeyword(final String value) {
@@ -113,7 +121,9 @@ public final class StringValidator {
         final int len = value.length();
         int i = 0;
 
-        if (value.charAt(0) == '-') {
+        // Spec §7.2 numeric-like test ^[+-]?[0-9]+...$: '+' counts (must quote "+1"),
+        // while the decoder grammar (§4) is ^-?[0-9]+...$ and decodes "+1" as string.
+        if (value.charAt(0) == '-' || value.charAt(0) == '+') {
             if (len < 2) {
                 return false;
             }

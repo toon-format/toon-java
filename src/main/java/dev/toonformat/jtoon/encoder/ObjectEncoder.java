@@ -7,6 +7,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import static dev.toonformat.jtoon.util.Constants.DOT;
@@ -130,6 +131,11 @@ public final class ObjectEncoder {
         }
         if (value.isObject()) {
             final ObjectNode objValue = (ObjectNode) value;
+            final List<TabularField> keyedFields = KeyedObjectEncoder.detectKeyedFields(objValue);
+            if (!keyedFields.isEmpty()) {
+                KeyedObjectEncoder.encodeKeyedTabularObject(key, objValue, keyedFields, writer, depth, currentOptions);
+                return;
+            }
             writer.push(depth, encodedKey + COLON);
             if (!objValue.isEmpty()) {
                 encodeObject(objValue, writer, depth + 1, currentOptions, rootLiteralKeys, currentPath,

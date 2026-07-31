@@ -1,7 +1,7 @@
 package dev.toonformat.jtoon.conformance.model;
 
 public record JsonDecodeTestOptions(
-        Integer indent,
+        Integer indentSize,
         String delimiter,
         String lengthMarker,
         Boolean strict,

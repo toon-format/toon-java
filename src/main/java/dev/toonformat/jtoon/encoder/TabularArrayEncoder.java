@@ -22,11 +22,12 @@ public final class TabularArrayEncoder {
     /**
      * Detects if an array can be encoded in tabular format.
      * Returns the header fields if tabular encoding is possible, empty list otherwise.
+     * Columns holding uniform nested objects are collapsed into nested field groups (§9.3).
      *
      * @param rows The array to analyze
-     * @return List of field names for tabular header, or empty list if not tabular
+     * @return List of header fields for tabular encoding, or empty list if not tabular
      */
-    public static List<String> detectTabularHeader(final ArrayNode rows) {
+    public static List<TabularField> detectTabularHeader(final ArrayNode rows) {
         if (rows.isEmpty()) {
             return Collections.emptyList();
         }
@@ -37,41 +38,71 @@ public final class TabularArrayEncoder {
         }
 
         final ObjectNode firstObj = (ObjectNode) firstRow;
-        final List<String> firstKeys = new ArrayList<>(firstObj.propertyNames());
-
-        if (firstKeys.isEmpty()) {
+        if (firstObj.isEmpty()) {
             return Collections.emptyList();
         }
 
-        if (isTabularArray(rows, firstKeys)) {
-            return Collections.unmodifiableList(firstKeys);
+        final List<TabularField> header = new ArrayList<>();
+        for (final String key : firstObj.propertyNames()) {
+            final List<TabularField> children = uniformColumnsOf(firstObj.get(key));
+            if (children == null) {
+                return Collections.emptyList();
+            }
+            header.add(new TabularField(key, children));
         }
 
-        return Collections.emptyList();
+        if (!matchesEveryRow(rows, header)) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(header);
     }
 
     /**
-     * Checks if all rows in the array have the same keys with primitive values.
+     * Derives the nested field-group structure of a single column value.
+     * Returns an empty list for a primitive (leaf) column, the child fields for a
+     * nested uniform object column, or null when the column cannot be tabular (§9.3):
+     * arrays, empty objects, and values whose structure differs per row.
      */
-    private static boolean isTabularArray(final Iterable<JsonNode> rows, final List<String> header) {
-        final int headerSize = header.size();
+    @Nullable
+    static List<TabularField> uniformColumnsOf(final JsonNode value) {
+        if (value.isValueNode()) {
+            return Collections.emptyList();
+        }
+        if (!value.isObject()) {
+            return null;
+        }
+        final ObjectNode obj = (ObjectNode) value;
+        if (obj.isEmpty()) {
+            return null;
+        }
+        final List<TabularField> children = new ArrayList<>();
+        for (final String key : obj.propertyNames()) {
+            final List<TabularField> subChildren = uniformColumnsOf(obj.get(key));
+            if (subChildren == null) {
+                return null;
+            }
+            children.add(new TabularField(key, subChildren));
+        }
+        return children;
+    }
 
-        for (JsonNode row : rows) {
+    /**
+     * Checks that every row matches the header structure with uniform values.
+     */
+    static boolean matchesEveryRow(final Iterable<JsonNode> rows, final List<TabularField> header) {
+        for (final JsonNode row : rows) {
             if (!row.isObject()) {
                 return false;
             }
 
             final ObjectNode obj = (ObjectNode) row;
-
-            // All objects must have the same number of keys
-            if (obj.size() != headerSize) {
+            if (obj.size() != header.size()) {
                 return false;
             }
 
-            // Check that all header keys exist in the row and all values are primitives
-            for (final String key : header) {
-                final JsonNode value = obj.get(key);
-                if (value == null || !value.isValueNode()) {
+            for (final TabularField field : header) {
+                if (!matchesField(field, obj.get(field.name()))) {
                     return false;
                 }
             }
@@ -81,17 +112,43 @@ public final class TabularArrayEncoder {
     }
 
     /**
+     * Checks that a row value matches the field structure: primitives for leaf
+     * fields, uniformly structured objects for nested field groups.
+     */
+    private static boolean matchesField(final TabularField field, @Nullable final JsonNode value) {
+        if (value == null) {
+            return false;
+        }
+        if (field.isLeaf()) {
+            return value.isValueNode();
+        }
+        if (!value.isObject()) {
+            return false;
+        }
+        final ObjectNode obj = (ObjectNode) value;
+        if (obj.size() != field.children().size()) {
+            return false;
+        }
+        for (final TabularField child : field.children()) {
+            if (!matchesField(child, obj.get(child.name()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Encodes an array of objects as a tabular structure.
      *
      * @param prefix  Optional key prefix
      * @param rows    Array of uniform objects
-     * @param header  List of field names
+     * @param header  List of header fields
      * @param writer  LineWriter for output
      * @param depth   Indentation depth
      * @param options Encoding options
      */
     public static void encodeArrayOfObjectsAsTabular(@Nullable final String prefix, final ArrayNode rows,
-            final List<String> header, final LineWriter writer, final int depth,
+            final List<TabularField> header, final LineWriter writer, final int depth,
             final EncodeOptions options) {
         final String headerStr = PrimitiveEncoder.formatHeader(rows.size(), prefix, header,
                 options.delimiter().toString(), options.lengthMarker());
@@ -101,16 +158,16 @@ public final class TabularArrayEncoder {
     }
 
     /**
-     * Writes rows of tabular data by extracting values in header order.
+     * Writes rows of tabular data by extracting leaf values in header order.
      * Public to allow ListItemEncoder to write rows after placing header on "- " line.
      *
      * @param rows    Array of objects
-     * @param header  List of field names
+     * @param header  List of header fields
      * @param writer  LineWriter for output
      * @param depth   Indentation depth
      * @param options Encoding options
      */
-    public static void writeTabularRows(final Iterable<JsonNode> rows, final List<String> header,
+    public static void writeTabularRows(final Iterable<JsonNode> rows, final List<TabularField> header,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         for (JsonNode row : rows) {
             // Skip non-object rows
@@ -124,25 +181,31 @@ public final class TabularArrayEncoder {
     }
 
     /**
-     * Joins values from a single row according to header order.
-     * Avoids creating intermediate collections.
-     * Missing keys are skipped.
+     * Joins leaf values from a single row in depth-first pre-order (§9.3):
+     * each nested field group contributes its own leaf cells before the next
+     * sibling field. Missing keys are skipped.
      */
-    private static String joinRowValues(final ObjectNode row, final List<String> header, final String delimiter) {
-        final StringBuilder sb = new StringBuilder(128);
-        boolean first = true;
-        for (final String key : header) {
-            final JsonNode value = row.get(key);
-            if (value == null) {
-                continue; // Skip missing keys
+    private static String joinRowValues(final ObjectNode row, final List<TabularField> header, final String delimiter) {
+        final List<String> cells = new ArrayList<>(header.size());
+        collectCells(row, header, cells, delimiter);
+        return String.join(delimiter, cells);
+    }
+
+    static void collectCells(final ObjectNode row, final List<TabularField> fields, final List<String> cells,
+            final String delimiter) {
+        for (final TabularField field : fields) {
+            if (field.isLeaf()) {
+                final JsonNode value = row.get(field.name());
+                if (value != null) {
+                    cells.add(PrimitiveEncoder.encodePrimitive(value, delimiter));
+                }
+                continue;
             }
-            if (!first) {
-                sb.append(delimiter);
+            final JsonNode group = row.get(field.name());
+            if (group != null && group.isObject()) {
+                collectCells((ObjectNode) group, field.children(), cells, delimiter);
             }
-            first = false;
-            sb.append(PrimitiveEncoder.encodePrimitive(value, delimiter));
         }
-        return sb.toString();
     }
 }
 

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import dev.toonformat.jtoon.DecodeOptions;
+import dev.toonformat.jtoon.util.Headers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -107,7 +108,7 @@ class ObjectDecoderTest {
         }
 
         @Test
-        @DisplayName("GIVEN deeper indentation WHEN child is not direct child THEN skip line")
+        @DisplayName("GIVEN deeper indentation WHEN child is not direct child THEN skip line in lenient mode")
         void parseNestedObject_skips_invalid_depth() {
             // Given
             setUpContext("""
@@ -115,7 +116,7 @@ class ObjectDecoderTest {
                     tooDeep: X
                   child: OK
                 """);
-
+            context.options = DecodeOptions.withStrict(false);
             context.currentLine = 1;
 
             // When
@@ -152,6 +153,7 @@ class ObjectDecoderTest {
                 b: 20
                   nested: IGNORE
                 """);
+            context.options = DecodeOptions.withStrict(false);
             final Map<String, Object> root = new LinkedHashMap<>();
 
             // When
@@ -420,8 +422,8 @@ class ObjectDecoderTest {
         // When
         invokePrivateStatic(
             "processRootKeyedArrayLine",
-            new Class[]{Map.class, String.class, String.class, int.class, DecodeContext.class},
-            objectMap, content, "user.name", depth, context);
+            new Class[]{Map.class, String.class, Headers.KeyedHeaderMatch.class, int.class, DecodeContext.class},
+            objectMap, content, Headers.matchKeyedArrayHeader(content), depth, context);
 
         // Then
         assertTrue(objectMap.containsKey("user.name"));

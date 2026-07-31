@@ -1,11 +1,11 @@
 package dev.toonformat.jtoon.decoder;
 
+import dev.toonformat.jtoon.util.Headers;
 import dev.toonformat.jtoon.util.StringEscaper;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
+import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
  * Handles decoding of TOON objects to JSON format.
@@ -52,6 +52,13 @@ public final class ObjectDecoder {
 
             if (depth == parentDepth + 1) {
                 processDirectChildLine(result, line, parentDepth, depth, context);
+            } else if (depth > parentDepth + 1) {
+                // Over-indented line jumps past the expected depth (§14.2)
+                if (context.options.strict()) {
+                    throw new IllegalArgumentException(
+                        "Over-indented line at " + (context.currentLine + 1) + " (depth " + depth + ")");
+                }
+                context.currentLine++;
             } else {
                 context.currentLine++;
             }
@@ -68,10 +75,18 @@ public final class ObjectDecoder {
     private static void processDirectChildLine(final Map<String, Object> result, final String line,
             final int parentDepth, final int depth, final DecodeContext context) {
         final String content = line.substring((parentDepth + 1) * context.options.indent());
-        final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
 
-        if (keyedArray.find()) {
-            KeyDecoder.processKeyedArrayLine(result, content, keyedArray.group(1), parentDepth, context);
+        // Spec §5/§6: keyless array headers are valid only as the document's
+        // root header or as list items; an object field position is a defect.
+        if (content.startsWith(OPEN_BRACKET) && context.options.strict()) {
+            throw new IllegalArgumentException(
+                "Keyless array header only valid at document root at line " + (context.currentLine + 1));
+        }
+
+        final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(content);
+
+        if (keyedHeader != null) {
+            KeyDecoder.processKeyedArrayLine(result, content, keyedHeader, parentDepth, context);
         } else {
             KeyDecoder.processKeyValueLine(result, content, depth, context);
         }
@@ -101,9 +116,17 @@ public final class ObjectDecoder {
 
             final String content = line.substring(depth * context.options.indent());
 
-            final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(content);
-            if (keyedArray.matches()) {
-                processRootKeyedArrayLine(obj, content, keyedArray.group(1), depth, context);
+            // Spec §5/§6: a keyless header is only valid as the document's
+            // root header, i.e. the first line; at any later depth-0 position
+            // it is a defect.
+            if (content.startsWith(OPEN_BRACKET) && context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Keyless array header only valid as root header at line " + (context.currentLine + 1));
+            }
+
+            final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(content);
+            if (keyedHeader != null) {
+                processRootKeyedArrayLine(obj, content, keyedHeader, depth, context);
             } else {
                 final int colonIdx = DecodeHelper.findUnquotedColon(content);
                 if (colonIdx > 0) {
@@ -123,16 +146,36 @@ public final class ObjectDecoder {
      *
      * @param objectMap   the string key-value pairs
      * @param content     the content string to parse
-     * @param originalKey the original Key
+     * @param keyedHeader the keyed header match for the content
      * @param depth       the depth of the object field
      * @param context     decode an object to deal with lines, delimiter and options
      */
     private static void processRootKeyedArrayLine(final Map<String, Object> objectMap,
-            final String content, final String originalKey, final int depth,
+            final String content, final Headers.KeyedHeaderMatch keyedHeader, final int depth,
             final DecodeContext context) {
+        if (keyedHeader.keyed()) {
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1, context);
+            KeyDecoder.putKeyedValueIntoMap(objectMap, keyedHeader, keyedValue, context);
+            return;
+        }
+
+        final String originalKey = keyedHeader.key();
         final String originalKeyTrimmed = originalKey.trim();
         final String key = StringEscaper.unescape(originalKey);
         final String arrayHeader = content.substring(originalKey.length());
+
+        // Spec §6: a keyed tabular header whose bracket and brace segments
+        // declare different delimiters is defective; in non-strict mode the
+        // whole line falls through and decodes as an ordinary key-value pair.
+        if (!context.options.strict() && ArrayDecoder.hasTabularDelimiterMismatch(arrayHeader)) {
+            final int colonIdx = DecodeHelper.findUnquotedColon(content);
+            if (colonIdx > 0) {
+                KeyDecoder.parseKeyValuePairIntoMap(objectMap,
+                    content.substring(0, colonIdx).trim(),
+                    content.substring(colonIdx + 1).trim(), depth, context);
+                return;
+            }
+        }
 
         final List<Object> arrayValue = ArrayDecoder.parseArray(arrayHeader, depth, context);
 
@@ -180,6 +223,21 @@ public final class ObjectDecoder {
         if (context.currentLine + 1 < context.lines.length) {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > fieldDepth) {
+                if (!fieldValue.isBlank()) {
+                    // Inline value: the field does not open a scope, so a deeper
+                    // line belongs to no scope at all (§14.2)
+                    if (context.options.strict()) {
+                        throw new IllegalArgumentException(
+                            "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
+                    }
+                    // Non-strict: skip the orphaned lines and keep the inline value
+                    context.currentLine++;
+                    while (context.currentLine < context.lines.length
+                            && DecodeHelper.getDepth(context.lines[context.currentLine], context) > fieldDepth) {
+                        context.currentLine++;
+                    }
+                    return PrimitiveDecoder.parse(fieldValue, context);
+                }
                 context.currentLine++;
                 // parseNestedObject manages the currentLine, so we don't increment here
                 return parseNestedObject(fieldDepth, context);

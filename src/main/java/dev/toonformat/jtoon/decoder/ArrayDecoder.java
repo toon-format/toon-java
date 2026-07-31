@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
+import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
 import static dev.toonformat.jtoon.util.Headers.ARRAY_HEADER_PATTERN;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
@@ -22,6 +23,37 @@ public final class ArrayDecoder {
 
     private ArrayDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
+
+    /**
+     * Spec §6: the delimiter declared inside the bracket segment of a tabular
+     * header must match the delimiter used by the brace field list. A header
+     * that declares a delimiter the field list does not use is defective.
+     *
+     * @param arrayHeader the array header starting with the bracket segment
+     * @return true when the header carries a mismatched delimiter declaration
+     */
+    static boolean hasTabularDelimiterMismatch(final String arrayHeader) {
+        final Matcher matcher = TABULAR_HEADER_PATTERN.matcher(arrayHeader);
+        if (!matcher.find() || matcher.group(DELIMITER_GROUP_INDEX) == null) {
+            return false;
+        }
+        final char declared = matcher.group(DELIMITER_GROUP_INDEX).charAt(0);
+        boolean inQuotes = false;
+        boolean escaped = false;
+        for (int i = 0; i < matcher.group(4).length(); i++) {
+            final char c = matcher.group(4).charAt(i);
+            if (escaped) {
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (!inQuotes && c != declared && (c == ',' || c == '\t' || c == '|')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -103,13 +135,20 @@ public final class ArrayDecoder {
                 if (!inlineContent.isEmpty()) {
                     final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter,
                         context.options.maxArraySize(), context.options.maxStringLength());
-                    validateArrayLength(header, result.size(), context.options.maxArraySize());
+                    validateArrayLength(header, result.size(), context.options.maxArraySize(),
+                        context.options.strict());
                     context.currentLine++;
                     return Collections.unmodifiableList(result);
                 }
             }
 
             context.currentLine++;
+            // Spec §12: blank lines between the header and the first item are
+            // accepted even in strict mode
+            while (context.currentLine < context.lines.length
+                    && DecodeHelper.isBlankLine(context.lines[context.currentLine])) {
+                context.currentLine++;
+            }
             if (context.currentLine < context.lines.length) {
                 final String nextLine = context.lines[context.currentLine];
                 final int nextDepth = DecodeHelper.getDepth(nextLine, context);
@@ -118,41 +157,54 @@ public final class ArrayDecoder {
                 if (nextDepth <= depth) {
                     // The next line is not a child of this array,
                     // the array is empty
-                    validateArrayLength(header, 0, context.options.maxArraySize());
+                    validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
                     return Collections.emptyList();
                 }
 
-                if (nextContent.startsWith(LIST_ITEM_PREFIX)) {
+                if (nextContent.equals(LIST_ITEM_MARKER) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
                     context.currentLine--;
                     return Collections.unmodifiableList(parseListArray(depth, header, context));
                 } else {
                     context.currentLine++;
                     final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
                         context.options.maxArraySize(), context.options.maxStringLength());
-                    validateArrayLength(header, result.size(), context.options.maxArraySize());
+                    validateArrayLength(header, result.size(), context.options.maxArraySize(),
+                        context.options.strict());
                     return Collections.unmodifiableList(result);
                 }
             }
             final List<Object> empty = new ArrayList<>();
-            validateArrayLength(header, 0, context.options.maxArraySize());
+            validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
             return Collections.unmodifiableList(empty);
+        }
+
+        // Spec §9.1/§9.2: a bare bracket pair is an empty array header
+        if ("[]".equals(header.trim())) {
+            context.currentLine++;
+            return Collections.emptyList();
         }
 
         if (context.options.strict()) {
             throw new IllegalArgumentException("Invalid array header: " + header);
         }
+        context.currentLine++;
         return Collections.emptyList();
     }
 
     /**
      * Validates array length if declared in the header.
+     * The count check applies in strict mode only; the declared length never
+     * truncates a scope (§14.1). Resource bounds are always enforced.
      *
      * @param header       header
      * @param actualLength actual length
+     * @param maxArraySize maximum allowed array size
+     * @param strict       strict mode flag
      */
-    static void validateArrayLength(final String header, final int actualLength, final int maxArraySize) {
+    static void validateArrayLength(final String header, final int actualLength, final int maxArraySize,
+            final boolean strict) {
         final Integer declaredLength = extractLengthFromHeader(header, maxArraySize);
-        if (declaredLength != null && declaredLength != actualLength) {
+        if (strict && declaredLength != null && declaredLength != actualLength) {
             throw new IllegalArgumentException(
                 String.format("Array length mismatch: declared %d, found %d", declaredLength, actualLength));
         }
@@ -277,7 +329,11 @@ public final class ArrayDecoder {
             final String line = context.lines[context.currentLine];
 
             if (DecodeHelper.isBlankLine(line)) {
-                if (handleBlankLineInListArray(depth, context)) {
+                // Spec §12: blank lines between the header and the first item are
+                // accepted even in strict mode
+                if (result.isEmpty()) {
+                    context.currentLine++;
+                } else if (handleBlankLineInListArray(depth, context)) {
                     shouldContinue = false;
                 }
             } else {
@@ -291,7 +347,7 @@ public final class ArrayDecoder {
         }
 
         if (header != null) {
-            validateArrayLength(header, result.size(), context.options.maxArraySize());
+            validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
         }
         return result;
     }

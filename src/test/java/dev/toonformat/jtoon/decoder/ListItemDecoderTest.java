@@ -86,7 +86,7 @@ class ListItemDecoderTest {
         final Map<String, Object> item = Map.of(line, testObject);
         final int depth = -2;
         final DecodeContext context = new DecodeContext();
-        context.options = DecodeOptions.DEFAULT;
+        context.options = DecodeOptions.withStrict(false);
         context.lines = new String[] { line };
 
         // When

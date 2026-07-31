@@ -21,6 +21,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 @Tag("unit")
 public class HeaderFormatterTest {
 
+    private static List<TabularField> leafFields(final String... names) {
+        return java.util.Arrays.stream(names).map(TabularField::leaf).toList();
+    }
+
     @Nested
     @DisplayName("Simple Array Headers")
     class SimpleArrayHeaders {
@@ -74,7 +78,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format tabular header with fields")
         void testTabularHeader() {
             // Given
-            final List<String> fields = List.of("id", "name", "age");
+            final List<TabularField> fields = leafFields("id", "name", "age");
 
             // When
             final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
@@ -87,7 +91,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format tabular header with single field")
         void testSingleField() {
             // Given
-            final List<String> fields = List.of("value");
+            final List<TabularField> fields = leafFields("value");
 
             // When
             final String result = HeaderFormatter.format(5, "data", fields, Delimiter.COMMA.toString(), false);
@@ -100,7 +104,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format tabular header without key")
         void testTabularWithoutKey() {
             // Given
-            final List<String> fields = List.of("x", "y");
+            final List<TabularField> fields = leafFields("x", "y");
 
             // When
             final String result = HeaderFormatter.format(10, null, fields, Delimiter.COMMA.toString(), false);
@@ -113,7 +117,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format empty tabular header (no fields)")
         void testEmptyFields() {
             // Given
-            final List<String> fields = List.of();
+            final List<TabularField> fields = leafFields();
 
             // When
             final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString(), false);
@@ -126,7 +130,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format tabular header with length marker")
         void testTabularWithLengthMarker() {
             // Given
-            final List<String> fields = List.of("id", "name");
+            final List<TabularField> fields = leafFields("id", "name");
 
             // When
             final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), true);
@@ -145,7 +149,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format with different delimiters")
         void testDelimiterFormatting(final String delimiterName, final String delimiter, final String expected) {
             // Given
-            final List<String> fields = List.of("a", "b", "c");
+            final List<TabularField> fields = leafFields("a", "b", "c");
 
             // When
             final String result = HeaderFormatter.format(3, "data", fields, delimiter, false);
@@ -185,7 +189,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format with pipe delimiter and length marker")
         void testPipeWithLengthMarker() {
             // Given
-            final List<String> fields = List.of("x", "y");
+            final List<TabularField> fields = leafFields("x", "y");
 
             // When
             final String result = HeaderFormatter.format(2, "points", fields, Delimiter.PIPE.toString(), true);
@@ -233,7 +237,7 @@ public class HeaderFormatterTest {
         @DisplayName("should quote field names with special characters")
         void testFieldQuoting() {
             // Given
-            final List<String> fields = List.of("first name", "last name");
+            final List<TabularField> fields = leafFields("first name", "last name");
 
             // When
             final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
@@ -246,7 +250,7 @@ public class HeaderFormatterTest {
         @DisplayName("should handle mix of quoted and unquoted field names")
         void testMixedFieldQuoting() {
             // Given
-            final List<String> fields = List.of("id", "full name", "age");
+            final List<TabularField> fields = leafFields("id", "full name", "age");
 
             // When
             final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
@@ -265,7 +269,7 @@ public class HeaderFormatterTest {
         void testRecordFormat() {
             // Given
             final HeaderFormatter.HeaderConfig config = new HeaderFormatter.HeaderConfig(
-                3, "items", List.of("id", "name"), Delimiter.COMMA.toString(), false);
+                3, "items", leafFields("id", "name"), Delimiter.COMMA.toString(), false);
 
             // When
             final String result = HeaderFormatter.format(config);
@@ -293,7 +297,7 @@ public class HeaderFormatterTest {
         void testRecordWithPipeDelimiter() {
             // Given
             final HeaderFormatter.HeaderConfig config = new HeaderFormatter.HeaderConfig(
-                2, "data", List.of("x", "y"), Delimiter.PIPE.toString(), true);
+                2, "data", leafFields("x", "y"), Delimiter.PIPE.toString(), true);
             // When
             final String result = HeaderFormatter.format(config);
 
@@ -320,7 +324,7 @@ public class HeaderFormatterTest {
         @DisplayName("should handle zero length with fields")
         void testZeroLengthWithFields() {
             // Given
-            final List<String> fields = List.of("id", "name");
+            final List<TabularField> fields = leafFields("id", "name");
 
             // When
             final String result = HeaderFormatter.format(0, "empty", fields, Delimiter.COMMA.toString(), false);
@@ -333,7 +337,7 @@ public class HeaderFormatterTest {
         @DisplayName("should handle many fields")
         void testManyFields() {
             // Given
-            final List<String> fields = List.of("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10");
+            final List<TabularField> fields = leafFields("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10");
 
             // When
             final String result = HeaderFormatter.format(1, "data", fields, Delimiter.COMMA.toString(), false);
@@ -361,7 +365,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format GitHub repositories header")
         void testGitHubRepos() {
             // Given
-            final List<String> fields = List.of("id", "name", "stars", "forks");
+            final List<TabularField> fields = leafFields("id", "name", "stars", "forks");
 
             // When
             final String result = HeaderFormatter.format(100, "repositories", fields,
@@ -375,7 +379,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format analytics metrics header")
         void testAnalyticsMetrics() {
             // Given
-            final List<String> fields = List.of("date", "views", "clicks", "conversions", "revenue");
+            final List<TabularField> fields = leafFields("date", "views", "clicks", "conversions", "revenue");
 
             // When
             final String result = HeaderFormatter.format(180, "metrics", fields, ",", false);
@@ -388,7 +392,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format employee records with tab delimiter")
         void testEmployeeRecords() {
             // Given
-            final List<String> fields = List.of("id", "name", "department", "salary");
+            final List<TabularField> fields = leafFields("id", "name", "department", "salary");
 
             // When
             final String result = HeaderFormatter.format(50, "employees", fields, Delimiter.TAB.toString(), false);
@@ -401,7 +405,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format nested array in list item")
         void testNestedArray() {
             // Given
-            final List<String> fields = List.of("sku", "qty", "price");
+            final List<TabularField> fields = leafFields("sku", "qty", "price");
 
             // When
             final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString(), false);

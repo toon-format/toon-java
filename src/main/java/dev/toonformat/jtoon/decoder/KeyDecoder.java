@@ -2,14 +2,12 @@ package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.PathExpansion;
+import dev.toonformat.jtoon.util.Headers;
 import dev.toonformat.jtoon.util.StringEscaper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.MatchResult;
-import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Handles decoding of key values/arrays to JSON format.
@@ -27,24 +25,63 @@ public final class KeyDecoder {
      *
      * @param result      result
      * @param content     the content string to parse
-     * @param originalKey the original Key
+     * @param keyedHeader the keyed header match for the content
      * @param parentDepth parent depth of keyed array line
      * @param context     decode an object to deal with lines, delimiter and options
      */
-    static void processKeyedArrayLine(final Map<String, Object> result, final String content, final String originalKey,
+    static void processKeyedArrayLine(final Map<String, Object> result, final String content,
+                                      final Headers.KeyedHeaderMatch keyedHeader,
                                       final int parentDepth, final DecodeContext context) {
-        final String key = StringEscaper.unescape(originalKey);
-        final String arrayHeader = content.substring(originalKey.length());
+        if (keyedHeader.keyed()) {
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(
+                content, keyedHeader, parentDepth + 2, context);
+            putKeyedValueIntoMap(result, keyedHeader, keyedValue, context);
+            return;
+        }
+
+        final String key = StringEscaper.unescape(keyedHeader.key());
+        final String arrayHeader = content.substring(keyedHeader.keyEnd());
+
+        // Spec §6: a keyed tabular header whose bracket and brace segments
+        // declare different delimiters is defective; in non-strict mode the
+        // whole line falls through and decodes as an ordinary key-value pair.
+        if (!context.options.strict() && ArrayDecoder.hasTabularDelimiterMismatch(arrayHeader)) {
+            processKeyValueLine(result, content, parentDepth + 1, context);
+            return;
+        }
+
         final List<Object> arrayValue = ArrayDecoder.parseArray(arrayHeader, parentDepth + 1, context);
 
         // Handle path expansion for array keys
-        if (shouldExpandKey(originalKey, context)) {
+        if (shouldExpandKey(keyedHeader.key(), context)) {
             expandPathIntoMap(result, key, arrayValue, context);
         } else {
             // Check for conflicts with existing expanded paths
             DecodeHelper.checkPathExpansionConflict(result, key, arrayValue, context);
             DecodeHelper.checkDuplicateKey(result, key, context);
             result.put(key, arrayValue);
+        }
+    }
+
+    /**
+     * Puts a keyed value into a map under the match's key, honoring path
+     * expansion, path-expansion conflicts and duplicate keys.
+     *
+     * @param map         the map to put the keyed value into
+     * @param keyedHeader the keyed header match carrying the key
+     * @param value       the value to put
+     * @param context     decode an object to deal with lines, delimiter and options
+     */
+    static void putKeyedValueIntoMap(final Map<String, Object> map,
+            final Headers.KeyedHeaderMatch keyedHeader, final Object value, final DecodeContext context) {
+        final String originalKey = keyedHeader.key().trim();
+        final String key = StringEscaper.unescape(originalKey);
+        if (shouldExpandKey(originalKey, context)) {
+            expandPathIntoMap(map, key, value, context);
+        } else {
+            DecodeHelper.checkPathExpansionConflict(map, key, value, context);
+            DecodeHelper.checkDuplicateKey(map, key, context);
+            map.put(key, value);
         }
     }
 
@@ -192,35 +229,42 @@ public final class KeyDecoder {
         if (context.currentLine + 1 < context.lines.length) {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > depth) {
+                if (!value.isBlank()) {
+                    // Inline value: the field does not open a scope, so a deeper
+                    // line belongs to no scope at all (§14.2)
+                    if (context.options.strict()) {
+                        throw new IllegalArgumentException(
+                            "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
+                    }
+                    // Non-strict: skip the orphaned lines and keep the inline value
+                    context.currentLine++;
+                    while (context.currentLine < context.lines.length
+                            && DecodeHelper.getDepth(context.lines[context.currentLine], context) > depth) {
+                        context.currentLine++;
+                    }
+                    return parseScalarValue(value, context);
+                }
                 context.currentLine++;
                 // parseNestedObject manages the currentLine, so we don't increment here
                 return ObjectDecoder.parseNestedObject(depth, context);
             } else {
-                // If the value is empty, create an empty object; otherwise parse as primitive
-                final Object parsedValue;
-                if (value.isBlank()) {
-                    parsedValue = new LinkedHashMap<>();
-                } else if ("[]".equals(value)) {
-                    parsedValue = List.of();
-                } else {
-                    parsedValue = PrimitiveDecoder.parse(value, context);
-                }
                 context.currentLine++;
-                return parsedValue;
+                return parseScalarValue(value, context);
             }
         } else {
-            // If the value is empty, create an empty object; otherwise parse as primitive
-            final Object parsedValue;
-            if (value.isBlank()) {
-                parsedValue = new LinkedHashMap<>();
-            } else if ("[]".equals(value)) {
-                parsedValue = List.of();
-            } else {
-                parsedValue = PrimitiveDecoder.parse(value, context);
-            }
             context.currentLine++;
-            return parsedValue;
+            return parseScalarValue(value, context);
         }
+    }
+
+    private static Object parseScalarValue(final String value, final DecodeContext context) {
+        if (value.isBlank()) {
+            return new LinkedHashMap<>();
+        }
+        if ("[]".equals(value)) {
+            return List.of();
+        }
+        return PrimitiveDecoder.parse(value, context);
     }
 
     /**
@@ -268,18 +312,40 @@ public final class KeyDecoder {
     /**
      * Parses a keyed array value (e.g., "items[2]{id,name}:").
      *
-     * @param keyedArray keyed array
-     * @param content    the content string to parse
-     * @param depth      the depth of the keyed array value
-     * @param context    decode an object to deal with lines, delimiter, and options
+     * @param keyedHeader keyed header match
+     * @param content     the content string to parse
+     * @param depth       the depth of the keyed array value
+     * @param context     decode an object to deal with lines, delimiter and options
      * @return parsed keyed array value
      */
-    static Object parseKeyedArrayValue(final MatchResult keyedArray, final String content,
+    static Object parseKeyedArrayValue(final Headers.KeyedHeaderMatch keyedHeader, final String content,
             final int depth, final DecodeContext context) {
-        final String group1 = keyedArray.group(1);
-        final String originalKey = group1.trim();
+        if (keyedHeader.keyed()) {
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1, context);
+            final Map<String, Object> obj = new LinkedHashMap<>();
+            putKeyedValueIntoMap(obj, keyedHeader, keyedValue, context);
+
+            // Continue parsing root-level fields if at depth 0
+            if (depth == 0) {
+                ObjectDecoder.parseRootObjectFields(obj, depth, context);
+            }
+            return obj;
+        }
+
+        final String originalKey = keyedHeader.key().trim();
         final String key = StringEscaper.unescape(originalKey);
-        final String arrayHeader = content.substring(group1.length());
+        final String arrayHeader = content.substring(keyedHeader.keyEnd());
+
+        // Spec §6: a keyed tabular header whose bracket and brace segments
+        // declare different delimiters is defective; in non-strict mode the
+        // whole line falls through and decodes as an ordinary key-value pair.
+        if (!context.options.strict() && ArrayDecoder.hasTabularDelimiterMismatch(arrayHeader)) {
+            final int colonIdx = DecodeHelper.findUnquotedColon(content);
+            if (colonIdx > 0) {
+                return parseKeyValuePair(content.substring(0, colonIdx).trim(),
+                    content.substring(colonIdx + 1).trim(), depth, depth == 0, context);
+            }
+        }
 
         final List<Object> arrayValue = ArrayDecoder.parseArray(arrayHeader, depth, context);
         final Map<String, Object> obj = new LinkedHashMap<>();
@@ -312,15 +378,29 @@ public final class KeyDecoder {
      */
     static boolean parseKeyedArrayField(final String fieldContent, final Map<String, Object> item, final int depth,
                                         final DecodeContext context) {
-        final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(fieldContent);
-        if (!keyedArray.matches()) {
+        final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(fieldContent);
+        if (keyedHeader == null) {
             return false;
         }
 
-        final String group1 = keyedArray.group(1);
-        final String originalKey = group1.trim();
+        if (keyedHeader.keyed()) {
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(
+                fieldContent, keyedHeader, depth + 3, context);
+            putKeyedValueIntoMap(item, keyedHeader, keyedValue, context);
+            return true;
+        }
+
+        // Spec §6: a keyed tabular header whose bracket and brace segments
+        // declare different delimiters is defective; in non-strict mode the
+        // field falls through to ordinary key-value parsing.
+        if (!context.options.strict()
+                && ArrayDecoder.hasTabularDelimiterMismatch(fieldContent.substring(keyedHeader.keyEnd()))) {
+            return false;
+        }
+
+        final String originalKey = keyedHeader.key().trim();
         final String key = StringEscaper.unescape(originalKey);
-        final String arrayHeader = fieldContent.substring(group1.length());
+        final String arrayHeader = fieldContent.substring(keyedHeader.keyEnd());
 
         // For nested arrays in list items, default to comma delimiter if not specified
         final Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);

@@ -1,20 +1,25 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import dev.toonformat.jtoon.util.Headers;
 import dev.toonformat.jtoon.util.StringEscaper;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
-import static dev.toonformat.jtoon.util.Headers.KEYED_ARRAY_PATTERN;
 
 /**
  * Handles decoding of TOON list item to JSON format.
  */
 public final class ListItemDecoder {
+
+    // Spec §6: a keyless array header is valid as a list item only in its
+    // plain form ([N]: or []); a fields-bearing ([N]{...}:) or keyed
+    // ([N:]{...}:) keyless header is a defect.
+    private static final Pattern KEYLESS_FIELDS_HEADER = Pattern.compile("^\\[[^\\]]*]\\s*\\{");
 
     private ListItemDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -70,6 +75,13 @@ public final class ListItemDecoder {
 
         // Check for standalone array (e.g., "[2]: 1,2")
         if (itemContent.startsWith(OPEN_BRACKET)) {
+            // Keyless headers are valid as list items only without a field
+            // list; [2]{x}: and [2:]{v}: are defects (§5, §6)
+            if (context.options.strict() && KEYLESS_FIELDS_HEADER.matcher(itemContent).find()) {
+                throw new IllegalArgumentException(
+                    "Keyless array header with field list only valid at document root at line "
+                        + (context.currentLine + 1));
+            }
             // For nested arrays in list items, default to comma delimiter if not specified
             final Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(itemContent, context);
             // parseArrayWithDelimiter handles currentLine increment internally
@@ -82,11 +94,35 @@ public final class ListItemDecoder {
         }
 
         // Check for keyed array pattern (e.g., "tags[3]: a,b,c" or "data[2]{id}: ...")
-        final Matcher keyedArray = KEYED_ARRAY_PATTERN.matcher(itemContent);
-        if (keyedArray.matches()) {
-            final String originalKey = keyedArray.group(1).trim();
+        final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(itemContent);
+        final boolean keyedMismatchFallThrough = keyedHeader != null
+            && !keyedHeader.keyed()
+            && !context.options.strict()
+            && ArrayDecoder.hasTabularDelimiterMismatch(
+                itemContent.substring(keyedHeader.keyEnd()));
+        if (keyedHeader != null && keyedHeader.keyed()) {
+            final String originalKey = keyedHeader.key().trim();
             final String key = StringEscaper.unescape(originalKey);
-            final String arrayHeader = itemContent.substring(keyedArray.group(1).length());
+            final Map<String, Object> item = new LinkedHashMap<>();
+
+            // Spec §9.5/§10: a keyed tabular object on the hyphen line keeps
+            // its entry rows at document depth + 3 (header on depth + 1) and
+            // its sibling fields at depth + 2.
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(
+                itemContent, keyedHeader, depth + 3, context);
+            DecodeHelper.checkDuplicateKey(item, key, context);
+            item.put(key, keyedValue);
+
+            // parseKeyedTabularObject manages currentLine: entry rows and the
+            // sibling lines that follow them are left to parseListItemFields.
+            parseListItemFields(item, depth, context);
+
+            return item;
+        }
+        if (keyedHeader != null && !keyedMismatchFallThrough) {
+            final String originalKey = keyedHeader.key().trim();
+            final String key = StringEscaper.unescape(originalKey);
+            final String arrayHeader = itemContent.substring(keyedHeader.keyEnd());
 
             // For nested arrays in list items, default to comma delimiter if not specified
             final Delimiter nestedArrayDelimiter = ArrayDecoder.extractDelimiterFromHeader(arrayHeader, context);
@@ -168,8 +204,14 @@ public final class ListItemDecoder {
                 if (!wasParsed) {
                     context.currentLine++;
                 }
+            } else if (lineDepth > depth + 2) {
+                // Over-indented line jumps past the expected field depth (§14.2)
+                if (context.options.strict()) {
+                    throw new IllegalArgumentException(
+                        "Over-indented line at " + (context.currentLine + 1) + " (depth " + lineDepth + ")");
+                }
+                context.currentLine++;
             } else {
-                // lineDepth > depth + 2, skip this line
                 context.currentLine++;
             }
         }

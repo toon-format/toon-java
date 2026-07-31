@@ -90,7 +90,7 @@ public final class ArrayEncoder {
         }
 
         if (allObjects) {
-            final List<String> header = TabularArrayEncoder.detectTabularHeader(value);
+            final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(value);
             if (!header.isEmpty()) {
                 TabularArrayEncoder.encodeArrayOfObjectsAsTabular(key, value, header, writer, depth, options);
             } else {

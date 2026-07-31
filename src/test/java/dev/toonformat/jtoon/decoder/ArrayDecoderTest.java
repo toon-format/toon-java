@@ -144,13 +144,13 @@ class ArrayDecoderTest {
     @DisplayName("Should validate array length")
     void validateArrayLength() {
         assertThrows(IllegalArgumentException.class,
-                () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", EXPECTED_PARSE_COUNT, MAX_ARRAY_SIZE));
+                () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", EXPECTED_PARSE_COUNT, MAX_ARRAY_SIZE, true));
     }
 
     @Test
     @DisplayName("Should validate array length")
     void validateArrayLengthWithoutException() {
-        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2, MAX_ARRAY_SIZE));
+        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2, MAX_ARRAY_SIZE, true));
     }
 
     @Test

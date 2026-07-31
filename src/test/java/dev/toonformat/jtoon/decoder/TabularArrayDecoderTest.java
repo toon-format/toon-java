@@ -92,12 +92,13 @@ class TabularArrayDecoderTest {
     }
 
     @Test
-    @DisplayName("processTabularRow: deeper-than-expected line is skipped (else-if branch)")
+    @DisplayName("processTabularRow: deeper-than-expected line is skipped in lenient mode (else-if branch)")
     void processTabularRow_skipsDeeperIndentedLine() {
         // Given
         final String toon = "[2]{id,name}:\n  1,Ada\n    nested: true\n  2,Bob";
 
         setUpContext(toon);
+        context.options = DecodeOptions.withStrict(false);
 
         // When
         final List<Object> result = TabularArrayDecoder.parseTabularArray(toon, 0,
