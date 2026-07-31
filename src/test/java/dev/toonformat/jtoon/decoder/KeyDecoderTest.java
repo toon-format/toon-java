@@ -11,6 +11,7 @@ import java.util.Map;
 import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.PathExpansion;
+import dev.toonformat.jtoon.util.Headers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -152,8 +153,7 @@ class KeyDecoderTest {
     void testCallsExpandPathIntoMapWhenShouldExpandKeyTrue() {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
-        final String originalKey = "foo.bar";
-        final String content = "foo.bar[#0]";
+        final String content = "foo.bar[#0]:";
         final int parentDepth = 0;
 
         final DecodeContext context = new DecodeContext();
@@ -165,7 +165,7 @@ class KeyDecoderTest {
         final List<Object> expectedArray = Arrays.asList(1, 2, 3);
 
         // When
-        KeyDecoder.processKeyedArrayLine(result, content, originalKey, parentDepth, context);
+        KeyDecoder.processKeyedArrayLine(result, content, Headers.matchKeyedArrayHeader(content), parentDepth, context);
 
         // Then
         final Map<String, Object> expectedNestedMap = new LinkedHashMap<>();
@@ -180,7 +180,6 @@ class KeyDecoderTest {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
         final String content = "tags[3]: a, b, c";
-        final String originalKey = "tags";
         final DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
@@ -188,7 +187,7 @@ class KeyDecoderTest {
         context.delimiter = Delimiter.COMMA;
 
         // When
-        KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context);
+        KeyDecoder.processKeyedArrayLine(result, content, Headers.matchKeyedArrayHeader(content), 0, context);
 
         // Then
         final List<Object> expected = Arrays.asList("a", "b", "c");
@@ -201,7 +200,6 @@ class KeyDecoderTest {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
         final String content = "user.tags[2]: dev, test";
-        final String originalKey = "user.tags";
         final DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
@@ -209,7 +207,7 @@ class KeyDecoderTest {
         context.delimiter = Delimiter.COMMA;
 
         // When
-        KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context);
+        KeyDecoder.processKeyedArrayLine(result, content, Headers.matchKeyedArrayHeader(content), 0, context);
 
         // Then
         assertTrue(result.containsKey("user"));
@@ -226,7 +224,6 @@ class KeyDecoderTest {
         final Map<String, Object> result = new LinkedHashMap<>();
         result.put("user", "not-a-map");
         final String content = "user.tags[1]: dev";
-        final String originalKey = "user.tags";
         final DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
@@ -235,7 +232,8 @@ class KeyDecoderTest {
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> KeyDecoder.processKeyedArrayLine(result, content, originalKey, 0, context));
+            () -> KeyDecoder.processKeyedArrayLine(result, content,
+                Headers.matchKeyedArrayHeader(content), 0, context));
         assertTrue(ex.getMessage().contains("Path expansion conflict"));
     }
 
@@ -259,6 +257,23 @@ class KeyDecoderTest {
         // Then
         assertInstanceOf(LinkedHashMap.class, result, "Expected a LinkedHashMap for empty value");
         assertTrue(((Map<?, ?>) result).isEmpty(), "LinkedHashMap should be empty");
+        assertEquals(0, context.currentLine);
+    }
+
+    @Test
+    void parseKeyValue_givenBracketPairValue_whenParsed_thenEmptyList() throws Exception {
+        // Given
+        final DecodeContext context = new DecodeContext();
+        context.lines = new String[]{"key: []"};
+        context.currentLine = -1;
+
+        // When
+        final Object result = invokePrivateStatic("parseKeyValue",
+                new Class[]{String.class, int.class, DecodeContext.class}, "[]", 0, context);
+
+        // Then
+        assertInstanceOf(List.class, result, "Expected an empty list for [] value");
+        assertTrue(((List<?>) result).isEmpty(), "List should be empty");
         assertEquals(0, context.currentLine);
     }
 

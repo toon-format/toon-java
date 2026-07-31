@@ -88,7 +88,7 @@ public class ConformanceTest {
                 return EncodeOptions.DEFAULT;
             }
 
-            final int indent = options.indent() != null ? options.indent() : 2;
+            final int indent = options.indentSize() != null ? options.indentSize() : 2;
 
             Delimiter delimiter = Delimiter.COMMA;
             if (options.delimiter() != null) {
@@ -190,7 +190,7 @@ public class ConformanceTest {
                 return DecodeOptions.DEFAULT;
             }
 
-            final int indent = options.indent() != null ? options.indent() : 2;
+            final int indent = options.indentSize() != null ? options.indentSize() : 2;
 
             Delimiter delimiter = Delimiter.COMMA;
             if (options.delimiter() != null) {

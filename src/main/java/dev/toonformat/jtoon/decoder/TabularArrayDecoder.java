@@ -4,9 +4,11 @@ import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.util.StringEscaper;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
@@ -31,6 +33,17 @@ public final class TabularArrayDecoder {
     }
 
     /**
+     * One entry of a tabular header's field list (§6, §9.3). A leaf field
+     * carries an empty child list; a field with a nested field group carries
+     * its own ordered subfield list.
+     *
+     * @param name     the field name
+     * @param children subfields of a nested field group, empty for a leaf field
+     */
+    record FieldNode(String name, List<FieldNode> children) {
+    }
+
+    /**
      * Parses tabular array format where each row contains delimiter-separated
      * values.
      * Example: items[2]{id,name}:\n 1,Ada\n 2,Bob
@@ -49,7 +62,14 @@ public final class TabularArrayDecoder {
         }
 
         final String keysStr = matcher.group(4);
-        final List<String> keys = parseTabularKeys(keysStr, arrayDelimiter, context);
+        final List<FieldNode> fields = parseTabularKeys(keysStr, arrayDelimiter, context);
+
+        // Spec §9.3: a duplicate field name within one field list is a header
+        // defect, diagnosed from the header line alone. Names repeated at
+        // different nesting levels are not duplicates.
+        if (context.options.strict()) {
+            validateNoDuplicateFields(fields, context);
+        }
 
         final List<Object> result = new ArrayList<>();
         context.currentLine++;
@@ -64,37 +84,146 @@ public final class TabularArrayDecoder {
         }
 
         while (context.currentLine < context.lines.length) {
-            if (!processTabularArrayLine(expectedRowDepth, keys, arrayDelimiter, result, context)) {
+            if (!processTabularArrayLine(expectedRowDepth, fields, arrayDelimiter, result, context)) {
                 break;
             }
         }
 
-        ArrayDecoder.validateArrayLength(header, result.size(), context.options.maxArraySize());
+        ArrayDecoder.validateArrayLength(header, result.size(), context.options.maxArraySize(),
+            context.options.strict());
         return Collections.unmodifiableList(result);
     }
 
     /**
      * Parses tabular header keys from field specification.
      * Validates delimiter consistency between bracket and brace fields.
+     * Nested field groups ({@code field{sub1,sub2}}) become inner field nodes.
      *
      * @param keysStr        the string representation of keys
      * @param arrayDelimiter the type of delimiter used in the array
      * @param context        decode an object to deal with lines, delimiter and options
-     * @return list of keys
+     * @return the parsed field tree
      */
-    private static List<String> parseTabularKeys(final String keysStr, final Delimiter arrayDelimiter,
+    static List<FieldNode> parseTabularKeys(final String keysStr, final Delimiter arrayDelimiter,
             final DecodeContext context) {
         // Validate delimiter mismatch between bracket and brace fields
         if (context.options.strict()) {
             validateKeysDelimiter(keysStr, arrayDelimiter);
         }
 
-        final List<String> rawValues = ArrayDecoder.parseDelimitedValues(keysStr, arrayDelimiter);
-        final List<String> result = new ArrayList<>(rawValues.size());
-        for (final String key : rawValues) {
-            result.add(StringEscaper.unescape(key));
-        }
+        final List<FieldNode> result = new ArrayList<>();
+        parseFieldList(keysStr, 0, arrayDelimiter, context, result);
         return result;
+    }
+
+    /**
+     * Recursively parses a field list. Braces outside quoted names open a
+     * nested field group parsed with the same delimiter (§6, §9.3).
+     *
+     * @param fieldList      the field list string to parse
+     * @param start          the index at which parsing starts
+     * @param arrayDelimiter the type of delimiter used in the array
+     * @param context        decode an object to deal with lines, delimiter and options
+     * @param result         the list to add parsed fields to
+     * @return the index just past the closing brace of the parsed group, or -1
+     *         when the string ends before a group is closed
+     */
+    private static int parseFieldList(final String fieldList, final int start, final Delimiter arrayDelimiter,
+            final DecodeContext context, final List<FieldNode> result) {
+        final char delimiterChar = arrayDelimiter.toString().charAt(0);
+        final StringBuilder name = new StringBuilder();
+        boolean inQuotes = false;
+        boolean escaped = false;
+        int i = start;
+        while (i < fieldList.length()) {
+            final char c = fieldList.charAt(i);
+            if (escaped) {
+                name.append(c);
+                escaped = false;
+                i++;
+            } else if (c == BACKSLASH) {
+                name.append(c);
+                escaped = true;
+                i++;
+            } else if (c == DOUBLE_QUOTE) {
+                name.append(c);
+                inQuotes = !inQuotes;
+                i++;
+            } else if (!inQuotes && c == '{') {
+                i = parseNestedFieldGroup(fieldList, i, arrayDelimiter, context, result, name);
+            } else if (!inQuotes && c == '}') {
+                flushField(result, name);
+                return i + 1;
+            } else if (!inQuotes && c == delimiterChar) {
+                i = skipFieldDelimiter(fieldList, i, result, name);
+            } else {
+                name.append(c);
+                i++;
+            }
+        }
+        flushField(result, name);
+        return -1;
+    }
+
+    /**
+     * Parses a nested field group opened at the given brace, recursing into
+     * {@link #parseFieldList}. Unbalanced groups are rejected in strict mode
+     * and skipped in lenient mode.
+     *
+     * @param fieldList      the field list string to parse
+     * @param braceIdx       the index of the opening brace
+     * @param arrayDelimiter the type of delimiter used in the array
+     * @param context        decode an object to deal with lines, delimiter and options
+     * @param result         the list to add the parsed group field to
+     * @param name           the buffered group field name
+     * @return the index just past the closing brace, or the end of the string
+     *         when the group is unbalanced and lenient mode skips it
+     */
+    private static int parseNestedFieldGroup(final String fieldList, final int braceIdx,
+            final Delimiter arrayDelimiter, final DecodeContext context, final List<FieldNode> result,
+            final StringBuilder name) {
+        final List<FieldNode> children = new ArrayList<>();
+        final int next = parseFieldList(fieldList, braceIdx + 1, arrayDelimiter, context, children);
+        if (next < 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Unbalanced braces in tabular header field list");
+            }
+            return fieldList.length();
+        }
+        result.add(new FieldNode(StringEscaper.unescape(name.toString().trim()), children));
+        name.setLength(0);
+        return next;
+    }
+
+    /**
+     * Flushes the buffered field and skips the delimiter together with any
+     * following whitespace.
+     *
+     * @param fieldList    the field list string to parse
+     * @param delimiterIdx the index of the delimiter character
+     * @param result       the list to add the flushed field to
+     * @param name         the buffered field name
+     * @return the index just past the delimiter and trailing whitespace
+     */
+    private static int skipFieldDelimiter(final String fieldList, final int delimiterIdx,
+            final List<FieldNode> result, final StringBuilder name) {
+        flushField(result, name);
+        int i = delimiterIdx + 1;
+        while (i < fieldList.length() && Character.isWhitespace(fieldList.charAt(i))) {
+            i++;
+        }
+        return i;
+    }
+
+    /**
+     * Adds the buffered field name as a leaf node and resets the buffer.
+     */
+    private static void flushField(final List<FieldNode> result, final StringBuilder name) {
+        if (!name.isEmpty()) {
+            result.add(new FieldNode(StringEscaper.unescape(name.toString().trim()), Collections.emptyList()));
+            name.setLength(0);
+        }
     }
 
     /**
@@ -148,18 +277,24 @@ public final class TabularArrayDecoder {
      * Processes a single line in a tabular array.
      *
      * @param expectedRowDepth the expected depth of the next row
-     * @param keys             the keys for the tabular array
+     * @param fields           the field tree for the tabular array
      * @param arrayDelimiter   the type of delimiter used in the array
      * @param result           the list to store parsed rows in
      * @param context          decode an object to deal with lines, delimiter and options
      * @return true if parsing should continue, false if an array should terminate
      */
-    private static boolean processTabularArrayLine(final int expectedRowDepth, final List<String> keys,
+    private static boolean processTabularArrayLine(final int expectedRowDepth, final List<FieldNode> fields,
             final Delimiter arrayDelimiter, final List<Object> result,
             final DecodeContext context) {
         final String line = context.lines[context.currentLine];
 
         if (DecodeHelper.isBlankLine(line)) {
+            // Spec §12: blank lines between the header and the first row are
+            // accepted even in strict mode
+            if (result.isEmpty()) {
+                context.currentLine++;
+                return true;
+            }
             return !handleBlankLineInTabularArray(expectedRowDepth, context);
         }
 
@@ -168,7 +303,7 @@ public final class TabularArrayDecoder {
             return false;
         }
 
-        if (processTabularRow(line, lineDepth, expectedRowDepth, keys, arrayDelimiter, result, context)) {
+        if (processTabularRow(line, lineDepth, expectedRowDepth, fields, arrayDelimiter, result, context)) {
             context.currentLine++;
         }
         return true;
@@ -184,13 +319,15 @@ public final class TabularArrayDecoder {
     private static boolean handleBlankLineInTabularArray(final int expectedRowDepth, final DecodeContext context) {
         final int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
 
-        if (nextNonBlankLine < context.lines.length) {
-            final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
-            // Header depth is one level above the expected row depth
-            final int headerDepth = expectedRowDepth - 1;
-            if (nextDepth <= headerDepth) {
-                return true;
-            }
+        if (nextNonBlankLine >= context.lines.length) {
+            // Blank lines at the end of the document are trailing newlines (§12)
+            return true;
+        }
+        final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
+        // Header depth is one level above the expected row depth
+        final int headerDepth = expectedRowDepth - 1;
+        if (nextDepth <= headerDepth) {
+            return true;
         }
 
         // Blank line is inside the array
@@ -283,22 +420,27 @@ public final class TabularArrayDecoder {
      * @param line             the line to process
      * @param lineDepth        the depth of the line
      * @param expectedRowDepth the expected depth of the next row
-     * @param keys             the keys for the tabular array
+     * @param fields           the field tree for the tabular array
      * @param arrayDelimiter   the type of delimiter used in the array
      * @param result           the list to store parsed rows in
      * @param context          decode an object to deal with lines, delimiter and options
      * @return true if a line was processed and the currentLine should be incremented, false otherwise.
      */
     private static boolean processTabularRow(final String line, final int lineDepth,
-            final int expectedRowDepth, final List<String> keys, final Delimiter arrayDelimiter,
+            final int expectedRowDepth, final List<FieldNode> fields, final Delimiter arrayDelimiter,
             final List<Object> result, final DecodeContext context) {
         if (lineDepth == expectedRowDepth) {
             final String rowContent = line.substring(expectedRowDepth * context.options.indent());
-            final Map<String, Object> row = parseTabularRow(rowContent, keys, arrayDelimiter, context);
+            final Map<String, Object> row = parseTabularRow(rowContent, fields, arrayDelimiter, context);
             result.add(row);
             return true;
         } else if (lineDepth > expectedRowDepth) {
-            // Line is deeper than expected - might be nested content, skip it
+            // A line deeper than the row depth belongs to no scope (§14.2)
+            if (context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Over-indented line after tabular rows at line " + (context.currentLine + 1));
+            }
+            // In non-strict mode, skip it
             context.currentLine++;
             return false;
         }
@@ -306,36 +448,86 @@ public final class TabularArrayDecoder {
     }
 
     /**
-     * Parses a tabular row into a Map using the provided keys.
-     * Validates that the row uses the correct delimiter.
+     * Parses a tabular row into a Map using the provided field tree.
+     * A leaf field consumes the next cell; a nested field group materializes
+     * an object from its subfields (§9.3).
      *
-     * <p>In strict mode, the number of values must exactly match the number of keys.
-     * In lenient mode, excess values are silently dropped and missing values
-     * result in omitted keys.</p>
+     * <p>In strict mode, the number of values must exactly match the leaf-field
+     * count. In lenient mode, excess values are silently dropped and missing
+     * values result in omitted keys.</p>
      *
      * @param rowContent     the row content to parse
-     * @param keys           the keys for the tabular array
+     * @param fields         the field tree for the tabular array
      * @param arrayDelimiter the type of delimiter used in the array
      * @param context        decode an object to deal with lines, delimiter and options
      * @return a Map containing the parsed row values
      */
-    private static Map<String, Object> parseTabularRow(final String rowContent, final List<String> keys,
-                                                       final Delimiter arrayDelimiter, final DecodeContext context) {
+    static Map<String, Object> parseTabularRow(final String rowContent, final List<FieldNode> fields,
+            final Delimiter arrayDelimiter, final DecodeContext context) {
         final Map<String, Object> row = new LinkedHashMap<>();
         final List<Object> values = ArrayDecoder.parseArrayValues(rowContent, arrayDelimiter,
             context.options.maxArraySize(), context.options.maxStringLength());
 
-        // Validate value count matches key count
-        if (context.options.strict() && values.size() != keys.size()) {
+        // Spec §9.3: each row must carry exactly one cell per leaf field
+        if (context.options.strict() && values.size() != countLeaves(fields)) {
             throw new IllegalArgumentException(
-                String.format("Tabular row value count (%d) does not match header field count (%d)",
-                              values.size(), keys.size()));
+                String.format("Tabular row value count (%d) does not match header leaf-field count (%d)",
+                              values.size(), countLeaves(fields)));
         }
 
-        for (int i = 0; i < keys.size() && i < values.size(); i++) {
-            row.put(keys.get(i), values.get(i));
-        }
+        assignRowValues(fields, values, row, 0);
 
         return row;
+    }
+
+    /**
+     * Assigns row cells to the field tree in depth-first, pre-order walk
+     * order (§9.3): a leaf field takes the next cell, a nested field group
+     * materializes an object from its subfields.
+     */
+    static void assignRowValues(final List<FieldNode> fields, final List<Object> values,
+            final Map<String, Object> target, final int... nextCell) {
+        for (final FieldNode field : fields) {
+            if (field.children().isEmpty()) {
+                final int index = nextCell[0];
+                nextCell[0] = index + 1;
+                if (index < values.size()) {
+                    target.put(field.name(), values.get(index));
+                }
+            } else {
+                final Map<String, Object> group = new LinkedHashMap<>();
+                assignRowValues(field.children(), values, group, nextCell);
+                target.put(field.name(), group);
+            }
+        }
+    }
+
+    /**
+     * Counts the leaf fields of a field tree (§9.3): each row carries exactly
+     * one cell per leaf field.
+     */
+    static int countLeaves(final List<FieldNode> fields) {
+        int count = 0;
+        for (final FieldNode field : fields) {
+            count += field.children().isEmpty() ? 1 : countLeaves(field.children());
+        }
+        return count;
+    }
+
+    /**
+     * Spec §9.3: a duplicate field name within one field list is a header
+     * defect, checked recursively at every nesting level.
+     */
+    static void validateNoDuplicateFields(final List<FieldNode> fields, final DecodeContext context) {
+        final Set<String> seen = new HashSet<>(fields.size());
+        for (final FieldNode field : fields) {
+            if (!seen.add(field.name())) {
+                throw new IllegalArgumentException(
+                    "Duplicate field name '" + field.name() + "' in tabular header");
+            }
+            if (!field.children().isEmpty()) {
+                validateNoDuplicateFields(field.children(), context);
+            }
+        }
     }
 }

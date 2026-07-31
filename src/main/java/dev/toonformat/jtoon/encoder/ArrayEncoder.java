@@ -31,75 +31,114 @@ public final class ArrayEncoder {
      */
     public static void encodeArray(@Nullable final String key, final ArrayNode value,
             final LineWriter writer, final int depth, final EncodeOptions options) {
+        final ArrayShape shape = classifyContents(value);
+        switch (shape) {
+            case EMPTY -> encodeEmptyArray(key, writer, depth, options);
+            case PRIMITIVES -> encodeInlinePrimitiveArray(key, value, writer, depth, options);
+            case ARRAYS_OF_PRIMITIVES -> encodeArrayOfArraysAsListItems(key, value, writer, depth, options);
+            case OBJECTS -> encodeObjectArray(key, value, writer, depth, options);
+            default -> encodeMixedArrayAsListItems(key, value, writer, depth, options);
+        }
+    }
+
+    /**
+     * Categorizes the homogeneous shape of an array: empty, all primitives,
+     * all primitive arrays, all objects, or mixed content.
+     */
+    private enum ArrayShape {
+        EMPTY,
+        PRIMITIVES,
+        ARRAYS_OF_PRIMITIVES,
+        OBJECTS,
+        MIXED
+    }
+
+    /**
+     * Tracks the homogeneity flags observed across all items.
+     *
+     * @param allPrimitives       whether every item is a primitive value
+     * @param allArrays           whether every item is an array
+     * @param allObjects          whether every item is an object
+     * @param allPrimitiveArrays  whether every item is an array of primitives
+     */
+    private record ShapeFlags(boolean allPrimitives, boolean allArrays, boolean allObjects,
+            boolean allPrimitiveArrays) {
+    }
+
+    /**
+     * Classifies the array contents into the homogeneous shape with the
+     * most specific encoding strategy.
+     *
+     * @param value the array to classify
+     * @return the detected shape
+     */
+    private static ArrayShape classifyContents(final ArrayNode value) {
         if (value.isEmpty()) {
-            // Per spec §9.1: encoders SHOULD emit key: [] for empty arrays.
-            // When lengthMarker is enabled, use the legacy header form instead.
-            if (key == null && depth == 0) {
-                writer.push(depth, options.lengthMarker() ? "[0]: " : "[]");
-                return;
-            }
-            if (key != null && !options.lengthMarker()) {
-                final String encodedKey = PrimitiveEncoder.encodeKey(key);
-                writer.push(depth, encodedKey + ": []");
-                return;
-            }
-            final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString(),
-                    options.lengthMarker());
-            writer.push(depth, header);
+            return ArrayShape.EMPTY;
+        }
+        ShapeFlags flags = new ShapeFlags(true, true, true, true);
+        for (int i = 0; i < value.size(); i++) {
+            flags = updateShape(flags, value.get(i));
+        }
+        if (flags.allPrimitives()) {
+            return ArrayShape.PRIMITIVES;
+        }
+        if (flags.allArrays() && flags.allPrimitiveArrays()) {
+            return ArrayShape.ARRAYS_OF_PRIMITIVES;
+        }
+        if (flags.allObjects()) {
+            return ArrayShape.OBJECTS;
+        }
+        return ArrayShape.MIXED;
+    }
+
+    /**
+     * Refines the homogeneity flags with a single item.
+     *
+     * @param flags the flags so far
+     * @param item  the item to fold in
+     * @return the refined flags
+     */
+    private static ShapeFlags updateShape(final ShapeFlags flags, final JsonNode item) {
+        return new ShapeFlags(
+                flags.allPrimitives() && item.isValueNode(),
+                flags.allArrays() && item.isArray(),
+                flags.allObjects() && item.isObject(),
+                flags.allPrimitiveArrays() && isArrayOfPrimitives(item));
+    }
+
+    /**
+     * Encodes an empty array per spec §9.1: emitters SHOULD use key: [].
+     * With the length marker enabled, the legacy header form is used instead.
+     */
+    private static void encodeEmptyArray(@Nullable final String key,
+            final LineWriter writer, final int depth, final EncodeOptions options) {
+        if (key == null && depth == 0) {
+            writer.push(depth, options.lengthMarker() ? "[0]: " : "[]");
             return;
         }
-
-        final int size = value.size();
-        boolean allPrimitives = true;
-        boolean allArrays = true;
-        boolean allObjects = true;
-
-        for (int i = 0; i < size; i++) {
-            final JsonNode item = value.get(i);
-            if (!item.isValueNode()) {
-                allPrimitives = false;
-            }
-            if (!item.isArray()) {
-                allArrays = false;
-            }
-            if (!item.isObject()) {
-                allObjects = false;
-            }
-            if (!allPrimitives && !allArrays && !allObjects) {
-                break;
-            }
-        }
-
-        if (allPrimitives) {
-            encodeInlinePrimitiveArray(key, value, writer, depth, options);
+        if (key != null && !options.lengthMarker()) {
+            final String encodedKey = PrimitiveEncoder.encodeKey(key);
+            writer.push(depth, encodedKey + ": []");
             return;
         }
+        final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString(),
+                options.lengthMarker());
+        writer.push(depth, header);
+    }
 
-        if (allArrays) {
-            boolean allPrimitiveArrays = true;
-            for (int i = 0; i < size; i++) {
-                if (!isArrayOfPrimitives(value.get(i))) {
-                    allPrimitiveArrays = false;
-                    break;
-                }
-            }
-            if (allPrimitiveArrays) {
-                encodeArrayOfArraysAsListItems(key, value, writer, depth, options);
-                return;
-            }
+    /**
+     * Encodes an array of objects: tabular when a uniform header is
+     * detected, otherwise as list items.
+     */
+    private static void encodeObjectArray(@Nullable final String key, final ArrayNode value,
+            final LineWriter writer, final int depth, final EncodeOptions options) {
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(value);
+        if (header.isEmpty()) {
+            encodeMixedArrayAsListItems(key, value, writer, depth, options);
+        } else {
+            TabularArrayEncoder.encodeArrayOfObjectsAsTabular(key, value, header, writer, depth, options);
         }
-
-        if (allObjects) {
-            final List<String> header = TabularArrayEncoder.detectTabularHeader(value);
-            if (!header.isEmpty()) {
-                TabularArrayEncoder.encodeArrayOfObjectsAsTabular(key, value, header, writer, depth, options);
-            } else {
-                encodeMixedArrayAsListItems(key, value, writer, depth, options);
-            }
-            return;
-        }
-
-        encodeMixedArrayAsListItems(key, value, writer, depth, options);
     }
 
     /**

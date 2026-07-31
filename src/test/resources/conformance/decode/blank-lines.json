@@ -1,7 +1,7 @@
 {
-  "version": "1.4",
+  "version": "4.0",
   "category": "decode",
-  "description": "Blank line handling - strict mode errors on blank lines inside arrays, accepts blank lines outside arrays",
+  "description": "Blank line handling – strict mode errors on blank lines inside arrays, accepts blank lines outside arrays",
   "tests": [
     {
       "name": "throws on blank line inside list array",
@@ -16,6 +16,16 @@
     {
       "name": "throws on blank line inside tabular array",
       "input": "items[2]{id}:\n  1\n\n  2",
+      "expected": null,
+      "shouldError": true,
+      "options": {
+        "strict": true
+      },
+      "specSection": "14.2"
+    },
+    {
+      "name": "throws on blank line between keyed entry rows",
+      "input": "m[2:]{v}:\n  a: 1\n\n  b: 2",
       "expected": null,
       "shouldError": true,
       "options": {
@@ -75,8 +85,7 @@
       "options": {
         "strict": true
       },
-      "specSection": "12",
-      "minSpecVersion": "3.2"
+      "specSection": "12"
     },
     {
       "name": "accepts trailing newline at end of file",
@@ -139,10 +148,10 @@
     },
     {
       "name": "ignores blank lines inside tabular array when strict=false",
-      "input": "items[2]{id,name}:\n  1,Alice\n\n  2,Bob",
+      "input": "items[2]{id,name}:\n  1,Ada\n\n  2,Bob",
       "expected": {
         "items": [
-          { "id": 1, "name": "Alice" },
+          { "id": 1, "name": "Ada" },
           { "id": 2, "name": "Bob" }
         ]
       },
@@ -160,6 +169,47 @@
       "options": {
         "strict": false
       },
+      "specSection": "12"
+    },
+    {
+      "name": "throws on blank line between list items after nested tabular rows",
+      "input": "outer[2]:\n  - inner[2]{a}:\n      1\n      2\n\n  - x",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "The blank is after the inner scope's last row but inside the outer array's span (\u00a712)"
+    },
+    {
+      "name": "throws on blank line between a list item's fields",
+      "input": "items[2]:\n  - a: 1\n\n    b: 2\n  - x",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2"
+    },
+    {
+      "name": "throws on blank line inside the last list item's fields",
+      "input": "items[1]:\n  - a: 1\n\n    b: 2",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "The header span ends at the last line of the scope's content, not at the last item line (\u00a712)"
+    },
+    {
+      "name": "accepts blank line between header and first list item",
+      "input": "items[2]:\n\n  - a\n  - b",
+      "expected": { "items": ["a", "b"] },
+      "specSection": "12"
+    },
+    {
+      "name": "accepts blank line between header and first tabular row",
+      "input": "items[2]{id}:\n\n  1\n  2",
+      "expected": { "items": [{ "id": 1 }, { "id": 2 }] },
+      "specSection": "12"
+    },
+    {
+      "name": "accepts blank line between header and first entry row",
+      "input": "m[2:]{v}:\n\n  a: 1\n  b: 2",
+      "expected": { "m": { "a": { "v": 1 }, "b": { "v": 2 } } },
       "specSection": "12"
     }
   ]

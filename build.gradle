@@ -149,7 +149,7 @@ dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.3'
 
     // NullAway + Error Prone for compile-time null safety
-    errorprone 'com.uber.nullaway:nullaway:0.13.7'
+    errorprone 'com.uber.nullaway:nullaway:0.13.8'
     // Pin error_prone_core to 2.42.0 (Java 17 compatible; 2.50.0+ requires Java 21)
     errorprone('com.google.errorprone:error_prone_core:2.42.0') {
         version {

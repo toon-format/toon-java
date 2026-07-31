@@ -16,6 +16,7 @@ class ArrayDecoderTest {
 
     private static final int EXPECTED_PARSE_COUNT = 3;
     private static final int MAX_ARRAY_SIZE = 10_000_000;
+    private static final int FIRST_DATA_LINE_INDEX = 3;
 
     private final DecodeContext context = new DecodeContext();
 
@@ -144,13 +145,13 @@ class ArrayDecoderTest {
     @DisplayName("Should validate array length")
     void validateArrayLength() {
         assertThrows(IllegalArgumentException.class,
-                () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", EXPECTED_PARSE_COUNT, MAX_ARRAY_SIZE));
+                () -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", EXPECTED_PARSE_COUNT, MAX_ARRAY_SIZE, true));
     }
 
     @Test
     @DisplayName("Should validate array length")
     void validateArrayLengthWithoutException() {
-        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2, MAX_ARRAY_SIZE));
+        assertDoesNotThrow(() -> ArrayDecoder.validateArrayLength("[2]: 1,2,3", 2, MAX_ARRAY_SIZE, true));
     }
 
     @Test
@@ -175,6 +176,144 @@ class ArrayDecoderTest {
     void shouldReturnEmptyListWhenInputIsEmpty() {
         // When
         final List<String> result = ArrayDecoder.parseDelimitedValues("", Delimiter.COMMA);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldKeepQuotedDelimiterInsideValue() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("\"a,b\",c", Delimiter.COMMA);
+
+        // Then
+        assertEquals(List.of("\"a,b\"", "c"), result);
+    }
+
+    @Test
+    void shouldKeepEmptyValueInMiddle() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("a,,b", Delimiter.COMMA);
+
+        // Then
+        assertEquals(List.of("a", "", "b"), result);
+    }
+
+    @Test
+    void shouldTrimWhitespaceAroundDelimiters() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("a ,  b\t,\nc", Delimiter.COMMA);
+
+        // Then
+        assertEquals(List.of("a", "b", "c"), result);
+    }
+
+    @Test
+    void shouldRespectTabDelimiter() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("a\tb\tc", Delimiter.TAB);
+
+        // Then
+        assertEquals(List.of("a", "b", "c"), result);
+    }
+
+    @Test
+    void shouldRespectPipeDelimiter() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("a|b|c", Delimiter.PIPE);
+
+        // Then
+        assertEquals(List.of("a", "b", "c"), result);
+    }
+
+    @Test
+    void shouldKeepBackslashEscapedDelimiterInsideValue() {
+        // When
+        final List<String> result = ArrayDecoder.parseDelimitedValues("a\\,b,c", Delimiter.COMMA);
+
+        // Then
+        assertEquals(List.of("a\\,b", "c"), result);
+    }
+
+    @Test
+    void shouldParseInlineArrayAfterColon() {
+        // Given
+        setUpContext("[3]: 1,2,3\nnext: value");
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[3]: 1,2,3", 0, context);
+
+        // Then
+        assertEquals("[1, 2, 3]", result.toString());
+        assertEquals(1, context.currentLine);
+    }
+
+    @Test
+    void shouldRejectLeadingZeroLengthInStrictMode() {
+        // Given
+        setUpContext("[03]: 1,2,3");
+
+        // When / Then
+        final IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            () -> ArrayDecoder.parseArray("[03]: 1,2,3", 0, context));
+        assertEquals("Invalid array length with leading zeros: [03]", thrown.getMessage());
+    }
+
+    @Test
+    void shouldParseFirstDataLineAfterBlankLinesFollowingHeader() {
+        // Given
+        setUpContext("[2]:\n\n  1,2\n  3,4\nnext: value");
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[2]:", 0, context);
+
+        // Then
+        assertEquals("[1, 2]", result.toString());
+        assertEquals(FIRST_DATA_LINE_INDEX, context.currentLine);
+    }
+
+    @Test
+    void shouldTreatShallowerNextLineAsEmptyArray() {
+        // Given
+        setUpContext("[0]:\nnext: value");
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[0]:", 0, context);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldTreatBareBracketsAsEmptyArray() {
+        // Given
+        setUpContext("[]\nnext: value");
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[]", 0, context);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldRejectInvalidHeaderInStrictMode() {
+        // Given
+        setUpContext("[x]");
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> ArrayDecoder.parseArray("[x]", 0, context));
+    }
+
+    @Test
+    void shouldReturnEmptyListForInvalidHeaderInLenientMode() {
+        // Given
+        this.context.lines = "[x]".split("\n", -1);
+        this.context.options = DecodeOptions.withStrict(false);
+        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
+
+        // When
+        final List<Object> result = ArrayDecoder.parseArray("[x]", 0, context);
 
         // Then
         assertTrue(result.isEmpty());

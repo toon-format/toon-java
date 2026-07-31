@@ -535,7 +535,7 @@ class PrimitiveEncoderTest {
         @DisplayName("should format tabular header")
         void testTabularHeader() {
             // Given
-            final List<String> fields = List.of("id", "name");
+            final List<TabularField> fields = List.of(TabularField.leaf("id"), TabularField.leaf("name"));
 
             // When
             final String result = PrimitiveEncoder.formatHeader(3, "users", fields, Delimiter.COMMA.toString(), false);
@@ -558,7 +558,7 @@ class PrimitiveEncoderTest {
         @DisplayName("should format header with pipe delimiter")
         void testPipeDelimiter() {
             // Given
-            final List<String> fields = List.of("x", "y");
+            final List<TabularField> fields = List.of(TabularField.leaf("x"), TabularField.leaf("y"));
 
             // When
             final String result = PrimitiveEncoder.formatHeader(2, "points", fields, Delimiter.PIPE.toString(), false);

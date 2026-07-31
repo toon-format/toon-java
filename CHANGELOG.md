@@ -6,6 +6,10 @@ This project adheres to Semantic Versioning and follows a Keep a Changelog-like 
 
 ## [Unreleased]
 
+### Changed
+
+-   Full TOON Spec 4.1 conformance: canonical number formatting, BOM stripping, comment pre-pass (§5.1), strict header validation (§5, §6, §7.3, §7.4), nested field groups in tabular arrays (§9.3), and keyed tabular form for objects of uniform objects, including the keyless root form and keyed headers on list-item hyphen lines (§9.5, §10). Conformance suite: 95/95 passing.
+
 ## [2.0.1] - 2026-07-11
 
 ### Added

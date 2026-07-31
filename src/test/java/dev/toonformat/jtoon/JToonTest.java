@@ -507,7 +507,7 @@ class JToonTest {
         }
 
         @Test
-        @DisplayName("uses list format for objects with nested values")
+        @DisplayName("uses tabular format for uniform objects with nested values")
         void usesListForNestedValues() {
             // Given
             final Map<String, Object> obj = obj(
@@ -517,10 +517,8 @@ class JToonTest {
             // Then
             assertEquals(
                 """
-                    items[1]:
-                      - id: 1
-                        nested:
-                          x: 1""",
+                    items[1]{id,nested{x}}:
+                      1,1""",
                 encode(obj));
         }
 

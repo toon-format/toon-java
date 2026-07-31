@@ -39,7 +39,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode();
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -51,7 +51,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(1).add(2);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -64,7 +64,7 @@ class TabularArrayEncoderTest {
         rows.add(jsonNodeFactory.objectNode()); // empty object
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -83,7 +83,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -104,7 +104,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -124,7 +124,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -144,10 +144,10 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
-        assertEquals(List.of("id", "name"), header);
+        assertEquals(List.of("id", "name"), header.stream().map(TabularField::name).toList());
     }
 
     @Test
@@ -162,7 +162,7 @@ class TabularArrayEncoderTest {
         b.put("name", "Bob");
 
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
         final LineWriter writer = new LineWriter(options.indent());
 
         // When
@@ -192,7 +192,7 @@ class TabularArrayEncoderTest {
         b.put("y", nodeBy);
 
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
-        final List<String> header = List.of("x", "y");
+        final List<TabularField> header = List.of(TabularField.leaf("x"), TabularField.leaf("y"));
         final LineWriter writer = new LineWriter(options.indent());
 
         // When
@@ -219,10 +219,10 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
-        assertThrows(UnsupportedOperationException.class, () -> header.add("extra"));
+        assertThrows(UnsupportedOperationException.class, () -> header.add(TabularField.leaf("extra")));
     }
 
     @Test
@@ -231,7 +231,7 @@ class TabularArrayEncoderTest {
         final ArrayNode rows = jsonNodeFactory.arrayNode();
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -244,7 +244,7 @@ class TabularArrayEncoderTest {
         rows.add(1);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -258,7 +258,7 @@ class TabularArrayEncoderTest {
         rows.add(a);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -272,7 +272,7 @@ class TabularArrayEncoderTest {
         rows.add(a).add(1);
 
         // When
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(rows);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(rows);
 
         // Then
         assertTrue(header.isEmpty());
@@ -292,7 +292,7 @@ class TabularArrayEncoderTest {
         b.put("x", objBx);
 
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
-        final List<String> header = List.of("x", "y");
+        final List<TabularField> header = List.of(TabularField.leaf("x"), TabularField.leaf("y"));
         final LineWriter writer = new LineWriter(options.indent());
 
         // When
@@ -321,7 +321,7 @@ class TabularArrayEncoderTest {
         b.add(mixArr2);
 
         final ArrayNode rows = jsonNodeFactory.arrayNode().add(a).add(b);
-        final List<String> header = List.of("x", "y");
+        final List<TabularField> header = List.of(TabularField.leaf("x"), TabularField.leaf("y"));
         final LineWriter writer = new LineWriter(options.indent());
 
         // When

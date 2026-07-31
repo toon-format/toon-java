@@ -5,6 +5,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,8 +42,14 @@ public final class ValueEncoder {
         if (value.isArray()) {
             ArrayEncoder.encodeArray(null, (ArrayNode) value, writer, 0, options);
         } else if (value.isObject()) {
-            final Set<String> jsonNodes = new HashSet<>(value.propertyNames());
-            ObjectEncoder.encodeObject((ObjectNode) value, writer, 0, options, jsonNodes, null, null, new HashSet<>());
+            final ObjectNode obj = (ObjectNode) value;
+            final List<TabularField> keyedFields = KeyedObjectEncoder.detectKeyedFields(obj);
+            if (!keyedFields.isEmpty()) {
+                KeyedObjectEncoder.encodeKeyedTabularObject(null, obj, keyedFields, writer, 0, options);
+            } else {
+                final Set<String> jsonNodes = new HashSet<>(value.propertyNames());
+                ObjectEncoder.encodeObject(obj, writer, 0, options, jsonNodes, null, null, new HashSet<>());
+            }
         }
 
         return writer.toString();

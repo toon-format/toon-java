@@ -339,61 +339,104 @@ public final class JsonNormalizer {
      */
     private static JsonNode normalizeArray(final Object array) {
         if (array instanceof int[] intArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (int i : intArray) {
-                node.add(IntNode.valueOf(i));
-            }
-            return node;
-        } else if (array instanceof long[] longArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (long l : longArray) {
-                node.add(LongNode.valueOf(l));
-            }
-            return node;
-        } else if (array instanceof double[] doubleArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (final double d : doubleArray) {
-                node.add(Double.isFinite(d) ? DoubleNode.valueOf(d) : NullNode.getInstance());
-            }
-            return node;
-        } else if (array instanceof float[] floatArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (final float f : floatArray) {
-                node.add(Float.isFinite(f) ? FloatNode.valueOf(f) : NullNode.getInstance());
-            }
-            return node;
-        } else if (array instanceof boolean[] boolArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (boolean b : boolArray) {
-                node.add(BooleanNode.valueOf(b));
-            }
-            return node;
-        } else if (array instanceof byte[] byteArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (byte by : byteArray) {
-                node.add(IntNode.valueOf(by));
-            }
-            return node;
-        } else if (array instanceof short[] shortArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (short s : shortArray) {
-                node.add(ShortNode.valueOf(s));
-            }
-            return node;
-        } else if (array instanceof char[] charArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (char c : charArray) {
-                node.add(StringNode.valueOf(String.valueOf(c)));
-            }
-            return node;
-        } else if (array instanceof Object[] objArray) {
-            final ArrayNode node = MAPPER.createArrayNode();
-            for (Object o : objArray) {
-                node.add(normalize(o));
-            }
-            return node;
-        } else {
-            return MAPPER.createArrayNode();
+            return intArrayNode(intArray);
         }
+        if (array instanceof long[] longArray) {
+            return longArrayNode(longArray);
+        }
+        if (array instanceof double[] doubleArray) {
+            return doubleArrayNode(doubleArray);
+        }
+        if (array instanceof float[] floatArray) {
+            return floatArrayNode(floatArray);
+        }
+        if (array instanceof boolean[] boolArray) {
+            return boolArrayNode(boolArray);
+        }
+        if (array instanceof byte[] byteArray) {
+            return byteArrayNode(byteArray);
+        }
+        if (array instanceof short[] shortArray) {
+            return shortArrayNode(shortArray);
+        }
+        if (array instanceof char[] charArray) {
+            return charArrayNode(charArray);
+        }
+        if (array instanceof Object[] objArray) {
+            return objectArrayNode(objArray);
+        }
+        return MAPPER.createArrayNode();
+    }
+
+    private static JsonNode intArrayNode(final int... intArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (int i : intArray) {
+            node.add(IntNode.valueOf(i));
+        }
+        return node;
+    }
+
+    private static JsonNode longArrayNode(final long... longArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (long l : longArray) {
+            node.add(LongNode.valueOf(l));
+        }
+        return node;
+    }
+
+    private static JsonNode doubleArrayNode(final double... doubleArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (final double d : doubleArray) {
+            node.add(Double.isFinite(d) ? DoubleNode.valueOf(d) : NullNode.getInstance());
+        }
+        return node;
+    }
+
+    private static JsonNode floatArrayNode(final float... floatArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (final float f : floatArray) {
+            node.add(Float.isFinite(f) ? FloatNode.valueOf(f) : NullNode.getInstance());
+        }
+        return node;
+    }
+
+    private static JsonNode boolArrayNode(final boolean... boolArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (boolean b : boolArray) {
+            node.add(BooleanNode.valueOf(b));
+        }
+        return node;
+    }
+
+    private static JsonNode byteArrayNode(final byte... byteArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (byte by : byteArray) {
+            node.add(IntNode.valueOf(by));
+        }
+        return node;
+    }
+
+    private static JsonNode shortArrayNode(final short... shortArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (short s : shortArray) {
+            node.add(ShortNode.valueOf(s));
+        }
+        return node;
+    }
+
+    private static JsonNode charArrayNode(final char... charArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (char c : charArray) {
+            node.add(StringNode.valueOf(String.valueOf(c)));
+        }
+        return node;
+    }
+
+    private static JsonNode objectArrayNode(final Object... objArray) {
+        final ArrayNode node = MAPPER.createArrayNode();
+        for (Object o : objArray) {
+            node.add(normalize(o));
+        }
+        return node;
     }
 }

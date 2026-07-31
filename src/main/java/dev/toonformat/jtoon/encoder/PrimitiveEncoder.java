@@ -154,7 +154,7 @@ public final class PrimitiveEncoder {
      *
      * @param length       Array length
      * @param key          Optional key prefix
-     * @param fields       Optional field names for tabular format
+     * @param fields       Optional header fields for tabular format
      * @param delimiter    The delimiter being used
      * @param lengthMarker Whether to include # marker before length
      * @return Formatted header string
@@ -162,7 +162,7 @@ public final class PrimitiveEncoder {
     public static String formatHeader(
         final int length,
         @Nullable final String key,
-        @Nullable final List<String> fields,
+        @Nullable final List<TabularField> fields,
         final String delimiter,
         final boolean lengthMarker) {
         return HeaderFormatter.format(length, key, fields, delimiter, lengthMarker);

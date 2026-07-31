@@ -75,7 +75,7 @@ public final class ListItemEncoder {
         } else if (value.isArray()) {
             encodeFirstValueAsArray(key, encodedKey, (ArrayNode) value, writer, depth, options);
         } else if (value.isObject()) {
-            encodeFirstValueAsObject(encodedKey, (ObjectNode) value, writer, depth, options);
+            encodeFirstValueAsObject(key, encodedKey, (ObjectNode) value, writer, depth, options);
         }
     }
 
@@ -119,7 +119,7 @@ public final class ListItemEncoder {
                                                   final LineWriter writer,
                                                   final int depth,
                                                   final EncodeOptions options) {
-        final List<String> header = TabularArrayEncoder.detectTabularHeader(arrayValue);
+        final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(arrayValue);
         if (!header.isEmpty()) {
             final String headerStr = PrimitiveEncoder.formatHeader(arrayValue.size(), key, header,
                                                                    options.delimiter().toString(),
@@ -159,11 +159,20 @@ public final class ListItemEncoder {
         }
     }
 
-    private static void encodeFirstValueAsObject(final String encodedKey,
+    private static void encodeFirstValueAsObject(final String key,
+                                                final String encodedKey,
                                                 final ObjectNode nestedObj,
                                                 final LineWriter writer,
                                                 final int depth,
                                                 final EncodeOptions options) {
+        final List<TabularField> keyedFields = KeyedObjectEncoder.detectKeyedFields(nestedObj);
+        if (!keyedFields.isEmpty()) {
+            final String headerStr = HeaderFormatter.formatKeyedHeader(nestedObj.size(), key, keyedFields,
+                    options.delimiter().toString(), options.lengthMarker());
+            writer.push(depth, LIST_ITEM_PREFIX + headerStr);
+            KeyedObjectEncoder.writeKeyedRows(nestedObj, keyedFields, writer, depth + 2, options);
+            return;
+        }
         writer.push(depth, LIST_ITEM_PREFIX + encodedKey + COLON);
         if (!nestedObj.isEmpty()) {
             ObjectEncoder.encodeObject(nestedObj, writer, depth + 2, options, Set.of(), null, null, new HashSet<>());

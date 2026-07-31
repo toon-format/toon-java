@@ -25,14 +25,14 @@ public final class HeaderFormatter {
      * 
      * @param length       Array or table length
      * @param key          Optional key prefix
-     * @param fields       Optional field names for tabular format
+     * @param fields       Optional header fields for tabular format
      * @param delimiter    The delimiter being used
      * @param lengthMarker Whether to include # marker before length
      */
     public record HeaderConfig(
             int length,
             @Nullable String key,
-            @Nullable List<String> fields,
+            @Nullable List<TabularField> fields,
             String delimiter,
             boolean lengthMarker) {
     }
@@ -59,7 +59,7 @@ public final class HeaderFormatter {
      * Delegates to the record-based format method.
      * @param length the array or table length
      * @param key optional key prefix
-     * @param fields optional field names for tabular format
+     * @param fields optional header fields for tabular format
      * @param delimiter the delimiter being used
      * @param lengthMarker whether to include # marker before length
      * @return formatted header string
@@ -67,11 +67,46 @@ public final class HeaderFormatter {
     public static String format(
             final int length,
             @Nullable final String key,
-            @Nullable final List<String> fields,
+            @Nullable final List<TabularField> fields,
             final String delimiter,
             final boolean lengthMarker) {
         final HeaderConfig config = new HeaderConfig(length, key, fields, delimiter, lengthMarker);
         return format(config);
+    }
+
+    /**
+     * Formats a keyed tabular header (§9.5): {@code key[N:<delim?>]{fields}:}.
+     * The keyed marker colon is written directly after the entry count; a
+     * non-default delimiter follows it inside the brackets.
+     *
+     * @param count        entry count
+     * @param key          optional key prefix (omitted for the root form)
+     * @param fields       header fields for keyed tabular form
+     * @param delimiter    the delimiter being used
+     * @param lengthMarker whether to include # marker before the count
+     * @return formatted keyed header string
+     */
+    public static String formatKeyedHeader(
+            final int count,
+            @Nullable final String key,
+            @Nullable final List<TabularField> fields,
+            final String delimiter,
+            final boolean lengthMarker) {
+        final StringBuilder header = new StringBuilder();
+
+        appendKeyIfPresent(header, key);
+        header.append(OPEN_BRACKET);
+        if (lengthMarker) {
+            header.append(HASHTAG);
+        }
+        header.append(count);
+        header.append(COLON);
+        appendDelimiterIfNotDefault(header, delimiter);
+        header.append(CLOSE_BRACKET);
+        appendFieldsIfPresent(header, fields, delimiter);
+        header.append(COLON);
+
+        return header.toString();
     }
 
     private static void appendKeyIfPresent(final StringBuilder header, @Nullable final String key) {
@@ -104,7 +139,7 @@ public final class HeaderFormatter {
 
     private static void appendFieldsIfPresent(
             final StringBuilder header,
-            @Nullable final Collection<String> fields,
+            @Nullable final Collection<TabularField> fields,
             final String delimiter) {
         if (fields == null || fields.isEmpty()) {
             return;
@@ -115,19 +150,20 @@ public final class HeaderFormatter {
         header.append(CLOSE_BRACE);
     }
 
-    private static String formatFields(final Collection<String> fields, final String delimiter) {
-        if (fields.isEmpty()) {
-            return "";
-        }
-
+    private static String formatFields(final Collection<TabularField> fields, final String delimiter) {
         final StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (final String field : fields) {
+        for (final TabularField field : fields) {
             if (!first) {
                 sb.append(delimiter);
             }
             first = false;
-            sb.append(PrimitiveEncoder.encodeKey(field));
+            sb.append(PrimitiveEncoder.encodeKey(field.name()));
+            if (!field.isLeaf()) {
+                sb.append(OPEN_BRACE);
+                sb.append(formatFields(field.children(), delimiter));
+                sb.append(CLOSE_BRACE);
+            }
         }
         return sb.toString();
     }

@@ -7,6 +7,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import static dev.toonformat.jtoon.util.Constants.DOT;
@@ -105,34 +106,81 @@ public final class ObjectEncoder {
         final int remainingDepth = effectiveFlattenDepth - depth;
         EncodeOptions currentOptions = options;
 
-        if (remainingDepth > 0
-            && !siblings.isEmpty()
-            && blockedKeys != null
-            && !blockedKeys.contains(key)
-            && KeyFolding.SAFE == currentOptions.flatten()) {
-            final Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys,
-                                                                          pathPrefix, remainingDepth);
-            if (foldResult != null) {
-                currentOptions = flatten(key, foldResult, writer, depth, currentOptions, rootLiteralKeys, pathPrefix,
-                                         blockedKeys, remainingDepth);
-                if (currentOptions == null) {
-                    return;
-                }
+        if (shouldTryFlatten(key, siblings, blockedKeys, remainingDepth, currentOptions)) {
+            currentOptions = tryFlatten(key, value, writer, depth, currentOptions, rootLiteralKeys, pathPrefix,
+                                        blockedKeys, remainingDepth, siblings);
+            if (currentOptions == null) {
+                return;
             }
         }
 
+        dispatchValueEncoding(encodedKey, currentPath, key, value, writer, depth, currentOptions,
+                              rootLiteralKeys, effectiveFlattenDepth, blockedKeys);
+    }
+
+    /**
+     * Returns whether the flattening preconditions hold: a positive
+     * remaining depth, sibling collisions, unblocked key, non-null block
+     * set and a SAFE flatten strategy.
+     */
+    private static boolean shouldTryFlatten(final String key,
+            final Set<String> siblings, @Nullable final Set<String> blockedKeys,
+            final int remainingDepth, final EncodeOptions options) {
+        return remainingDepth > 0
+            && !siblings.isEmpty()
+            && blockedKeys != null
+            && !blockedKeys.contains(key)
+            && KeyFolding.SAFE == options.flatten();
+    }
+
+    /**
+     * Attempts to fold the key chain and flatten the folded object.
+     *
+     * @return the changed EncodeOptions, null when encoding was completed
+     *         by flattening, or the unchanged options when folding failed
+     */
+    @Nullable
+    private static EncodeOptions tryFlatten(final String key, final JsonNode value,
+            final LineWriter writer, final int depth, final EncodeOptions options,
+            @Nullable final Set<String> rootLiteralKeys, @Nullable final String pathPrefix,
+            @Nullable final Set<String> blockedKeys, final int remainingDepth, final Set<String> siblings) {
+        if (blockedKeys == null) {
+            return options;
+        }
+        final Flatten.FoldResult foldResult = Flatten.tryFoldKeyChain(key, value, siblings, rootLiteralKeys,
+                                                                      pathPrefix, remainingDepth);
+        if (foldResult == null) {
+            return options;
+        }
+        return flatten(key, foldResult, writer, depth, options, rootLiteralKeys, pathPrefix, blockedKeys,
+                       remainingDepth);
+    }
+
+    /**
+     * Dispatches the value encoding by node type: primitive, array or
+     * object (with keyed-tabular detection).
+     */
+    private static void dispatchValueEncoding(final String encodedKey, final String currentPath,
+            final String key, final JsonNode value, final LineWriter writer, final int depth,
+            final EncodeOptions options, @Nullable final Set<String> rootLiteralKeys,
+            final int effectiveFlattenDepth, @Nullable final Set<String> blockedKeys) {
         if (value.isValueNode()) {
             writer.push(depth, encodedKey + COLON + SPACE
-                + PrimitiveEncoder.encodePrimitive(value, currentOptions.delimiter().toString()));
+                + PrimitiveEncoder.encodePrimitive(value, options.delimiter().toString()));
         }
         if (value.isArray()) {
-            ArrayEncoder.encodeArray(key, (ArrayNode) value, writer, depth, currentOptions);
+            ArrayEncoder.encodeArray(key, (ArrayNode) value, writer, depth, options);
         }
         if (value.isObject()) {
             final ObjectNode objValue = (ObjectNode) value;
+            final List<TabularField> keyedFields = KeyedObjectEncoder.detectKeyedFields(objValue);
+            if (!keyedFields.isEmpty()) {
+                KeyedObjectEncoder.encodeKeyedTabularObject(key, objValue, keyedFields, writer, depth, options);
+                return;
+            }
             writer.push(depth, encodedKey + COLON);
             if (!objValue.isEmpty()) {
-                encodeObject(objValue, writer, depth + 1, currentOptions, rootLiteralKeys, currentPath,
+                encodeObject(objValue, writer, depth + 1, options, rootLiteralKeys, currentPath,
                              effectiveFlattenDepth, blockedKeys);
             }
         }
