@@ -83,51 +83,108 @@ public final class Headers {
     @Nullable
     private static KeyedHeaderMatch scanHeader(final String content, final boolean requireKey) {
         final int n = content.length();
-        int i = 0;
-
-        if (requireKey) {
-            // Key: quoted (escapes honored) or unquoted [^\[\]:\s]+ (§7.3)
-            if (i < n && content.charAt(i) == '"') {
-                i++;
-                boolean escaped = false;
-                boolean closed = false;
-                while (i < n) {
-                    final char c = content.charAt(i);
-                    if (escaped) {
-                        escaped = false;
-                    } else if (c == '\\') {
-                        escaped = true;
-                    } else if (c == '"') {
-                        closed = true;
-                        i++;
-                        break;
-                    }
-                    i++;
-                }
-                if (!closed) {
-                    return null;
-                }
-            } else {
-                final int keyStart = i;
-                while (i < n && content.charAt(i) != '['
-                        && content.charAt(i) != ':' && !Character.isWhitespace(content.charAt(i))) {
-                    i++;
-                }
-                if (i == keyStart) {
-                    return null;
-                }
-            }
+        final int keyEnd = scanKey(content, n, requireKey);
+        if (keyEnd < 0) {
+            return null;
         }
-        final int keyEnd = i;
 
-        // Bracket segment: [ (#?) \d+ (:)? ([\t|])? ]
+        final BracketSegment bracket = scanBracketSegment(content, keyEnd, n);
+        if (bracket == null) {
+            return null;
+        }
+
+        final FieldSpecMatch fields = scanFieldSpec(content, bracket.endIndex(), n);
+        if (fields == null) {
+            return null;
+        }
+
+        // Trailing colon required after the bracket or field spec segment
+        if (fields.endIndex() >= n || content.charAt(fields.endIndex()) != ':') {
+            return null;
+        }
+        return new KeyedHeaderMatch(content.substring(0, keyEnd), keyEnd, bracket.declaredLength(),
+            bracket.keyed(), bracket.delimiter(), fields.start(), fields.endIndex());
+    }
+
+    /**
+     * Scans the key segment: a quoted key with escapes honored (§7.3), an
+     * unquoted {@code [^\[\]:\s]+} key, or no key at all for keyless headers.
+     *
+     * @param content    the line content to scan
+     * @param n          the content length
+     * @param requireKey whether a key must be present
+     * @return the index just past the key, or -1 when the key is missing or
+     *         a quoted key is unterminated
+     */
+    private static int scanKey(final String content, final int n, final boolean requireKey) {
+        if (!requireKey) {
+            return 0;
+        }
+        if (content.charAt(0) == '"') {
+            return scanQuotedKey(content, n);
+        }
+        return scanUnquotedKey(content, 0, n);
+    }
+
+    /**
+     * Scans a quoted key up to its unescaped closing quote.
+     *
+     * @param content the line content to scan
+     * @param n       the content length
+     * @return the index just past the closing quote, or -1 when unterminated
+     */
+    private static int scanQuotedKey(final String content, final int n) {
+        int i = 1;
+        boolean escaped = false;
+        while (i < n) {
+            final char c = content.charAt(i);
+            if (escaped) {
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                return i + 1;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    /**
+     * Scans an unquoted key up to a structural character or whitespace.
+     *
+     * @param content  the line content to scan
+     * @param keyStart the index where the key starts
+     * @param n        the content length
+     * @return the index just past the key, or -1 when the key is empty
+     */
+    private static int scanUnquotedKey(final String content, final int keyStart, final int n) {
+        int i = keyStart;
+        while (i < n && content.charAt(i) != '[' && content.charAt(i) != ':'
+                && !Character.isWhitespace(content.charAt(i))) {
+            i++;
+        }
+        if (i == keyStart) {
+            return -1;
+        }
+        return i;
+    }
+
+    /**
+     * Scans the bracket segment: {@code [ (#?) \d+ (:)? ([\t|])? ]}.
+     *
+     * @param content the line content to scan
+     * @param start   the index of the opening bracket
+     * @param n       the content length
+     * @return the parsed segment, or null for a malformed segment
+     */
+    @Nullable
+    private static BracketSegment scanBracketSegment(final String content, final int start, final int n) {
+        int i = start;
         if (i >= n || content.charAt(i) != '[') {
             return null;
         }
-        i++;
-        if (i < n && content.charAt(i) == '#') {
-            i++;
-        }
+        i = skipHashMarker(content, i + 1, n);
         final int digitsStart = i;
         while (i < n && Character.isDigit(content.charAt(i))) {
             i++;
@@ -154,44 +211,109 @@ public final class Headers {
         if (i >= n || content.charAt(i) != ']') {
             return null;
         }
-        i++;
+        return new BracketSegment(declaredLength, keyed, delimiter, i + 1);
+    }
 
-        // Optional balanced field spec {…}, at least one field entry (§6)
-        int fieldsStart = -1;
-        if (i < n && content.charAt(i) == '{') {
-            fieldsStart = i;
-            int depth = 0;
-            boolean escaped = false;
-            boolean inQuotes = false;
-            while (i < n) {
-                final char c = content.charAt(i);
-                if (escaped) {
-                    escaped = false;
-                } else if (c == '\\') {
-                    escaped = true;
-                } else if (c == '"') {
-                    inQuotes = !inQuotes;
-                } else if (!inQuotes && c == '{') {
-                    depth++;
-                } else if (!inQuotes && c == '}') {
-                    depth--;
-                    if (depth == 0) {
-                        i++;
-                        break;
-                    }
-                }
-                i++;
-            }
-            if (depth != 0 || i - fieldsStart <= 2) {
-                return null;
-            }
+    /**
+     * Skips an optional length-marker hash in the bracket segment.
+     *
+     * @param content the line content to scan
+     * @param i       the index to inspect
+     * @param n       the content length
+     * @return the index just past the hash, or the unchanged index
+     */
+    private static int skipHashMarker(final String content, final int i, final int n) {
+        if (i < n && content.charAt(i) == '#') {
+            return i + 1;
         }
+        return i;
+    }
 
-        if (i >= n || content.charAt(i) != ':') {
+    /**
+     * Scans the optional balanced field spec {@code {…}} with braces nested
+     * at any depth; at least one field entry is required (§6).
+     *
+     * @param content the line content to scan
+     * @param start   the index where the field spec may start
+     * @param n       the content length
+     * @return the parsed segment, or null for a malformed field spec
+     */
+    @Nullable
+    private static FieldSpecMatch scanFieldSpec(final String content, final int start, final int n) {
+        if (start >= n || content.charAt(start) != '{') {
+            return new FieldSpecMatch(-1, start);
+        }
+        final int closingBrace = skipBalancedFieldSpec(content, start + 1, n);
+        if (closingBrace < 0 || closingBrace - start <= 1) {
             return null;
         }
-        return new KeyedHeaderMatch(content.substring(0, keyEnd), keyEnd, declaredLength, keyed, delimiter,
-                fieldsStart, i);
+        return new FieldSpecMatch(start, closingBrace + 1);
+    }
+
+    /**
+     * Skips a balanced brace group, honoring quoted field names and escaped
+     * characters, and returns the index of its closing brace.
+     *
+     * @param content the line content to scan
+     * @param i       the index just past the opening brace
+     * @param n       the content length
+     * @return the index of the matching closing brace, or -1 when unbalanced
+     */
+    private static int skipBalancedFieldSpec(final String content, final int i, final int n) {
+        int pos = i;
+        int depth = 1;
+        boolean escaped = false;
+        boolean inQuotes = false;
+        while (pos < n) {
+            final char c = content.charAt(pos);
+            if (escaped) {
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (!inQuotes && (c == '{' || c == '}')) {
+                depth = adjustDepth(depth, c);
+                if (depth == 0) {
+                    return pos;
+                }
+            }
+            pos++;
+        }
+        return -1;
+    }
+
+    /**
+     * Adjusts the brace depth for an opening or closing brace.
+     *
+     * @param depth the current brace depth
+     * @param c     the brace character
+     * @return the adjusted depth
+     */
+    private static int adjustDepth(final int depth, final char c) {
+        return c == '}' ? depth - 1 : depth + 1;
+    }
+
+    /**
+     * The parsed bracket segment of a keyed header.
+     *
+     * @param declaredLength the declared entry/row count
+     * @param keyed          whether the segment declares a keyed marker (§9.5)
+     * @param delimiter      the declared delimiter, or null for the default
+     * @param endIndex       the index just past the closing bracket
+     */
+    private record BracketSegment(long declaredLength, boolean keyed,
+            @Nullable Character delimiter, int endIndex) {
+    }
+
+    /**
+     * The parsed field spec segment of a keyed header.
+     *
+     * @param start    the index of the opening brace, or -1 without a field spec
+     * @param endIndex the index just past the closing brace, or just past the
+     *                 preceding segment without a field spec
+     */
+    private record FieldSpecMatch(int start, int endIndex) {
     }
 
     private Headers() {

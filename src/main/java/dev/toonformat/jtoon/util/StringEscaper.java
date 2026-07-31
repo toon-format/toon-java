@@ -63,67 +63,107 @@ public final class StringEscaper {
         if (value == null || value.isEmpty()) {
             return;
         }
+        validateQuotedString(value);
+    }
 
-        // Check for unterminated string (starts with quote but doesn't end with quote)
-        if (value.startsWith("\"") && !value.endsWith("\"")) {
-            throw new IllegalArgumentException("Unterminated string");
-        }
-
-        // Check for invalid escape sequences in quoted strings
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            final String unquoted = value.substring(1, value.length() - 1);
-            boolean escaped = false;
-            int i = 0;
-            while (i < unquoted.length()) {
-                final char c = unquoted.charAt(i);
-                if (escaped) {
-                    // Check if escape sequence is valid
-                    if (!isValidEscapeChar(c)) {
-                        throw new IllegalArgumentException("Invalid escape sequence: \\" + c);
-                    }
-                    if (c == 'u') {
-                        if (i + UNICODE_HEX_LENGTH >= unquoted.length()) {
-                            throw new IllegalArgumentException(INVALID_ESCAPE_U);
-                        }
-                        final String hex = unquoted.substring(i + 1, i + 1 + UNICODE_HEX_LENGTH);
-                        if (!isHexString(hex)) {
-                            throw new IllegalArgumentException(INVALID_ESCAPE_U + hex);
-                        }
-                        final int codePoint = Integer.parseInt(hex, HEX_RADIX);
-                        if (Character.isLowSurrogate((char) codePoint)) {
-                            throw new IllegalArgumentException(INVALID_UNICODE_LONE_LOW);
-                        }
-                        if (Character.isHighSurrogate((char) codePoint)) {
-                            final int nextEscapeStart = i + 1 + UNICODE_HEX_LENGTH;
-                            if (nextEscapeStart + UNICODE_ESCAPE_TOTAL_LENGTH - 1 >= unquoted.length()
-                                || unquoted.charAt(nextEscapeStart) != '\\'
-                                || unquoted.charAt(nextEscapeStart + 1) != 'u') {
-                                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
-                            }
-                            final String nextHex = unquoted.substring(nextEscapeStart + 2,
-                                nextEscapeStart + 2 + UNICODE_HEX_LENGTH);
-                            if (!isHexString(nextHex)
-                                || !Character.isLowSurrogate((char) Integer.parseInt(nextHex, HEX_RADIX))) {
-                                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
-                            }
-                            // Skip past the full surrogate pair (\\uXXXX\\uXXXX = 12 chars total)
-                            // to avoid reprocessing the consumed hex digits and the low surrogate
-                            // escape as individual characters.
-                            i += UNICODE_ESCAPE_TOTAL_LENGTH + UNICODE_HEX_LENGTH;
-                        }
-                    }
-                    escaped = false;
-                } else if (c == '\\') {
-                    escaped = true;
-                }
-                i++;
+    /**
+     * Validates a quoted string for untermination and invalid escape
+     * sequences; unquoted values pass through.
+     *
+     * @param value the string to validate
+     */
+    private static void validateQuotedString(final String value) {
+        if (!value.startsWith("\"") || !value.endsWith("\"")) {
+            // Check for unterminated string (starts with quote but doesn't end with quote)
+            if (value.startsWith("\"")) {
+                throw new IllegalArgumentException("Unterminated string");
             }
+            return;
+        }
+        scanForInvalidEscapes(value.substring(1, value.length() - 1));
+    }
 
-            // Check for trailing backslash (invalid escape)
+    /**
+     * Scans an unquoted string content for invalid escape sequences,
+     * including a trailing backslash.
+     *
+     * @param unquoted the unquoted string content
+     */
+    private static void scanForInvalidEscapes(final String unquoted) {
+        boolean escaped = false;
+        int i = 0;
+        while (i < unquoted.length()) {
+            final char c = unquoted.charAt(i);
             if (escaped) {
-                throw new IllegalArgumentException("Invalid escape sequence: trailing backslash");
+                // Check if escape sequence is valid
+                validateEscapeSequence(c);
+                if (c == 'u') {
+                    i = validateUnicodeEscape(unquoted, i);
+                }
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
             }
+            i++;
         }
+
+        // Check for trailing backslash (invalid escape)
+        if (escaped) {
+            throw new IllegalArgumentException("Invalid escape sequence: trailing backslash");
+        }
+    }
+
+    /**
+     * Rejects characters that are not valid after a backslash.
+     *
+     * @param c the character following a backslash
+     */
+    private static void validateEscapeSequence(final char c) {
+        if (!isValidEscapeChar(c)) {
+            throw new IllegalArgumentException("Invalid escape sequence: \\" + c);
+        }
+    }
+
+    /**
+     * Validates the {@code \\uXXXX} escape starting at the given index,
+     * including a following low-surrogate escape of a surrogate pair.
+     *
+     * @param unquoted the unquoted string content
+     * @param i        the index of the 'u' of the escape
+     * @return the index to continue scanning from, after a validated
+     *         surrogate pair; unchanged for a single code unit
+     */
+    private static int validateUnicodeEscape(final String unquoted, final int i) {
+        if (i + UNICODE_HEX_LENGTH >= unquoted.length()) {
+            throw new IllegalArgumentException(INVALID_ESCAPE_U);
+        }
+        final String hex = unquoted.substring(i + 1, i + 1 + UNICODE_HEX_LENGTH);
+        if (!isHexString(hex)) {
+            throw new IllegalArgumentException(INVALID_ESCAPE_U + hex);
+        }
+        final int codePoint = Integer.parseInt(hex, HEX_RADIX);
+        if (Character.isLowSurrogate((char) codePoint)) {
+            throw new IllegalArgumentException(INVALID_UNICODE_LONE_LOW);
+        }
+        if (Character.isHighSurrogate((char) codePoint)) {
+            final int nextEscapeStart = i + 1 + UNICODE_HEX_LENGTH;
+            if (nextEscapeStart + UNICODE_ESCAPE_TOTAL_LENGTH - 1 >= unquoted.length()
+                || unquoted.charAt(nextEscapeStart) != '\\'
+                || unquoted.charAt(nextEscapeStart + 1) != 'u') {
+                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
+            }
+            final String nextHex = unquoted.substring(nextEscapeStart + 2,
+                nextEscapeStart + 2 + UNICODE_HEX_LENGTH);
+            if (!isHexString(nextHex)
+                || !Character.isLowSurrogate((char) Integer.parseInt(nextHex, HEX_RADIX))) {
+                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
+            }
+            // Skip past the full surrogate pair (\\uXXXX\\uXXXX = 12 chars total)
+            // to avoid reprocessing the consumed hex digits and the low surrogate
+            // escape as individual characters.
+            return i + UNICODE_ESCAPE_TOTAL_LENGTH + UNICODE_HEX_LENGTH;
+        }
+        return i;
     }
 
     /**
@@ -158,39 +198,7 @@ public final class StringEscaper {
             final char c = unquoted.charAt(i);
             if (escaped) {
                 if (c == 'u') {
-                    if (i + UNICODE_HEX_LENGTH >= unquoted.length()) {
-                        throw new IllegalArgumentException(INVALID_ESCAPE_U);
-                    }
-                    final String hex = unquoted.substring(i + 1, i + 1 + UNICODE_HEX_LENGTH);
-                    if (!isHexString(hex)) {
-                        throw new IllegalArgumentException(INVALID_ESCAPE_U + hex);
-                    }
-                    final char codeUnit = (char) Integer.parseInt(hex, HEX_RADIX);
-                    if (Character.isLowSurrogate(codeUnit)) {
-                        throw new IllegalArgumentException(INVALID_UNICODE_LONE_LOW);
-                    }
-                    if (Character.isHighSurrogate(codeUnit)) {
-                        if (i + (2 * UNICODE_ESCAPE_TOTAL_LENGTH) - 2 >= unquoted.length()
-                            || unquoted.charAt(i + 1 + UNICODE_HEX_LENGTH) != '\\'
-                            || unquoted.charAt(i + 2 + UNICODE_HEX_LENGTH) != 'u') {
-                            throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
-                        }
-                        final String lowHex = unquoted.substring(i + 3 + UNICODE_HEX_LENGTH,
-                            i + 3 + (2 * UNICODE_HEX_LENGTH));
-                        if (!isHexString(lowHex)) {
-                            throw new IllegalArgumentException(INVALID_ESCAPE_U + lowHex);
-                        }
-                        final char lowCodeUnit = (char) Integer.parseInt(lowHex, HEX_RADIX);
-                        if (!Character.isLowSurrogate(lowCodeUnit)) {
-                            throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
-                        }
-                        result.append(codeUnit);
-                        result.append(lowCodeUnit);
-                        i += (2 * UNICODE_ESCAPE_TOTAL_LENGTH) - 2;
-                    } else {
-                        result.append(codeUnit);
-                        i += UNICODE_HEX_LENGTH;
-                    }
+                    i = appendUnicodeEscape(result, unquoted, i);
                 } else {
                     result.append(unescapeChar(c));
                 }
@@ -204,6 +212,51 @@ public final class StringEscaper {
         }
 
         return result.toString();
+    }
+
+    /**
+     * Appends the decoded {@code \\uXXXX} escape starting at the given index,
+     * including a following low-surrogate escape of a surrogate pair.
+     *
+     * @param result   the builder receiving the decoded characters
+     * @param unquoted the unquoted string content
+     * @param i        the index of the 'u' of the escape
+     * @return the index to continue scanning from, after a decoded surrogate
+     *         pair; otherwise the index of the last hex digit
+     */
+    private static int appendUnicodeEscape(final StringBuilder result, final String unquoted, final int i) {
+        if (i + UNICODE_HEX_LENGTH >= unquoted.length()) {
+            throw new IllegalArgumentException(INVALID_ESCAPE_U);
+        }
+        final String hex = unquoted.substring(i + 1, i + 1 + UNICODE_HEX_LENGTH);
+        if (!isHexString(hex)) {
+            throw new IllegalArgumentException(INVALID_ESCAPE_U + hex);
+        }
+        final char codeUnit = (char) Integer.parseInt(hex, HEX_RADIX);
+        if (Character.isLowSurrogate(codeUnit)) {
+            throw new IllegalArgumentException(INVALID_UNICODE_LONE_LOW);
+        }
+        if (Character.isHighSurrogate(codeUnit)) {
+            if (i + (2 * UNICODE_ESCAPE_TOTAL_LENGTH) - 2 >= unquoted.length()
+                || unquoted.charAt(i + 1 + UNICODE_HEX_LENGTH) != '\\'
+                || unquoted.charAt(i + 2 + UNICODE_HEX_LENGTH) != 'u') {
+                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
+            }
+            final String lowHex = unquoted.substring(i + 3 + UNICODE_HEX_LENGTH,
+                i + 3 + (2 * UNICODE_HEX_LENGTH));
+            if (!isHexString(lowHex)) {
+                throw new IllegalArgumentException(INVALID_ESCAPE_U + lowHex);
+            }
+            final char lowCodeUnit = (char) Integer.parseInt(lowHex, HEX_RADIX);
+            if (!Character.isLowSurrogate(lowCodeUnit)) {
+                throw new IllegalArgumentException(INVALID_UNICODE_LONE_HIGH);
+            }
+            result.append(codeUnit);
+            result.append(lowCodeUnit);
+            return i + (2 * UNICODE_ESCAPE_TOTAL_LENGTH) - 2;
+        }
+        result.append(codeUnit);
+        return i + UNICODE_HEX_LENGTH;
     }
 
     private static boolean isHexString(final String value) {

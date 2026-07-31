@@ -50,6 +50,23 @@ public final class StringValidator {
             return false;
         }
 
+        if (!hasSafeCharacters(value, delimiter)) {
+            return false;
+        }
+
+        return !value.startsWith(LIST_ITEM_MARKER);
+    }
+
+    /**
+     * Rejects any character that would require quoting: structural
+     * characters, control characters and the active delimiter.
+     *
+     * @param value     the string value to check
+     * @param delimiter the delimiter being used (for validation)
+     * @return true when every character is safe unquoted
+     */
+    private static boolean hasSafeCharacters(final String value, final String delimiter) {
+        final int len = value.length();
         for (int i = 0; i < len; i++) {
             final char c = value.charAt(i);
             switch (c) {
@@ -66,8 +83,7 @@ public final class StringValidator {
                 }
             }
         }
-
-        return !value.startsWith(LIST_ITEM_MARKER);
+        return true;
     }
 
     /**
@@ -117,53 +133,110 @@ public final class StringValidator {
         if (value.isEmpty()) {
             return false;
         }
-
-        final int len = value.length();
-        int i = 0;
-
-        // Spec §7.2 numeric-like test ^[+-]?[0-9]+...$: '+' counts (must quote "+1"),
-        // while the decoder grammar (§4) is ^-?[0-9]+...$ and decodes "+1" as string.
-        if (value.charAt(0) == '-' || value.charAt(0) == '+') {
-            if (len < 2) {
-                return false;
-            }
-            i = 1;
+        final int start = skipSign(value);
+        if (start < 0) {
+            return false;
         }
+        return scanNumericBody(value, start);
+    }
 
-        boolean hasDigit = false;
-        boolean hasDot = false;
-        boolean hasExponent = false;
+    /**
+     * Skips an optional leading sign. A lone sign is not numeric-like.
+     *
+     * @param value the value to inspect
+     * @return the index after the sign, 0 without a sign, or -1 for a lone sign
+     */
+    private static int skipSign(final String value) {
+        final char first = value.charAt(0);
+        if (first != '-' && first != '+') {
+            return 0;
+        }
+        if (value.length() < 2) {
+            return -1;
+        }
+        return 1;
+    }
 
-        while (i < len) {
-            final char c = value.charAt(i);
-
-            if (c >= '0' && c <= '9') {
-                hasDigit = true;
-            } else if (c == '.') {
-                if (hasDot || hasExponent || !hasDigit) {
-                    return false;
-                }
-                hasDot = true;
-                hasDigit = false;
-            } else if (c == 'e' || c == 'E') {
-                if (!hasDigit || hasExponent) {
-                    return false;
-                }
-                hasExponent = true;
-                hasDigit = false;
-                if (i + 1 < len) {
-                    final char next = value.charAt(i + 1);
-                    if (next == '+' || next == '-') {
-                        i++;
-                    }
-                }
-            } else {
+    /**
+     * Scans the numeric body after the optional sign. Mirrors the grammar
+     * [0-9]+ ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? from Spec §7.2.
+     *
+     * @param value the value to scan
+     * @param start the index where the body starts
+     * @return true when the body is numeric-like
+     */
+    private static boolean scanNumericBody(final String value, final int start) {
+        int i = consumeDigits(value, start);
+        if (i == start) {
+            return false;
+        }
+        if (i < value.length() && value.charAt(i) == '.') {
+            final int afterDot = consumeDigits(value, i + 1);
+            if (afterDot == i + 1) {
                 return false;
             }
+            i = afterDot;
+        }
+        if (i < value.length() && isExponentMarker(value.charAt(i))) {
+            final int afterExponent = consumeExponentPart(value, i + 1);
+            if (afterExponent == i + 1) {
+                return false;
+            }
+            i = afterExponent;
+        }
+        return i == value.length();
+    }
+
+    /**
+     * Consumes a run of ASCII digits.
+     *
+     * @param value the value to scan
+     * @param from  the index to start at
+     * @return the index after the last consumed digit
+     */
+    private static int consumeDigits(final String value, final int from) {
+        int i = from;
+        while (i < value.length() && isDigit(value.charAt(i))) {
             i++;
         }
+        return i;
+    }
 
-        return hasDigit;
+    private static boolean isDigit(final char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private static boolean isExponentMarker(final char c) {
+        return c == 'e' || c == 'E';
+    }
+
+    /**
+     * Consumes the exponent part after the marker: an optional sign
+     * followed by at least one digit.
+     *
+     * @param value the value to scan
+     * @param from  the index after the exponent marker
+     * @return the index after the last consumed digit
+     */
+    private static int consumeExponentPart(final String value, final int from) {
+        return consumeDigits(value, skipOptionalSign(value, from));
+    }
+
+    /**
+     * Skips an optional exponent sign.
+     *
+     * @param value the value to scan
+     * @param from  the index to start at
+     * @return the index after the sign, or the unchanged index
+     */
+    private static int skipOptionalSign(final String value, final int from) {
+        if (from < value.length()) {
+            final char c = value.charAt(from);
+            if (c == '+' || c == '-') {
+                return from + 1;
+            }
+        }
+        return from;
     }
 
     static boolean containsQuotesOrBackslash(final String value) {
