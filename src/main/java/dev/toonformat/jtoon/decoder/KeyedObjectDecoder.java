@@ -1,5 +1,6 @@
 package dev.toonformat.jtoon.decoder;
 
+import org.jspecify.annotations.Nullable;
 import dev.toonformat.jtoon.Delimiter;
 import dev.toonformat.jtoon.util.Headers;
 import dev.toonformat.jtoon.util.StringEscaper;
@@ -126,7 +127,7 @@ public final class KeyedObjectDecoder {
         return result;
     }
 
-    private static Delimiter delimiterFromChar(@org.jspecify.annotations.Nullable final Character delimiter,
+    private static Delimiter delimiterFromChar(@Nullable final Character delimiter,
             final DecodeContext context) {
         if (delimiter == null) {
             return context.delimiter;

@@ -232,11 +232,10 @@ public final class ObjectDecoder {
                             "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
                     }
                     // Non-strict: skip the orphaned lines and keep the inline value
-                    context.currentLine++;
-                    while (context.currentLine < context.lines.length
-                            && DecodeHelper.getDepth(context.lines[context.currentLine], context) > fieldDepth) {
+                    do {
                         context.currentLine++;
-                    }
+                    } while (context.currentLine < context.lines.length
+                        && DecodeHelper.getDepth(context.lines[context.currentLine], context) > fieldDepth);
                     return PrimitiveDecoder.parse(fieldValue, context);
                 }
                 context.currentLine++;

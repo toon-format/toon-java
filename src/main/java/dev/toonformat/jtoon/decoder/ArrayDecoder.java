@@ -143,13 +143,12 @@ public final class ArrayDecoder {
                 }
             }
 
-            context.currentLine++;
             // Spec §12: blank lines between the header and the first item are
             // accepted even in strict mode
-            while (context.currentLine < context.lines.length
-                    && DecodeHelper.isBlankLine(context.lines[context.currentLine])) {
+            do {
                 context.currentLine++;
-            }
+            } while (context.currentLine < context.lines.length
+                && DecodeHelper.isBlankLine(context.lines[context.currentLine]));
             if (context.currentLine < context.lines.length) {
                 final String nextLine = context.lines[context.currentLine];
                 final int nextDepth = DecodeHelper.getDepth(nextLine, context);
@@ -174,9 +173,8 @@ public final class ArrayDecoder {
                     return Collections.unmodifiableList(result);
                 }
             }
-            final List<Object> empty = new ArrayList<>();
             validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
-            return Collections.unmodifiableList(empty);
+            return Collections.unmodifiableList(new ArrayList<>());
         }
 
         // Spec §9.1/§9.2: a bare bracket pair is an empty array header
@@ -236,17 +234,6 @@ public final class ArrayDecoder {
             return (int) longLength;
         }
         return null;
-    }
-
-    /**
-     * Parses array values from a delimiter-separated string.
-     *
-     * @param values         the value string to parse
-     * @param arrayDelimiter array delimiter
-     * @return parsed array values
-     */
-    static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter, final int maxArraySize) {
-        return parseArrayValues(values, arrayDelimiter, maxArraySize, Integer.MAX_VALUE);
     }
 
     static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter,

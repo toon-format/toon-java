@@ -484,7 +484,7 @@ public final class TabularArrayDecoder {
      * defect, checked recursively at every nesting level.
      */
     static void validateNoDuplicateFields(final List<FieldNode> fields, final DecodeContext context) {
-        final Set<String> seen = new HashSet<>(fields.size());
+        final Set<String> seen = HashSet.newHashSet(fields.size());
         for (final FieldNode field : fields) {
             if (!seen.add(field.name())) {
                 throw new IllegalArgumentException(

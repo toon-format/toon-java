@@ -19,7 +19,7 @@ public final class ListItemDecoder {
     // Spec §6: a keyless array header is valid as a list item only in its
     // plain form ([N]: or []); a fields-bearing ([N]{...}:) or keyed
     // ([N:]{...}:) keyless header is a defect.
-    private static final Pattern KEYLESS_FIELDS_HEADER = Pattern.compile("^\\[[^\\]]*]\\s*\\{");
+    private static final Pattern KEYLESS_FIELDS_HEADER = Pattern.compile("^\\[[^]]*]\\s*\\{");
 
     private ListItemDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");

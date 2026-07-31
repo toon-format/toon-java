@@ -39,7 +39,7 @@ public final class PrimitiveDecoder {
     // (case-insensitive). No leading '+': that is the wider encoder-side
     // numeric-like test of §7.2. Tokens failing the gate (.5, 1., +1, NaN, 0x10)
     // decode as strings without delegating to a host-language number parser.
-    private static final Pattern NUMBER_GRAMMAR = Pattern.compile("^-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$");
+    private static final Pattern NUMBER_GRAMMAR = Pattern.compile("^-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$");
 
     private PrimitiveDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
