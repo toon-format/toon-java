@@ -5,6 +5,7 @@ import dev.toonformat.jtoon.util.StringEscaper;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
@@ -100,13 +101,8 @@ public final class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      */
     static void parseRootObjectFields(final Map<String, Object> obj, final int depth, final DecodeContext context) {
-        while (context.currentLine < context.lines.length) {
+        while (isRootFieldLine(depth, context)) {
             final String line = context.lines[context.currentLine];
-            final int lineDepth = DecodeHelper.getDepth(line, context);
-
-            if (lineDepth != depth) {
-                return;
-            }
 
             // Skip blank lines
             if (DecodeHelper.isBlankLine(line)) {
@@ -116,29 +112,60 @@ public final class ObjectDecoder {
 
             final String content = line.substring(depth * context.options.indent());
 
-            // Spec §5/§6: a keyless header is only valid as the document's
-            // root header, i.e. the first line; at any later depth-0 position
-            // it is a defect.
-            if (content.startsWith(OPEN_BRACKET) && context.options.strict()) {
-                throw new IllegalArgumentException(
-                    "Keyless array header only valid as root header at line " + (context.currentLine + 1));
-            }
-
-            final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(content);
-            if (keyedHeader != null) {
-                processRootKeyedArrayLine(obj, content, keyedHeader, depth, context);
-            } else {
-                final int colonIdx = DecodeHelper.findUnquotedColon(content);
-                if (colonIdx > 0) {
-                    final String key = content.substring(0, colonIdx).trim();
-                    final String value = content.substring(colonIdx + 1).trim();
-
-                    KeyDecoder.parseKeyValuePairIntoMap(obj, key, value, depth, context);
-                } else {
-                    return;
-                }
+            if (!processRootFieldLine(obj, content, depth, context)) {
+                return;
             }
         }
+    }
+
+    /**
+     * Returns whether the current line is a root field line at the given
+     * depth, staying within the line buffer.
+     *
+     * @param depth   the expected root field depth
+     * @param context decode an object to deal with lines, delimiter and options
+     * @return true when the current line sits at the root field depth
+     */
+    private static boolean isRootFieldLine(final int depth, final DecodeContext context) {
+        return context.currentLine < context.lines.length
+            && DecodeHelper.getDepth(context.lines[context.currentLine], context) == depth;
+    }
+
+    /**
+     * Processes a single root field line. Returns false when the line is not
+     * a root field, terminating the root field scan.
+     *
+     * @param obj     the string key-value pairs
+     * @param content the content string to parse
+     * @param depth   the depth of the object field
+     * @param context decode an object to deal with lines, delimiter and options
+     * @return false when the line ends the root field scan
+     */
+    private static boolean processRootFieldLine(final Map<String, Object> obj, final String content,
+            final int depth, final DecodeContext context) {
+        // Spec §5/§6: a keyless header is only valid as the document's
+        // root header, i.e. the first line; at any later depth-0 position
+        // it is a defect.
+        if (content.startsWith(OPEN_BRACKET) && context.options.strict()) {
+            throw new IllegalArgumentException(
+                "Keyless array header only valid as root header at line " + (context.currentLine + 1));
+        }
+
+        final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(content);
+        if (keyedHeader != null) {
+            processRootKeyedArrayLine(obj, content, keyedHeader, depth, context);
+            return true;
+        }
+
+        final int colonIdx = DecodeHelper.findUnquotedColon(content);
+        if (colonIdx > 0) {
+            final String key = content.substring(0, colonIdx).trim();
+            final String value = content.substring(colonIdx + 1).trim();
+
+            KeyDecoder.parseKeyValuePairIntoMap(obj, key, value, depth, context);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -220,47 +247,80 @@ public final class ObjectDecoder {
      * @return the parsed value (Map, List, or primitive)
      */
     static Object parseFieldValue(final String fieldValue, final int fieldDepth, final DecodeContext context) {
-        // Check if the next line is nested
+        return parseValueWithNestedScope(fieldValue, fieldDepth, context, ObjectDecoder::parseFieldScalar);
+    }
+
+    /**
+     * Parses a field value that does not open a nested scope: a blank value
+     * becomes an empty object, any other value a primitive.
+     *
+     * @param value   the value string to parse
+     * @param context decode an object to deal with lines, delimiter and options
+     * @return the parsed value (Map or primitive)
+     */
+    private static Object parseFieldScalar(final String value, final DecodeContext context) {
+        if (value.isBlank()) {
+            return new LinkedHashMap<>();
+        }
+        return PrimitiveDecoder.parse(value, context);
+    }
+
+    /**
+     * Parses a value that may either open a nested scope or decode as a
+     * scalar. Deeper lines open a nested object; inline values on a field
+     * that does not open a scope are rejected in strict mode (§14.2).
+     *
+     * @param value        the value string to parse
+     * @param depth        the depth at which the value is located
+     * @param context      decode an object to deal with lines, delimiter and options
+     * @param scalarParser parses the value when it does not open a scope
+     * @return the parsed value (Map or scalar)
+     */
+    static Object parseValueWithNestedScope(final String value, final int depth, final DecodeContext context,
+            final BiFunction<String, DecodeContext, Object> scalarParser) {
+        // Check if the next line is nested (deeper indentation)
         if (context.currentLine + 1 < context.lines.length) {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
-            if (nextDepth > fieldDepth) {
-                if (!fieldValue.isBlank()) {
-                    // Inline value: the field does not open a scope, so a deeper
-                    // line belongs to no scope at all (§14.2)
-                    if (context.options.strict()) {
-                        throw new IllegalArgumentException(
-                            "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
-                    }
-                    // Non-strict: skip the orphaned lines and keep the inline value
-                    do {
-                        context.currentLine++;
-                    } while (context.currentLine < context.lines.length
-                        && DecodeHelper.getDepth(context.lines[context.currentLine], context) > fieldDepth);
-                    return PrimitiveDecoder.parse(fieldValue, context);
+            if (nextDepth > depth) {
+                if (!value.isBlank()) {
+                    return parseInlineValueWithOrphanLines(value, depth, nextDepth, context, scalarParser);
                 }
                 context.currentLine++;
                 // parseNestedObject manages the currentLine, so we don't increment here
-                return parseNestedObject(fieldDepth, context);
-            } else {
-                // If the value is empty, create an empty object; otherwise parse as primitive
-                if (fieldValue.isBlank()) {
-                    context.currentLine++;
-                    return new LinkedHashMap<>();
-                } else {
-                    context.currentLine++;
-                    return PrimitiveDecoder.parse(fieldValue, context);
-                }
+                return parseNestedObject(depth, context);
             }
-        } else {
-            // If the value is empty, create an empty object; otherwise parse as primitive
-            if (fieldValue.isBlank()) {
-                context.currentLine++;
-                return new LinkedHashMap<>();
-            } else {
-                context.currentLine++;
-                return PrimitiveDecoder.parse(fieldValue, context);
-            }
+            context.currentLine++;
+            return scalarParser.apply(value, context);
         }
+        context.currentLine++;
+        return scalarParser.apply(value, context);
+    }
+
+    /**
+     * Parses an inline value whose line carries deeper, orphaned lines:
+     * rejected in strict mode (§14.2), skipped in non-strict mode.
+     *
+     * @param value        the inline value string to parse
+     * @param depth        the depth at which the value is located
+     * @param nextDepth    the depth of the first orphaned line
+     * @param context      decode an object to deal with lines, delimiter and options
+     * @param scalarParser parses the inline value
+     * @return the parsed scalar value
+     */
+    private static Object parseInlineValueWithOrphanLines(final String value, final int depth, final int nextDepth,
+            final DecodeContext context, final BiFunction<String, DecodeContext, Object> scalarParser) {
+        // Inline value: the field does not open a scope, so a deeper
+        // line belongs to no scope at all (§14.2)
+        if (context.options.strict()) {
+            throw new IllegalArgumentException(
+                "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
+        }
+        // Non-strict: skip the orphaned lines and keep the inline value
+        do {
+            context.currentLine++;
+        } while (context.currentLine < context.lines.length
+            && DecodeHelper.getDepth(context.lines[context.currentLine], context) > depth);
+        return scalarParser.apply(value, context);
     }
 
     /**

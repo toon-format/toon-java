@@ -73,16 +73,12 @@ public final class ValueDecoder {
 
         // Spec §5.1: a single U+FEFF at the very start of the document is a
         // byte-order mark, not content; remove it before any processing.
-        String input = toon;
-        if (!input.isEmpty() && input.charAt(0) == BOM_CHARACTER) {
-            input = input.substring(1);
-        }
+        final String input = stripByteOrderMark(toon);
 
         if (input.isBlank()) {
             return new LinkedHashMap<>();
         }
 
-        // Special case: if input is exactly "null", return null
         final String trimmed = input.trim();
         if (NULL_LITERAL.equals(trimmed)) {
             return null;
@@ -93,7 +89,46 @@ public final class ValueDecoder {
 
         //set an own decode context
         final DecodeContext context = new DecodeContext();
-        final String[] rawLines = input.split("\r?\n", -1);
+        context.lines = buildContentLines(input.split("\r?\n", -1));
+        context.options = options;
+        context.delimiter = options.delimiter();
+
+        // Spec §5.1: a document of only comments and blank lines is an empty object
+        if (isEmptyDocument(context.lines)) {
+            return new LinkedHashMap<>();
+        }
+
+        final int lineIndex = context.currentLine;
+        final String line = context.lines[lineIndex];
+        final int depth = DecodeHelper.getDepth(line, context);
+
+        if (depth > 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException("Unexpected indentation at line " + lineIndex);
+            }
+            return new LinkedHashMap<>();
+        }
+
+        final Object result = parseRootDocument(line, depth, context);
+
+        // The root form spans the whole document (§5); leftover lines must not be
+        // silently discarded.
+        DecodeHelper.validateNoTrailingContent(context);
+        return result;
+    }
+
+    private static String stripByteOrderMark(final String input) {
+        if (!input.isEmpty() && input.charAt(0) == BOM_CHARACTER) {
+            return input.substring(1);
+        }
+        return input;
+    }
+
+    /**
+     * Builds the list of content lines: trailing spaces are stripped per line
+     * (§12) and full-line comments are discarded (§5.1).
+     */
+    private static String[] buildContentLines(final String... rawLines) {
         // Spec §12: trailing spaces at the end of a line are not part of its content;
         // strip them per line before classification. Only characters after the last
         // non-space character are removed, so trailing spaces inside quoted strings
@@ -109,89 +144,81 @@ public final class ValueDecoder {
                 contentLines.add(stripped);
             }
         }
-        context.lines = contentLines.toArray(new String[0]);
-        context.options = options;
-        context.delimiter = options.delimiter();
+        return contentLines.toArray(new String[0]);
+    }
 
-        // Spec §5.1: a document of only comments and blank lines is an empty object
-        boolean allBlank = true;
-        for (final String line : context.lines) {
+    private static boolean isEmptyDocument(final String... lines) {
+        for (final String line : lines) {
             if (!line.isBlank()) {
-                allBlank = false;
-                break;
+                return false;
             }
         }
-        if (allBlank) {
-            return new LinkedHashMap<>();
-        }
+        return true;
+    }
 
-        final int lineIndex = context.currentLine;
-        final String line = context.lines[lineIndex];
-        final int depth = DecodeHelper.getDepth(line, context);
-
-        if (depth > 0) {
-            if (context.options.strict()) {
-                throw new IllegalArgumentException("Unexpected indentation at line " + lineIndex);
-            }
-            return new LinkedHashMap<>();
-        }
-
-        final Object result;
-        // Handle standalone arrays: [2]:
+    /**
+     * Routes the root line to its form (§5): keyless array header, keyed
+     * array header, key-value pair, or bare scalar.
+     */
+    private static Object parseRootDocument(final String line, final int depth, final DecodeContext context) {
         if (!line.isEmpty() && line.charAt(0) == OPEN_BRACKET.charAt(0)) {
-            // Spec §5/§9.5: a keyed marker in the bracket segment makes a
-            // keyless header a keyed tabular object, not an array.
-            final Headers.KeyedHeaderMatch keylessHeader = Headers.matchKeylessKeyedHeader(line);
-            if (keylessHeader != null && keylessHeader.keyed()) {
-                result = KeyedObjectDecoder.parseKeyedTabularObject(line, keylessHeader, depth + 1, context);
-            } else {
-                result = ArrayDecoder.parseArray(line, depth, context);
-            }
-        } else {
-            // Handle keyed arrays: items[2]{id,name}:
-            final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(line);
-            if (keyedHeader != null) {
-                result = KeyDecoder.parseKeyedArrayValue(keyedHeader, line, depth, context);
-            } else {
-                // Handle key-value pairs: name: Ada
-                final int colonIdx = DecodeHelper.findUnquotedColon(line);
-                if (colonIdx > 0) {
-                    if (context.options.strict()) {
-                        final String key = line.substring(0, colonIdx).trim();
-                        // In strict mode, reject keys with unquoted brackets that didn't match
-                        // KEYED_ARRAY_PATTERN. This catches:
-                        //   - extra brackets between bracket segment and colon (foo[1][bar])
-                        //   - text between bracket segment and colon (foo[2]extra)
-                        //   - non-integer bracket segment (foo[bar])
-                        //   - negative bracket length (items[-1])
-                        //   - whitespace between bracket segment and colon/fields segment
-                        //     (items[2] :, items[2] {a,b}:)
-                        if (DecodeHelper.hasUnquotedBrackets(key)) {
-                            throw new IllegalArgumentException(
-                                "Invalid array header syntax at line " + (context.currentLine + 1));
-                        }
-                    }
-                    final String key = line.substring(0, colonIdx).trim();
-                    final String value = line.substring(colonIdx + 1).trim();
-                    result = KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
-                } else {
-                    // Bare scalar value
-                    if (context.options.strict() && DecodeHelper.hasUnquotedBrackets(line)) {
-                        // Line has brackets but no colon and didn't match KEYED_ARRAY_PATTERN
-                        // (e.g. "items[2]{id,name}" missing colon)
-                        throw new IllegalArgumentException(
-                            "Invalid syntax: unquoted brackets without valid header at line "
-                                + (context.currentLine + 1));
-                    }
-                    result = ObjectDecoder.parseBareScalarValue(line, depth, context);
-                }
-            }
+            return parseRootArrayLine(line, depth, context);
         }
 
-        // The root form spans the whole document (§5); leftover lines must not be
-        // silently discarded.
-        DecodeHelper.validateNoTrailingContent(context);
-        return result;
+        final Headers.KeyedHeaderMatch keyedHeader = Headers.matchKeyedArrayHeader(line);
+        if (keyedHeader != null) {
+            return KeyDecoder.parseKeyedArrayValue(keyedHeader, line, depth, context);
+        }
+
+        final int colonIdx = DecodeHelper.findUnquotedColon(line);
+        if (colonIdx > 0) {
+            return parseRootKeyValueLine(line, colonIdx, depth, context);
+        }
+
+        return parseRootBareLine(line, depth, context);
+    }
+
+    private static Object parseRootArrayLine(final String line, final int depth, final DecodeContext context) {
+        // Spec §5/§9.5: a keyed marker in the bracket segment makes a
+        // keyless header a keyed tabular object, not an array.
+        final Headers.KeyedHeaderMatch keylessHeader = Headers.matchKeylessKeyedHeader(line);
+        if (keylessHeader != null && keylessHeader.keyed()) {
+            return KeyedObjectDecoder.parseKeyedTabularObject(line, keylessHeader, depth + 1, context);
+        }
+        return ArrayDecoder.parseArray(line, depth, context);
+    }
+
+    private static Object parseRootKeyValueLine(final String line, final int colonIdx, final int depth,
+            final DecodeContext context) {
+        if (context.options.strict()) {
+            final String key = line.substring(0, colonIdx).trim();
+            // In strict mode, reject keys with unquoted brackets that didn't match
+            // KEYED_ARRAY_PATTERN. This catches:
+            //   - extra brackets between bracket segment and colon (foo[1][bar])
+            //   - text between bracket segment and colon (foo[2]extra)
+            //   - non-integer bracket segment (foo[bar])
+            //   - negative bracket length (items[-1])
+            //   - whitespace between bracket segment and colon/fields segment
+            //     (items[2] :, items[2] {a,b}:)
+            if (DecodeHelper.hasUnquotedBrackets(key)) {
+                throw new IllegalArgumentException(
+                    "Invalid array header syntax at line " + (context.currentLine + 1));
+            }
+        }
+        final String key = line.substring(0, colonIdx).trim();
+        final String value = line.substring(colonIdx + 1).trim();
+        return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
+    }
+
+    private static Object parseRootBareLine(final String line, final int depth, final DecodeContext context) {
+        if (context.options.strict() && DecodeHelper.hasUnquotedBrackets(line)) {
+            // Line has brackets but no colon and didn't match KEYED_ARRAY_PATTERN
+            // (e.g. "items[2]{id,name}" missing colon)
+            throw new IllegalArgumentException(
+                "Invalid syntax: unquoted brackets without valid header at line "
+                    + (context.currentLine + 1));
+        }
+        return ObjectDecoder.parseBareScalarValue(line, depth, context);
     }
 
     /**

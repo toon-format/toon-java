@@ -78,6 +78,115 @@ class ValueDecoderTest {
     }
 
     @Test
+    @DisplayName("strips a single leading byte-order mark before decoding")
+    void decode_stripsLeadingByteOrderMark() {
+        // Given
+        final String input = Character.toString(0xFEFF) + "name: Ada";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("{name=Ada}", result.toString());
+    }
+
+    @Test
+    @DisplayName("keeps a byte-order mark that is not the first character as content")
+    void decode_keepsNonLeadingByteOrderMarkAsContent() {
+        // Given
+        final String bom = Character.toString(0xFEFF);
+        final String input = "name: " + bom + "Ada";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("{name=" + bom + "Ada}", result.toString());
+    }
+
+    @Test
+    @DisplayName("discards full-line comment lines before structural parsing")
+    void decode_discardsFullLineComments() {
+        // Given
+        final String input = "# a comment\nname: Ada";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("{name=Ada}", result.toString());
+    }
+
+    @Test
+    @DisplayName("treats a hash not at line start as data")
+    void decode_hashInsideLineIsData() {
+        // When
+        final Object result = ValueDecoder.decode("name: a#b", DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("{name=a#b}", result.toString());
+    }
+
+    @Test
+    @DisplayName("decodes an empty array literal as an empty list")
+    void decode_emptyArrayLiteral() {
+        // When
+        final Object result = ValueDecoder.decode("[]", DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("[]", result.toString());
+    }
+
+    @Test
+    @DisplayName("decodes a keyless root array header as an array")
+    void decode_keylessRootArrayHeader() {
+        // When
+        final Object result = ValueDecoder.decode("[2]: 1,2", DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("[1, 2]", result.toString());
+    }
+
+    @Test
+    @DisplayName("decodes a keyed tabular root header as a keyed object")
+    void decode_keyedTabularRootHeader() {
+        // Given
+        final String input = "servers[1:]{host,port}:\n  alpha: a.example.com,8080";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("{servers={alpha={host=a.example.com, port=8080}}}", result.toString());
+    }
+
+    @Test
+    @DisplayName("parses a bare scalar at the root")
+    void decode_bareScalarRoot() {
+        // When
+        final Object result = ValueDecoder.decode("42", DecodeOptions.DEFAULT);
+
+        // Then
+        assertEquals("42", result.toString());
+    }
+
+    @Test
+    @DisplayName("rejects stray unquoted brackets in a root key in strict mode")
+    void decode_strict_rejectsStrayBracketsInRootKey() {
+        // When / Then
+        assertThrows(IllegalArgumentException.class,
+            () -> ValueDecoder.decode("foo[1][bar]: x", DecodeOptions.DEFAULT));
+    }
+
+    @Test
+    @DisplayName("rejects unquoted brackets without a valid header in strict mode")
+    void decode_strict_rejectsBracketsWithoutValidHeader() {
+        // When / Then
+        assertThrows(IllegalArgumentException.class,
+            () -> ValueDecoder.decode("items[2]{id,name}", DecodeOptions.DEFAULT));
+    }
+
+    @Test
     @DisplayName("Should parse TOON format primitive array to JSON")
     void parsePrimitiveArray() {
         // When

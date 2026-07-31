@@ -35,14 +35,7 @@ public final class KeyedObjectDecoder {
      */
     static Map<String, Object> parseKeyedTabularObject(final String content,
             final Headers.KeyedHeaderMatch header, final int entryDepth, final DecodeContext context) {
-        if (header.fieldsStart() < 0) {
-            throw new IllegalArgumentException(
-                "Keyed header requires a field list at line " + (context.currentLine + 1));
-        }
-        if (!content.substring(header.headerEnd() + 1).isBlank()) {
-            throw new IllegalArgumentException(
-                "Inline content after keyed header at line " + (context.currentLine + 1));
-        }
+        validateKeyedHeader(content, header, context);
 
         final String fieldsSpec = content.substring(header.fieldsStart() + 1, header.headerEnd() - 1);
         final Delimiter arrayDelimiter = delimiterFromChar(header.delimiter(), context);
@@ -60,62 +53,15 @@ public final class KeyedObjectDecoder {
         context.currentLine++;
 
         while (context.currentLine < context.lines.length) {
-            final String line = context.lines[context.currentLine];
-
-            if (DecodeHelper.isBlankLine(line)) {
-                final int nextNonBlank = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
-                if (nextNonBlank >= context.lines.length) {
-                    break;
-                }
-                final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlank], context);
-                if (nextDepth <= entryDepth - 1) {
-                    break;
-                }
-                // Spec §12: blank lines between the header and the first entry
-                // row are accepted; later blank lines inside the object are a
-                // defect in strict mode.
-                if (!result.isEmpty() && context.options.strict()) {
-                    throw new IllegalArgumentException(
-                        "Blank line inside keyed object at line " + (context.currentLine + 1));
-                }
-                context.currentLine++;
-                continue;
-            }
-
-            final int lineDepth = DecodeHelper.getDepth(line, context);
-            if (lineDepth < entryDepth) {
+            final LineHandling handling = handleNextLine(result, entryDepth, context);
+            if (handling == LineHandling.STOP) {
                 break;
             }
-            if (lineDepth > entryDepth) {
-                // A line deeper than the entry depth belongs to no scope (§14.2)
-                if (context.options.strict()) {
-                    throw new IllegalArgumentException(
-                        "Over-indented line at " + (context.currentLine + 1) + " (depth " + lineDepth + ")");
-                }
+            if (handling == LineHandling.PROCESS) {
+                processEntryLine(context.lines[context.currentLine], entryDepth,
+                    fields, arrayDelimiter, result, context);
                 context.currentLine++;
-                continue;
             }
-
-            final String entryContent = line.substring(entryDepth * context.options.indent());
-            // Spec §9.5: an entry row splits at its first unquoted colon; the
-            // remainder is parsed as a tabular row with the active delimiter.
-            final int colonIdx = DecodeHelper.findUnquotedColon(entryContent);
-            if (colonIdx <= 0) {
-                if (context.options.strict()) {
-                    throw new IllegalArgumentException(
-                        "Missing colon in keyed entry at line " + (context.currentLine + 1));
-                }
-                context.currentLine++;
-                continue;
-            }
-
-            final String entryKey = StringEscaper.unescape(entryContent.substring(0, colonIdx).trim());
-            final Map<String, Object> entry = TabularArrayDecoder.parseTabularRow(
-                entryContent.substring(colonIdx + 1), fields, arrayDelimiter, context);
-
-            DecodeHelper.checkDuplicateKey(result, entryKey, context);
-            result.put(entryKey, entry);
-            context.currentLine++;
         }
 
         // Spec §9.5: the declared entry count must match in strict mode
@@ -125,6 +71,130 @@ public final class KeyedObjectDecoder {
                               result.size(), header.declaredLength()));
         }
         return result;
+    }
+
+    /**
+     * Validates the keyed header shape: a field list must be present and no
+     * inline content may follow the header.
+     *
+     * @param content the header line content
+     * @param header  the keyed header match for the line
+     * @param context decode an object to deal with lines, delimiter and options
+     * @throws IllegalArgumentException for a defective header
+     */
+    private static void validateKeyedHeader(final String content,
+            final Headers.KeyedHeaderMatch header, final DecodeContext context) {
+        if (header.fieldsStart() < 0) {
+            throw new IllegalArgumentException(
+                "Keyed header requires a field list at line " + (context.currentLine + 1));
+        }
+        if (!content.substring(header.headerEnd() + 1).isBlank()) {
+            throw new IllegalArgumentException(
+                "Inline content after keyed header at line " + (context.currentLine + 1));
+        }
+    }
+
+    /**
+     * Returns whether parsing stops at a blank line: at the end of the input
+     * or when the next non-blank line sits outside the keyed object. Blank
+     * lines inside the object are rejected in strict mode (§12).
+     *
+     * @param result    the rows parsed so far
+     * @param entryDepth the depth of the entry rows
+     * @param context   decode an object to deal with lines, delimiter and options
+     * @return true when the blank line terminates the object
+     */
+    private static boolean shouldStopAtBlankLine(final Map<String, Object> result, final int entryDepth,
+            final DecodeContext context) {
+        final int nextNonBlank = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
+        if (nextNonBlank >= context.lines.length) {
+            return true; // EOF - terminate
+        }
+        final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlank], context);
+        if (nextDepth <= entryDepth - 1) {
+            return true; // outside the object - terminate
+        }
+        // Spec §12: blank lines between the header and the first entry
+        // row are accepted; later blank lines inside the object are a
+        // defect in strict mode.
+        if (!result.isEmpty() && context.options.strict()) {
+            throw new IllegalArgumentException(
+                "Blank line inside keyed object at line " + (context.currentLine + 1));
+        }
+        return false;
+    }
+
+    /**
+     * How the next line of a keyed object is handled by the parse loop.
+     */
+    private enum LineHandling { STOP, SKIP, PROCESS }
+
+    /**
+     * Classifies the current line of a keyed tabular object: terminates the
+     * object at blank-line/EOF boundaries or shallower lines, skips blank and
+     * over-indented lines (§14.2), and passes entry rows through.
+     *
+     * @param result     the rows parsed so far
+     * @param entryDepth the depth of the entry rows
+     * @param context    decode an object to deal with lines, delimiter and options
+     * @return the handling to apply to the current line
+     */
+    private static LineHandling handleNextLine(final Map<String, Object> result, final int entryDepth,
+            final DecodeContext context) {
+        final String line = context.lines[context.currentLine];
+
+        if (DecodeHelper.isBlankLine(line)) {
+            if (shouldStopAtBlankLine(result, entryDepth, context)) {
+                return LineHandling.STOP;
+            }
+            context.currentLine++;
+            return LineHandling.SKIP;
+        }
+
+        final int lineDepth = DecodeHelper.getDepth(line, context);
+        if (lineDepth < entryDepth) {
+            return LineHandling.STOP;
+        }
+        if (lineDepth > entryDepth) {
+            DecodeHelper.processOverIndentedLine(context, lineDepth);
+            return LineHandling.SKIP;
+        }
+        return LineHandling.PROCESS;
+    }
+
+    /**
+     * Parses one entry row of a keyed tabular object, splitting the row at
+     * its first unquoted colon (§9.5). A row without a colon is rejected in
+     * strict mode; otherwise the caller skips it.
+     *
+     * @param line          the entry row line
+     * @param entryDepth    the depth of the entry rows
+     * @param fields        the declared field nodes
+     * @param arrayDelimiter the active delimiter
+     * @param result        the entry-keyed result map
+     * @param context       decode an object to deal with lines, delimiter and options
+     */
+    private static void processEntryLine(final String line, final int entryDepth,
+            final List<TabularArrayDecoder.FieldNode> fields, final Delimiter arrayDelimiter,
+            final Map<String, Object> result, final DecodeContext context) {
+        final String entryContent = line.substring(entryDepth * context.options.indent());
+        // Spec §9.5: an entry row splits at its first unquoted colon; the
+        // remainder is parsed as a tabular row with the active delimiter.
+        final int colonIdx = DecodeHelper.findUnquotedColon(entryContent);
+        if (colonIdx <= 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Missing colon in keyed entry at line " + (context.currentLine + 1));
+            }
+            return;
+        }
+
+        final String entryKey = StringEscaper.unescape(entryContent.substring(0, colonIdx).trim());
+        final Map<String, Object> entry = TabularArrayDecoder.parseTabularRow(
+            entryContent.substring(colonIdx + 1), fields, arrayDelimiter, context);
+
+        DecodeHelper.checkDuplicateKey(result, entryKey, context);
+        result.put(entryKey, entry);
     }
 
     private static Delimiter delimiterFromChar(@Nullable final Character delimiter,

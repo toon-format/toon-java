@@ -286,4 +286,20 @@ public final class DecodeHelper {
         }
     }
 
+    /**
+     * Skips or rejects an over-indented line that jumps past the expected
+     * depth (§14.2).
+     *
+     * @param context   decode an object to deal with lines, delimiter, and options
+     * @param lineDepth the depth of the over-indented line
+     * @throws IllegalArgumentException in strict mode
+     */
+    static void processOverIndentedLine(final DecodeContext context, final int lineDepth) {
+        if (context.options.strict()) {
+            throw new IllegalArgumentException(
+                "Over-indented line at " + (context.currentLine + 1) + " (depth " + lineDepth + ")");
+        }
+        context.currentLine++;
+    }
+
 }

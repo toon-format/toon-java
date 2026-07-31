@@ -324,6 +324,72 @@ class ObjectDecoderTest {
             assertInstanceOf(Map.class, parseFieldValue);
             assertEquals(offset + 1, context.currentLine);
         }
+
+        @Test
+        @DisplayName("GIVEN inline value + deeper line + strict => over-indented exception")
+        void parseFieldValue_inlineValueWithDeeperLineThrowsInStrictMode() {
+            // Given
+            setUpContext("""
+                key: 15
+                  orphan
+                """);
+            context.currentLine = 0;
+
+            // When / Then
+            final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> ObjectDecoder.parseFieldValue("15", 0, context));
+            assertTrue(ex.getMessage().contains("Over-indented line"));
+        }
+
+        @Test
+        @DisplayName("GIVEN inline value + deeper line + lenient => value kept, orphan lines skipped")
+        void parseFieldValue_inlineValueWithDeeperLineSkippedInLenientMode() {
+            // Given
+            setUpContext("""
+                key: 15
+                  orphan
+                """);
+            context.options = DecodeOptions.withStrict(false);
+            context.currentLine = 0;
+
+            // When
+            final Object parseFieldValue = ObjectDecoder.parseFieldValue("15", 0, context);
+
+            // Then
+            assertEquals(SCALAR_PARSE_VALUE, parseFieldValue);
+            assertEquals(2, context.currentLine);
+        }
+
+        @Test
+        @DisplayName("GIVEN bracket pair value => parsed as string, not empty list")
+        void parseFieldValue_bracketPairStaysString() {
+            // Given
+            setUpContext("key: []");
+            context.currentLine = 0;
+
+            // When
+            final Object parseFieldValue = ObjectDecoder.parseFieldValue("[]", 0, context);
+
+            // Then
+            assertEquals("[]", parseFieldValue);
+            assertEquals(1, context.currentLine);
+        }
+
+        @Test
+        @DisplayName("GIVEN blank value on last line => empty map")
+        void parseFieldValue_blankValueOnLastLineBecomesEmptyMap() {
+            // Given
+            setUpContext("key: ");
+            context.currentLine = 0;
+
+            // When
+            final Object parseFieldValue = ObjectDecoder.parseFieldValue("", 0, context);
+
+            // Then
+            assertInstanceOf(Map.class, parseFieldValue);
+            assertTrue(((Map<?, ?>) parseFieldValue).isEmpty());
+            assertEquals(1, context.currentLine);
+        }
     }
 
     @Nested

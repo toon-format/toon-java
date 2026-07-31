@@ -261,6 +261,23 @@ class KeyDecoderTest {
     }
 
     @Test
+    void parseKeyValue_givenBracketPairValue_whenParsed_thenEmptyList() throws Exception {
+        // Given
+        final DecodeContext context = new DecodeContext();
+        context.lines = new String[]{"key: []"};
+        context.currentLine = -1;
+
+        // When
+        final Object result = invokePrivateStatic("parseKeyValue",
+                new Class[]{String.class, int.class, DecodeContext.class}, "[]", 0, context);
+
+        // Then
+        assertInstanceOf(List.class, result, "Expected an empty list for [] value");
+        assertTrue(((List<?>) result).isEmpty(), "List should be empty");
+        assertEquals(0, context.currentLine);
+    }
+
+    @Test
     void testExpandPathIntoMapCalledWhenShouldExpandKeyTrue() {
         // Given
         final Map<String, Object> item = new LinkedHashMap<>();

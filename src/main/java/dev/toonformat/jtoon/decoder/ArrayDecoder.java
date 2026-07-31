@@ -118,60 +118,20 @@ public final class ArrayDecoder {
         }
 
         if (arrayMatcher.find()) {
-            // In strict mode, reject bracket lengths with leading zeros (e.g. [03])
-            // unless the length is exactly "0".
-            if (context.options.strict()) {
-                final String lengthStr = arrayMatcher.group(2);
-                if (lengthStr.length() > 1 && lengthStr.charAt(0) == '0') {
-                    throw new IllegalArgumentException(
-                        "Invalid array length with leading zeros: [" + lengthStr + "]");
-                }
-            }
+            rejectLeadingZeroLength(arrayMatcher, context.options.strict());
             final int headerEndIdx = arrayMatcher.end();
             final String afterHeader = header.substring(headerEndIdx).trim();
 
-            if (afterHeader.startsWith(COLON)) {
-                final String inlineContent = afterHeader.substring(1).trim();
-
-                if (!inlineContent.isEmpty()) {
-                    final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter,
-                        context.options.maxArraySize(), context.options.maxStringLength());
-                    validateArrayLength(header, result.size(), context.options.maxArraySize(),
-                        context.options.strict());
-                    context.currentLine++;
-                    return Collections.unmodifiableList(result);
-                }
+            if (hasInlineContent(afterHeader)) {
+                return parseInlineArray(afterHeader, header, arrayDelimiter, context);
             }
 
             // Spec §12: blank lines between the header and the first item are
             // accepted even in strict mode
-            do {
-                context.currentLine++;
-            } while (context.currentLine < context.lines.length
-                && DecodeHelper.isBlankLine(context.lines[context.currentLine]));
+            skipBlankLines(context);
+
             if (context.currentLine < context.lines.length) {
-                final String nextLine = context.lines[context.currentLine];
-                final int nextDepth = DecodeHelper.getDepth(nextLine, context);
-                final String nextContent = nextLine.substring(nextDepth * context.options.indent());
-
-                if (nextDepth <= depth) {
-                    // The next line is not a child of this array,
-                    // the array is empty
-                    validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
-                    return Collections.emptyList();
-                }
-
-                if (LIST_ITEM_MARKER.equals(nextContent) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
-                    context.currentLine--;
-                    return Collections.unmodifiableList(parseListArray(depth, header, context));
-                } else {
-                    context.currentLine++;
-                    final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
-                        context.options.maxArraySize(), context.options.maxStringLength());
-                    validateArrayLength(header, result.size(), context.options.maxArraySize(),
-                        context.options.strict());
-                    return Collections.unmodifiableList(result);
-                }
+                return parseArrayDataLine(header, depth, arrayDelimiter, context);
             }
             validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
             return Collections.unmodifiableList(new ArrayList<>());
@@ -188,6 +148,99 @@ public final class ArrayDecoder {
         }
         context.currentLine++;
         return Collections.emptyList();
+    }
+
+    /**
+     * In strict mode, rejects bracket lengths with leading zeros (e.g. [03])
+     * unless the length is exactly "0".
+     *
+     * @param arrayMatcher the matched array header
+     * @param strict       strict mode flag
+     */
+    private static void rejectLeadingZeroLength(final Matcher arrayMatcher, final boolean strict) {
+        if (strict) {
+            final String lengthStr = arrayMatcher.group(2);
+            if (lengthStr.length() > 1 && lengthStr.charAt(0) == '0') {
+                throw new IllegalArgumentException(
+                    "Invalid array length with leading zeros: [" + lengthStr + "]");
+            }
+        }
+    }
+
+    /**
+     * Returns whether the header text past the bracket segment declares
+     * non-empty inline values ({@code header: v1,v2}).
+     *
+     * @param afterHeader the header text past the bracket segment
+     * @return true when inline values follow the colon
+     */
+    private static boolean hasInlineContent(final String afterHeader) {
+        return afterHeader.startsWith(COLON) && !afterHeader.substring(1).isBlank();
+    }
+
+    /**
+     * Parses the inline values of an array header ({@code header: v1,v2}).
+     *
+     * @param afterHeader    the header text past the bracket segment
+     * @param header         the full header string
+     * @param arrayDelimiter array delimiter
+     * @param context        decode context
+     * @return the parsed values
+     */
+    private static List<Object> parseInlineArray(final String afterHeader, final String header,
+            final Delimiter arrayDelimiter, final DecodeContext context) {
+        final String inlineContent = afterHeader.substring(1).trim();
+        final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter,
+            context.options.maxArraySize(), context.options.maxStringLength());
+        validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
+        context.currentLine++;
+        return Collections.unmodifiableList(result);
+    }
+
+    /**
+     * Advances the current line past blank lines following the header.
+     *
+     * @param context decode context
+     */
+    private static void skipBlankLines(final DecodeContext context) {
+        do {
+            context.currentLine++;
+        } while (context.currentLine < context.lines.length
+            && DecodeHelper.isBlankLine(context.lines[context.currentLine]));
+    }
+
+    /**
+     * Parses the first data line below an array header, routing list items to
+     * the list parser and any other content to the value splitter.
+     *
+     * @param header         the full header string
+     * @param depth          depth of the array
+     * @param arrayDelimiter array delimiter
+     * @param context        decode context
+     * @return the parsed array values
+     */
+    private static List<Object> parseArrayDataLine(final String header, final int depth,
+            final Delimiter arrayDelimiter, final DecodeContext context) {
+        final String nextLine = context.lines[context.currentLine];
+        final int nextDepth = DecodeHelper.getDepth(nextLine, context);
+        final String nextContent = nextLine.substring(nextDepth * context.options.indent());
+
+        if (nextDepth <= depth) {
+            // The next line is not a child of this array, the array is empty
+            validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
+            return Collections.emptyList();
+        }
+
+        if (LIST_ITEM_MARKER.equals(nextContent) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
+            context.currentLine--;
+            return Collections.unmodifiableList(parseListArray(depth, header, context));
+        }
+
+        context.currentLine++;
+        final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
+            context.options.maxArraySize(), context.options.maxStringLength());
+        validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
+        return Collections.unmodifiableList(result);
     }
 
     /**
@@ -286,10 +339,7 @@ public final class ArrayDecoder {
                 final String value = stringBuilder.toString().trim();
                 result.add(value);
                 stringBuilder.setLength(0);
-                // Skip whitespace after delimiter
-                do {
-                    i++;
-                } while (i < input.length() && Character.isWhitespace(input.charAt(i)));
+                i = skipWhitespace(input, i + 1);
             } else {
                 stringBuilder.append(currentChar);
                 i++;
@@ -302,6 +352,22 @@ public final class ArrayDecoder {
         }
 
         return result;
+    }
+
+    /**
+     * Returns the index of the first non-whitespace character at or after
+     * the given position.
+     *
+     * @param input the input string
+     * @param start the position to scan from
+     * @return the first non-whitespace index, or the input length
+     */
+    private static int skipWhitespace(final String input, final int start) {
+        int i = start;
+        while (i < input.length() && Character.isWhitespace(input.charAt(i))) {
+            i++;
+        }
+        return i;
     }
 
     /**

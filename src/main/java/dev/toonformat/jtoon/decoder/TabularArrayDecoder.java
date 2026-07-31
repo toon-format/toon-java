@@ -150,28 +150,12 @@ public final class TabularArrayDecoder {
                 inQuotes = !inQuotes;
                 i++;
             } else if (!inQuotes && c == '{') {
-                final List<FieldNode> children = new ArrayList<>();
-                final int next = parseFieldList(fieldList, i + 1, arrayDelimiter, context, children);
-                if (next < 0) {
-                    if (context.options.strict()) {
-                        throw new IllegalArgumentException(
-                            "Unbalanced braces in tabular header field list");
-                    }
-                    i = fieldList.length();
-                    continue;
-                }
-                result.add(new FieldNode(StringEscaper.unescape(name.toString().trim()), children));
-                name.setLength(0);
-                i = next;
+                i = parseNestedFieldGroup(fieldList, i, arrayDelimiter, context, result, name);
             } else if (!inQuotes && c == '}') {
                 flushField(result, name);
                 return i + 1;
             } else if (!inQuotes && c == delimiterChar) {
-                flushField(result, name);
-                i++;
-                while (i < fieldList.length() && Character.isWhitespace(fieldList.charAt(i))) {
-                    i++;
-                }
+                i = skipFieldDelimiter(fieldList, i, result, name);
             } else {
                 name.append(c);
                 i++;
@@ -179,6 +163,57 @@ public final class TabularArrayDecoder {
         }
         flushField(result, name);
         return -1;
+    }
+
+    /**
+     * Parses a nested field group opened at the given brace, recursing into
+     * {@link #parseFieldList}. Unbalanced groups are rejected in strict mode
+     * and skipped in lenient mode.
+     *
+     * @param fieldList      the field list string to parse
+     * @param braceIdx       the index of the opening brace
+     * @param arrayDelimiter the type of delimiter used in the array
+     * @param context        decode an object to deal with lines, delimiter and options
+     * @param result         the list to add the parsed group field to
+     * @param name           the buffered group field name
+     * @return the index just past the closing brace, or the end of the string
+     *         when the group is unbalanced and lenient mode skips it
+     */
+    private static int parseNestedFieldGroup(final String fieldList, final int braceIdx,
+            final Delimiter arrayDelimiter, final DecodeContext context, final List<FieldNode> result,
+            final StringBuilder name) {
+        final List<FieldNode> children = new ArrayList<>();
+        final int next = parseFieldList(fieldList, braceIdx + 1, arrayDelimiter, context, children);
+        if (next < 0) {
+            if (context.options.strict()) {
+                throw new IllegalArgumentException(
+                    "Unbalanced braces in tabular header field list");
+            }
+            return fieldList.length();
+        }
+        result.add(new FieldNode(StringEscaper.unescape(name.toString().trim()), children));
+        name.setLength(0);
+        return next;
+    }
+
+    /**
+     * Flushes the buffered field and skips the delimiter together with any
+     * following whitespace.
+     *
+     * @param fieldList    the field list string to parse
+     * @param delimiterIdx the index of the delimiter character
+     * @param result       the list to add the flushed field to
+     * @param name         the buffered field name
+     * @return the index just past the delimiter and trailing whitespace
+     */
+    private static int skipFieldDelimiter(final String fieldList, final int delimiterIdx,
+            final List<FieldNode> result, final StringBuilder name) {
+        flushField(result, name);
+        int i = delimiterIdx + 1;
+        while (i < fieldList.length() && Character.isWhitespace(fieldList.charAt(i))) {
+            i++;
+        }
+        return i;
     }
 
     /**

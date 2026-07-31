@@ -99,9 +99,18 @@ public final class PrimitiveDecoder {
             return StringEscaper.unescape(value);
         }
 
-        // Check for forbidden leading zeros (treat as string, except for "0", "-0", "0.0", etc.)
-        // Per spec §4: tokens like "05", "0001", "-05", "-0001" must be treated as strings.
-        // But "0.5", "0e1", "-0.5", "-0e1" are valid numbers.
+        return parseNumericToken(value);
+    }
+
+    /**
+     * Parses an unquoted token as a number. Tokens failing the normative
+     * number grammar gate or carrying forbidden leading zeros decode as
+     * strings, without delegating to a host-language number parser (§4).
+     *
+     * @param value the token to parse
+     * @return the parsed number, or the token as string
+     */
+    private static Object parseNumericToken(final String value) {
         final String trimmed = value.trim();
 
         // Normative number grammar gate (§4): tokens that do not match decode as
@@ -110,42 +119,73 @@ public final class PrimitiveDecoder {
             return value;
         }
 
-        if (trimmed.length() > 1) {
-            // Match forbidden leading zeros: starts with optional '-', then one or more zeros,
-            // then another digit (0-9) — meaning it's a multi-digit number with leading zeros.
-            // Exclude cases where the zero is part of a fractional/exponent form like "0.5", "0e1".
-            final boolean hasLeadingZeros = trimmed.matches("^-?0+\\d.*");
-            // But we must NOT match "0.5" style numbers (single zero integer part)
-            final boolean isLikelyFractionalOrExponent = trimmed.matches("^-?0[.eE].*");
-            if (hasLeadingZeros && !isLikelyFractionalOrExponent) {
-                return value; // treat as string
-            }
+        if (hasForbiddenLeadingZeros(trimmed)) {
+            return value; // treat as string
         }
 
         // Try parsing as number
         try {
             // Check if it contains exponent notation or decimal point
-            if (value.contains("e") || value.contains("E") || value.contains(DOT)) {
-                final double parsed = Double.parseDouble(value);
-                // Handle negative zero - Java doesn't distinguish, but spec says it should be 0
-                if (parsed == 0.0) {
-                    return 0L;
-                }
-                // Check if the result is a whole number - if so, return as Long
-                if (!Double.isInfinite(parsed)
-                    && parsed >= Long.MIN_VALUE
-                    && parsed <= Long.MAX_VALUE
-                    && parsed == Math.floor(parsed)) {
-                    return (long) parsed;
-                }
-
-                return parsed;
-            } else {
-                return Long.parseLong(value);
+            if (isFloatingPointToken(value)) {
+                return normalizeFloatingPoint(Double.parseDouble(value));
             }
+            return Long.parseLong(value);
         } catch (NumberFormatException e) {
             return value;
         }
+    }
+
+    /**
+     * Per spec §4: tokens like "05", "0001", "-05", "-0001" must be treated
+     * as strings. But "0.5", "0e1", "-0.5", "-0e1" are valid numbers.
+     *
+     * @param trimmed the trimmed token to check
+     * @return true when the token carries forbidden leading zeros
+     */
+    private static boolean hasForbiddenLeadingZeros(final String trimmed) {
+        if (trimmed.length() <= 1) {
+            return false;
+        }
+        // Match forbidden leading zeros: starts with optional '-', then one or more zeros,
+        // then another digit (0-9) — meaning it's a multi-digit number with leading zeros.
+        // Exclude cases where the zero is part of a fractional/exponent form like "0.5", "0e1".
+        final boolean hasLeadingZeros = trimmed.matches("^-?0+\\d.*");
+        // But we must NOT match "0.5" style numbers (single zero integer part)
+        final boolean isLikelyFractionalOrExponent = trimmed.matches("^-?0[.eE].*");
+        return hasLeadingZeros && !isLikelyFractionalOrExponent;
+    }
+
+    /**
+     * Returns whether the token contains exponent notation or a decimal point.
+     *
+     * @param value the token to check
+     * @return true for floating point tokens
+     */
+    private static boolean isFloatingPointToken(final String value) {
+        return value.contains("e") || value.contains("E") || value.contains(DOT);
+    }
+
+    /**
+     * Normalizes a parsed floating point value: negative zero collapses to
+     * zero, and whole numbers within long range are returned as Long.
+     *
+     * @param parsed the parsed double value
+     * @return the normalized number
+     */
+    private static Object normalizeFloatingPoint(final double parsed) {
+        // Handle negative zero - Java doesn't distinguish, but spec says it should be 0
+        if (parsed == 0.0) {
+            return 0L;
+        }
+        // Check if the result is a whole number - if so, return as Long
+        if (!Double.isInfinite(parsed)
+            && parsed >= Long.MIN_VALUE
+            && parsed <= Long.MAX_VALUE
+            && parsed == Math.floor(parsed)) {
+            return (long) parsed;
+        }
+
+        return parsed;
     }
 
     /**

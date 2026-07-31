@@ -225,35 +225,7 @@ public final class KeyDecoder {
      * @return the parsed value (Map, List, or primitive)
      */
     private static Object parseKeyValue(final String value, final int depth, final DecodeContext context) {
-        // Check if the next line is nested (deeper indentation)
-        if (context.currentLine + 1 < context.lines.length) {
-            final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
-            if (nextDepth > depth) {
-                if (!value.isBlank()) {
-                    // Inline value: the field does not open a scope, so a deeper
-                    // line belongs to no scope at all (§14.2)
-                    if (context.options.strict()) {
-                        throw new IllegalArgumentException(
-                            "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
-                    }
-                    // Non-strict: skip the orphaned lines and keep the inline value
-                    do {
-                        context.currentLine++;
-                    } while (context.currentLine < context.lines.length
-                        && DecodeHelper.getDepth(context.lines[context.currentLine], context) > depth);
-                    return parseScalarValue(value, context);
-                }
-                context.currentLine++;
-                // parseNestedObject manages the currentLine, so we don't increment here
-                return ObjectDecoder.parseNestedObject(depth, context);
-            } else {
-                context.currentLine++;
-                return parseScalarValue(value, context);
-            }
-        } else {
-            context.currentLine++;
-            return parseScalarValue(value, context);
-        }
+        return ObjectDecoder.parseValueWithNestedScope(value, depth, context, KeyDecoder::parseScalarValue);
     }
 
     private static Object parseScalarValue(final String value, final DecodeContext context) {
