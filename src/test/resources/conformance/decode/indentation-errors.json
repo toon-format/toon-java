@@ -1,43 +1,43 @@
 {
-  "version": "1.4",
+  "version": "4.0",
   "category": "decode",
-  "description": "Strict mode indentation validation - non-multiple indentation, tab characters, custom indent sizes",
+  "description": "Strict mode indentation validation – non-multiple indentation, tab characters, custom indentSizes",
   "tests": [
     {
-      "name": "throws on object field with non-multiple indentation (3 spaces with indent=2)",
+      "name": "throws on object field with non-multiple indentation (3 spaces with indentSize 2)",
       "input": "a:\n   b: 1",
       "expected": null,
       "shouldError": true,
       "options": {
-        "indent": 2,
+        "indentSize": 2,
         "strict": true
       },
       "specSection": "14.2"
     },
     {
-      "name": "throws on list item with non-multiple indentation (3 spaces with indent=2)",
+      "name": "throws on list item with non-multiple indentation (3 spaces with indentSize 2)",
       "input": "items[2]:\n   - id: 1\n   - id: 2",
       "expected": null,
       "shouldError": true,
       "options": {
-        "indent": 2,
+        "indentSize": 2,
         "strict": true
       },
       "specSection": "14.2"
     },
     {
-      "name": "throws on non-multiple indentation with custom indent=4 (3 spaces)",
+      "name": "throws on non-multiple indentation with custom indentSize 4 (3 spaces)",
       "input": "a:\n   b: 1",
       "expected": null,
       "shouldError": true,
       "options": {
-        "indent": 4,
+        "indentSize": 4,
         "strict": true
       },
       "specSection": "14.2"
     },
     {
-      "name": "accepts correct indentation with custom indent size (4 spaces with indent=4)",
+      "name": "accepts correct indentation with custom indentSize (4 spaces with indentSize 4)",
       "input": "a:\n    b: 1",
       "expected": {
         "a": {
@@ -45,7 +45,7 @@
         }
       },
       "options": {
-        "indent": 4,
+        "indentSize": 4,
         "strict": true
       },
       "specSection": "12"
@@ -122,7 +122,7 @@
         }
       },
       "options": {
-        "indent": 2,
+        "indentSize": 2,
         "strict": false
       },
       "specSection": "12"
@@ -138,10 +138,64 @@
         }
       },
       "options": {
-        "indent": 2,
+        "indentSize": 2,
         "strict": false
       },
       "specSection": "12"
+    },
+    {
+      "name": "throws on depth jump of more than one level",
+      "input": "a:\n    b: 1",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "Four leading spaces are a multiple of indentSize 2, but depth 2 directly under depth 0 skips a level"
+    },
+    {
+      "name": "throws on depth jump inside a nested object",
+      "input": "a:\n  b:\n      c: 1",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2"
+    },
+    {
+      "name": "throws on over-indented line after a primitive field",
+      "input": "a: 1\n    b: 2",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "A primitive field opens no scope, so the depth-2 line belongs to none and must not be silently discarded"
+    },
+    {
+      "name": "throws on a line indented one level under a primitive field",
+      "input": "a: 1\n  b: 2",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "Even a single extra level is over-indentation when the preceding line did not open a scope"
+    },
+    {
+      "name": "throws on over-indented line inside a nested object",
+      "input": "a:\n  b: 1\n      c: 2",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "The depth-3 line follows a primitive field at depth 1; it belongs to no scope"
+    },
+    {
+      "name": "throws on over-indented line after tabular rows",
+      "input": "u[1]{a}:\n  1\n    junk: 9",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2"
+    },
+    {
+      "name": "throws on orphan scalar line under a primitive field",
+      "input": "a: 1\n  hello",
+      "expected": null,
+      "shouldError": true,
+      "specSection": "14.2",
+      "note": "A scalar line is valid only at root primitive position"
     }
   ]
 }

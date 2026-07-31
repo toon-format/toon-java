@@ -1,7 +1,7 @@
 {
-  "version": "1.4",
+  "version": "4.0",
   "category": "encode",
-  "description": "Object encoding - simple objects, nested objects, key encoding",
+  "description": "Object encoding – simple objects, nested objects, key encoding",
   "tests": [
     {
       "name": "preserves key order in objects",
@@ -173,6 +173,23 @@
       "specSection": "7.3"
     },
     {
+      "name": "quotes non-ASCII key",
+      "input": {
+        "café": 1
+      },
+      "expected": "\"café\": 1",
+      "specSection": "7.3",
+      "note": "The unquoted-key pattern is ASCII-only, so every non-ASCII key is quoted"
+    },
+    {
+      "name": "quotes CJK key",
+      "input": {
+        "名前": "x"
+      },
+      "expected": "\"名前\": x",
+      "specSection": "7.3"
+    },
+    {
       "name": "escapes newline in key",
       "input": {
         "line\nbreak": 1
@@ -202,8 +219,7 @@
         "a\u0004b": 1
       },
       "expected": "\"a\\u0004b\": 1",
-      "specSection": "7.1",
-      "minSpecVersion": "3.1"
+      "specSection": "7.1"
     },
     {
       "name": "escapes U+001F control character in key via \\uXXXX",
@@ -211,8 +227,7 @@
         "x\u001fy": 2
       },
       "expected": "\"x\\u001fy\": 2",
-      "specSection": "7.1",
-      "minSpecVersion": "3.1"
+      "specSection": "7.1"
     },
     {
       "name": "encodes deeply nested objects",
@@ -233,6 +248,50 @@
       },
       "expected": "user:",
       "specSection": "8"
+    },
+    {
+      "name": "encodes __proto__ own property as an ordinary key",
+      "input": {
+        "__proto__": "polluted",
+        "safe": true
+      },
+      "expected": "__proto__: polluted\nsafe: true",
+      "specSection": "15",
+      "note": "No key has special meaning, so the encoder emits prototype-named own entries like any other (§8)"
+    },
+    {
+      "name": "encodes constructor and prototype own properties as ordinary keys",
+      "input": {
+        "constructor": 1,
+        "prototype": 2
+      },
+      "expected": "constructor: 1\nprototype: 2",
+      "specSection": "15"
+    },
+    {
+      "name": "encodes __proto__ as a tabular field name",
+      "input": {
+        "rows": [
+          {
+            "__proto__": "a",
+            "x": 1
+          },
+          {
+            "__proto__": "b",
+            "x": 2
+          }
+        ]
+      },
+      "expected": "rows[2]{__proto__,x}:\n  a,1\n  b,2",
+      "specSection": "15"
+    },
+    {
+      "name": "quotes hash-leading string in object field value",
+      "input": {
+        "note": "#x"
+      },
+      "expected": "note: \"#x\"",
+      "specSection": "7.2"
     }
   ]
 }

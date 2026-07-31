@@ -1,7 +1,7 @@
 {
-  "version": "3.1",
+  "version": "4.0",
   "category": "decode",
-  "description": "Object decoding - fields, nested objects, key parsing, §6 fall-through (non-strict), and §14.4 duplicate-key LWW",
+  "description": "Object decoding – fields, nested objects, key parsing, §6 fall-through (non-strict), and §14.3 duplicate-key LWW",
   "tests": [
     {
       "name": "parses objects with primitive values",
@@ -47,8 +47,7 @@
       "options": {
         "strict": false
       },
-      "specSection": "14.4",
-      "minSpecVersion": "3.2"
+      "specSection": "14.3"
     },
     {
       "name": "parses quoted object value with colon",
@@ -72,7 +71,7 @@
       "expected": {
         "text": "line1\nline2"
       },
-      "specSection": "8"
+      "specSection": "7.1"
     },
     {
       "name": "parses quoted object value with escaped quotes",
@@ -80,7 +79,7 @@
       "expected": {
         "text": "say \"hello\""
       },
-      "specSection": "8"
+      "specSection": "7.1"
     },
     {
       "name": "parses quoted object value with leading/trailing spaces",
@@ -211,6 +210,18 @@
       "note": "Non-whitespace [bar] between ] and : prevents array header interpretation; non-strict fall-through produces a literal key not constrained by §7.3"
     },
     {
+      "name": "treats bracket segment without a length as literal key (non-strict)",
+      "input": "key[]: 1,2",
+      "options": {
+        "strict": false
+      },
+      "expected": {
+        "key[]": "1,2"
+      },
+      "specSection": "6",
+      "note": "An absent length prevents header interpretation; non-strict fall-through produces a literal key"
+    },
+    {
       "name": "treats non-integer bracket content as literal key (non-strict)",
       "input": "foo[bar][1]: 20",
       "options": {
@@ -320,7 +331,7 @@
       "expected": {
         "line\nbreak": 1
       },
-      "specSection": "8"
+      "specSection": "7.1"
     },
     {
       "name": "unescapes tab in key",
@@ -328,7 +339,15 @@
       "expected": {
         "tab\there": 2
       },
-      "specSection": "8"
+      "specSection": "7.1"
+    },
+    {
+      "name": "unescapes tab in key immediately followed by a colon",
+      "input": "\"\\t:x\": v",
+      "expected": {
+        "\t:x": "v"
+      },
+      "specSection": "7.1"
     },
     {
       "name": "unescapes tab in key immediately followed by a colon",
@@ -344,7 +363,7 @@
       "expected": {
         "he said \"hi\"": 1
       },
-      "specSection": "8"
+      "specSection": "7.1"
     },
     {
       "name": "parses deeply nested objects with indentation",
@@ -369,8 +388,7 @@
       "options": {
         "strict": false
       },
-      "specSection": "14.4",
-      "minSpecVersion": "3.2"
+      "specSection": "14.3"
     },
     {
       "name": "applies LWW for duplicate keys within a list-item object in non-strict mode",
@@ -385,8 +403,120 @@
       "options": {
         "strict": false
       },
-      "specSection": "14.4",
-      "minSpecVersion": "3.2"
+      "specSection": "14.3"
+    },
+    {
+      "name": "accepts unquoted key outside the encoder key pattern (hyphen)",
+      "input": "foo-bar: 1",
+      "expected": {
+        "foo-bar": 1
+      },
+      "specSection": "7.4",
+      "note": "§7.3 constrains encoder output; decoders accept any token before the first unquoted colon as a literal key"
+    },
+    {
+      "name": "accepts unquoted key outside the encoder key pattern (leading digit)",
+      "input": "2key: x",
+      "expected": {
+        "2key": "x"
+      },
+      "specSection": "7.4"
+    },
+    {
+      "name": "accepts unquoted hyphen-leading value in strict mode",
+      "input": "k: -x",
+      "expected": {
+        "k": "-x"
+      },
+      "specSection": "7.4",
+      "note": "Encoders must quote hyphen-leading strings (§7.2); decoders accept the unquoted form as data"
+    },
+    {
+      "name": "accepts unquoted colon-containing value in strict mode",
+      "input": "k: b:c",
+      "expected": {
+        "k": "b:c"
+      },
+      "specSection": "7.4",
+      "note": "The first unquoted colon ends the key; the entire post-colon token is the value (§11.2)"
+    },
+    {
+      "name": "materializes __proto__ as an ordinary own key",
+      "input": "__proto__: polluted",
+      "expected": {
+        "__proto__": "polluted"
+      },
+      "specSection": "15",
+      "note": "Decoding MUST NOT mutate the host object model, so the decoded object carries __proto__ as an own entry"
+    },
+    {
+      "name": "materializes constructor and prototype as ordinary own keys",
+      "input": "constructor: 1\nprototype: 2",
+      "expected": {
+        "constructor": 1,
+        "prototype": 2
+      },
+      "specSection": "15"
+    },
+    {
+      "name": "materializes __proto__ opening a nested object as an ordinary own key",
+      "input": "__proto__:\n  admin: true",
+      "expected": {
+        "__proto__": {
+          "admin": true
+        }
+      },
+      "specSection": "15",
+      "note": "The classic pollution shape – the nested object becomes an own entry, never the prototype"
+    },
+    {
+      "name": "materializes quoted __proto__ key as an ordinary own key",
+      "input": "\"__proto__\": x",
+      "expected": {
+        "__proto__": "x"
+      },
+      "specSection": "15"
+    },
+    {
+      "name": "materializes __proto__ tabular field name as ordinary own keys",
+      "input": "rows[2]{__proto__,x}:\n  a,1\n  b,2",
+      "expected": {
+        "rows": [
+          {
+            "__proto__": "a",
+            "x": 1
+          },
+          {
+            "__proto__": "b",
+            "x": 2
+          }
+        ]
+      },
+      "specSection": "15"
+    },
+    {
+      "name": "falls through to a key-value line when whitespace precedes the bracket segment",
+      "input": "foo [2]: bar,baz",
+      "expected": {
+        "foo [2]": "bar,baz"
+      },
+      "options": {
+        "strict": false
+      },
+      "specSection": "5.2",
+      "minSpecVersion": "4.1"
+    },
+    {
+      "name": "accepts a header key outside the encoder unquoted-key pattern",
+      "input": "foo-bar[2]: 1,2",
+      "expected": {
+        "foo-bar": [
+          1,
+          2
+        ]
+      },
+      "specSection": "7.4",
+      "minSpecVersion": "4.1"
     }
   ]
 }
