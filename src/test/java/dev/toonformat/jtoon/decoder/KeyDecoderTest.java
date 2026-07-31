@@ -153,7 +153,7 @@ class KeyDecoderTest {
     void testCallsExpandPathIntoMapWhenShouldExpandKeyTrue() {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
-                final String content = "foo.bar[#0]:";
+        final String content = "foo.bar[#0]:";
         final int parentDepth = 0;
 
         final DecodeContext context = new DecodeContext();
@@ -180,7 +180,7 @@ class KeyDecoderTest {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
         final String content = "tags[3]: a, b, c";
-                final DecodeContext context = new DecodeContext();
+        final DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
                 DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
@@ -200,7 +200,7 @@ class KeyDecoderTest {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
         final String content = "user.tags[2]: dev, test";
-                final DecodeContext context = new DecodeContext();
+        final DecodeContext context = new DecodeContext();
         context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.SAFE,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
                 DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
@@ -232,7 +232,8 @@ class KeyDecoderTest {
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> KeyDecoder.processKeyedArrayLine(result, content, Headers.matchKeyedArrayHeader(content), 0, context));
+            () -> KeyDecoder.processKeyedArrayLine(result, content,
+                Headers.matchKeyedArrayHeader(content), 0, context));
         assertTrue(ex.getMessage().contains("Path expansion conflict"));
     }
 

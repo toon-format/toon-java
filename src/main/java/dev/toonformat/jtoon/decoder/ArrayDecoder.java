@@ -20,6 +20,7 @@ import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 public final class ArrayDecoder {
 
     private static final int DELIMITER_GROUP_INDEX = 3;
+    private static final int FIELDS_GROUP_INDEX = 4;
 
     private ArrayDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -41,8 +42,8 @@ public final class ArrayDecoder {
         final char declared = matcher.group(DELIMITER_GROUP_INDEX).charAt(0);
         boolean inQuotes = false;
         boolean escaped = false;
-        for (int i = 0; i < matcher.group(4).length(); i++) {
-            final char c = matcher.group(4).charAt(i);
+        for (int i = 0; i < matcher.group(FIELDS_GROUP_INDEX).length(); i++) {
+            final char c = matcher.group(FIELDS_GROUP_INDEX).charAt(i);
             if (escaped) {
                 escaped = false;
             } else if (c == '\\') {
@@ -161,7 +162,7 @@ public final class ArrayDecoder {
                     return Collections.emptyList();
                 }
 
-                if (nextContent.equals(LIST_ITEM_MARKER) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
+                if (LIST_ITEM_MARKER.equals(nextContent) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
                     context.currentLine--;
                     return Collections.unmodifiableList(parseListArray(depth, header, context));
                 } else {

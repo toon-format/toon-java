@@ -1,12 +1,11 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.util.StringEscaper;
+import java.util.regex.Pattern;
 import static dev.toonformat.jtoon.util.Constants.DOT;
+import static dev.toonformat.jtoon.util.Constants.FALSE_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
 import static dev.toonformat.jtoon.util.Constants.TRUE_LITERAL;
-import static dev.toonformat.jtoon.util.Constants.FALSE_LITERAL;
-
-import java.util.regex.Pattern;
 
 /**
  * Handles parsing of primitive TOON values with type inference.

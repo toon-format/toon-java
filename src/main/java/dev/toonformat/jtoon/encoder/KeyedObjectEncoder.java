@@ -7,6 +7,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
 
@@ -46,11 +47,11 @@ public final class KeyedObjectEncoder {
         final ObjectNode firstEntry = (ObjectNode) entries.get(firstKey);
         final List<TabularField> header = new ArrayList<>();
         for (final String key : firstEntry.propertyNames()) {
-            final List<TabularField> children = TabularArrayEncoder.uniformColumnsOf(firstEntry.get(key));
-            if (children == null) {
+            final Optional<List<TabularField>> children = TabularArrayEncoder.uniformColumnsOf(firstEntry.get(key));
+            if (children.isEmpty()) {
                 return Collections.emptyList();
             }
-            header.add(new TabularField(key, children));
+            header.add(new TabularField(key, children.get()));
         }
 
         if (!TabularArrayEncoder.matchesEveryRow(entries, header)) {

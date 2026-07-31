@@ -33,6 +33,7 @@ import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 public final class ValueDecoder {
 
     private static final ObjectMapper MAPPER = ObjectMapperSingleton.getInstance();
+    private static final int BOM_CHARACTER = 0xFEFF;
 
     private ValueDecoder() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -73,7 +74,7 @@ public final class ValueDecoder {
         // Spec §5.1: a single U+FEFF at the very start of the document is a
         // byte-order mark, not content; remove it before any processing.
         String input = toon;
-        if (!input.isEmpty() && input.charAt(0) == '\uFEFF') {
+        if (!input.isEmpty() && input.charAt(0) == BOM_CHARACTER) {
             input = input.substring(1);
         }
 

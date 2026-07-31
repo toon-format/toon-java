@@ -154,7 +154,8 @@ public final class ObjectDecoder {
             final String content, final Headers.KeyedHeaderMatch keyedHeader, final int depth,
             final DecodeContext context) {
         if (keyedHeader.keyed()) {
-            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1, context);
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1,
+                    context);
             KeyDecoder.putKeyedValueIntoMap(objectMap, keyedHeader, keyedValue, context);
             return;
         }

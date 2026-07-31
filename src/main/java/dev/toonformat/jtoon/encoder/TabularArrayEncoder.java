@@ -8,6 +8,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Detects and encodes uniform arrays of objects in efficient tabular format.
@@ -44,11 +45,11 @@ public final class TabularArrayEncoder {
 
         final List<TabularField> header = new ArrayList<>();
         for (final String key : firstObj.propertyNames()) {
-            final List<TabularField> children = uniformColumnsOf(firstObj.get(key));
-            if (children == null) {
+            final Optional<List<TabularField>> children = uniformColumnsOf(firstObj.get(key));
+            if (children.isEmpty()) {
                 return Collections.emptyList();
             }
-            header.add(new TabularField(key, children));
+            header.add(new TabularField(key, children.get()));
         }
 
         if (!matchesEveryRow(rows, header)) {
@@ -60,31 +61,31 @@ public final class TabularArrayEncoder {
 
     /**
      * Derives the nested field-group structure of a single column value.
-     * Returns an empty list for a primitive (leaf) column, the child fields for a
-     * nested uniform object column, or null when the column cannot be tabular (§9.3):
+     * Returns {@link Optional#empty()} when the column cannot be tabular (§9.3):
      * arrays, empty objects, and values whose structure differs per row.
+     * A primitive (leaf) column yields an empty field list; a nested uniform
+     * object column yields its child fields.
      */
-    @Nullable
-    static List<TabularField> uniformColumnsOf(final JsonNode value) {
+    static Optional<List<TabularField>> uniformColumnsOf(final JsonNode value) {
         if (value.isValueNode()) {
-            return Collections.emptyList();
+            return Optional.of(Collections.emptyList());
         }
         if (!value.isObject()) {
-            return null;
+            return Optional.empty();
         }
         final ObjectNode obj = (ObjectNode) value;
         if (obj.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         final List<TabularField> children = new ArrayList<>();
         for (final String key : obj.propertyNames()) {
-            final List<TabularField> subChildren = uniformColumnsOf(obj.get(key));
-            if (subChildren == null) {
-                return null;
+            final Optional<List<TabularField>> subChildren = uniformColumnsOf(obj.get(key));
+            if (subChildren.isEmpty()) {
+                return Optional.empty();
             }
-            children.add(new TabularField(key, subChildren));
+            children.add(new TabularField(key, subChildren.get()));
         }
-        return children;
+        return Optional.of(children);
     }
 
     /**

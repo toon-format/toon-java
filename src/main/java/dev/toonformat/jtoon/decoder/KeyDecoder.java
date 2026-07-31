@@ -321,7 +321,8 @@ public final class KeyDecoder {
     static Object parseKeyedArrayValue(final Headers.KeyedHeaderMatch keyedHeader, final String content,
             final int depth, final DecodeContext context) {
         if (keyedHeader.keyed()) {
-            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1, context);
+            final Object keyedValue = KeyedObjectDecoder.parseKeyedTabularObject(content, keyedHeader, depth + 1,
+                    context);
             final Map<String, Object> obj = new LinkedHashMap<>();
             putKeyedValueIntoMap(obj, keyedHeader, keyedValue, context);
 

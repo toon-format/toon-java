@@ -36,15 +36,11 @@ public final class TabularArrayDecoder {
      * One entry of a tabular header's field list (§6, §9.3). A leaf field
      * carries an empty child list; a field with a nested field group carries
      * its own ordered subfield list.
+     *
+     * @param name     the field name
+     * @param children subfields of a nested field group, empty for a leaf field
      */
-    static final class FieldNode {
-        final String name;
-        final List<FieldNode> children;
-
-        FieldNode(final String name, final List<FieldNode> children) {
-            this.name = name;
-            this.children = children;
-        }
+    record FieldNode(String name, List<FieldNode> children) {
     }
 
     /**
@@ -444,8 +440,7 @@ public final class TabularArrayDecoder {
                               values.size(), countLeaves(fields)));
         }
 
-        final int[] nextCell = {0};
-        assignRowValues(fields, values, row, nextCell);
+        assignRowValues(fields, values, row, 0);
 
         return row;
     }
@@ -456,16 +451,18 @@ public final class TabularArrayDecoder {
      * materializes an object from its subfields.
      */
     static void assignRowValues(final List<FieldNode> fields, final List<Object> values,
-            final Map<String, Object> target, final int[] nextCell) {
+            final Map<String, Object> target, final int... nextCell) {
         for (final FieldNode field : fields) {
-            if (field.children.isEmpty()) {
-                if (nextCell[0] < values.size()) {
-                    target.put(field.name, values.get(nextCell[0]++));
+            if (field.children().isEmpty()) {
+                final int index = nextCell[0];
+                nextCell[0] = index + 1;
+                if (index < values.size()) {
+                    target.put(field.name(), values.get(index));
                 }
             } else {
                 final Map<String, Object> group = new LinkedHashMap<>();
-                assignRowValues(field.children, values, group, nextCell);
-                target.put(field.name, group);
+                assignRowValues(field.children(), values, group, nextCell);
+                target.put(field.name(), group);
             }
         }
     }
@@ -477,7 +474,7 @@ public final class TabularArrayDecoder {
     static int countLeaves(final List<FieldNode> fields) {
         int count = 0;
         for (final FieldNode field : fields) {
-            count += field.children.isEmpty() ? 1 : countLeaves(field.children);
+            count += field.children().isEmpty() ? 1 : countLeaves(field.children());
         }
         return count;
     }
@@ -489,12 +486,12 @@ public final class TabularArrayDecoder {
     static void validateNoDuplicateFields(final List<FieldNode> fields, final DecodeContext context) {
         final Set<String> seen = new HashSet<>(fields.size());
         for (final FieldNode field : fields) {
-            if (!seen.add(field.name)) {
+            if (!seen.add(field.name())) {
                 throw new IllegalArgumentException(
-                    "Duplicate field name '" + field.name + "' in tabular header");
+                    "Duplicate field name '" + field.name() + "' in tabular header");
             }
-            if (!field.children.isEmpty()) {
-                validateNoDuplicateFields(field.children, context);
+            if (!field.children().isEmpty()) {
+                validateNoDuplicateFields(field.children(), context);
             }
         }
     }
