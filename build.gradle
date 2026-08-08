@@ -156,7 +156,7 @@ dependencies {
             strictly '2.42.0'
         }
     }
-    api 'org.jspecify:jspecify:1.0.0'
+    api 'org.jspecify:jspecify:1.0.1'
 
     testImplementation platform('org.junit:junit-bom:6.1.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
