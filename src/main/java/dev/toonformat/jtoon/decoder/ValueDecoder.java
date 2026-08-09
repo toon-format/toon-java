@@ -89,8 +89,8 @@ public final class ValueDecoder {
 
         //set an own decode context
         final DecodeContext context = new DecodeContext();
-        context.lines = buildContentLines(input.split("\r?\n", -1));
         context.options = options;
+        context.lines = buildContentLines(input.split("\r?\n", -1), options);
         context.delimiter = options.delimiter();
 
         // Spec §5.1: a document of only comments and blank lines is an empty object
@@ -127,8 +127,12 @@ public final class ValueDecoder {
     /**
      * Builds the list of content lines: trailing spaces are stripped per line
      * (§12) and full-line comments are discarded (§5.1).
+     *
+     * @param rawLines the raw input lines
+     * @param options  decode options (strict mode, indent size)
+     * @return the content lines to parse
      */
-    private static String[] buildContentLines(final String... rawLines) {
+    private static String[] buildContentLines(final String[] rawLines, final DecodeOptions options) {
         // Spec §12: trailing spaces at the end of a line are not part of its content;
         // strip them per line before classification. Only characters after the last
         // non-space character are removed, so trailing spaces inside quoted strings
@@ -138,13 +142,48 @@ public final class ValueDecoder {
         // interpretation. A tab before '#' disqualifies the line, and a '#'
         // anywhere else is data, not a comment.
         final List<String> contentLines = new ArrayList<>(rawLines.length);
-        for (String rawLine : rawLines) {
+        for (final String rawLine : rawLines) {
             final String stripped = rawLine.stripTrailing();
             if (!isCommentLine(stripped)) {
-                contentLines.add(stripped);
+                contentLines.add(expandLeadingTabs(stripped, options));
             }
         }
         return contentLines.toArray(new String[0]);
+    }
+
+    /**
+     * Spec §12 (non-strict mode): implementations MAY accept tab characters in
+     * indentation; when they do, leading tabs are indentation and MUST be
+     * removed from the line's content before classification (§5.2). The depth
+     * computation for tabs is implementation-defined. JToon expands each
+     * leading tab to {@code indentSize} spaces, so a leading tab contributes
+     * exactly one indentation level.
+     *
+     * <p>In strict mode tabs in indentation are errors (§12), so no expansion
+     * is performed and the tab is left for {@link DecodeHelper#getDepth} to
+     * reject. A tab before a leading '#' has already kept the line out of the
+     * §5.1 comment pre-pass, so a tab-indented hash row is data, not a
+     * comment.</p>
+     *
+     * @param line    the stripped line to process
+     * @param options decode options (strict mode, indent size)
+     * @return the line with leading tabs expanded to indentSize spaces in
+     *         non-strict mode, otherwise the unchanged line
+     */
+    private static String expandLeadingTabs(final String line, final DecodeOptions options) {
+        if (options.strict()) {
+            return line;
+        }
+        int i = 0;
+        while (i < line.length() && (line.charAt(i) == ' ' || line.charAt(i) == '\t')) {
+            i++;
+        }
+        final String leading = line.substring(0, i);
+        if (leading.indexOf('\t') < 0) {
+            return line;
+        }
+        final String expanded = leading.replace("\t", " ".repeat(options.indent()));
+        return expanded + line.substring(i);
     }
 
     private static boolean isEmptyDocument(final String... lines) {
