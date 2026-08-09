@@ -483,6 +483,12 @@ level1:
 - Tabs not allowed in indentation
 - Mixing spaces and tabs causes errors
 
+**Non-strict mode (§12 leniency):**
+
+- Depth may be computed as `floor(leadingSpaces / indent)`
+- Leading tabs are accepted as indentation and removed from the line's content before classification (§5.2). Depth computation for tabs is implementation-defined: JToon expands each leading tab to `indent` spaces, so a leading tab contributes exactly one indentation level.
+- Because comment detection precedes the tab leniency (§5.1), a tab-indented `#` line is data, not a comment.
+
 ---
 
 ## Array Length Indicators
