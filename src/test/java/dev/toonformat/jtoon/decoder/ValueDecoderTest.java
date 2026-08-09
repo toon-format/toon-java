@@ -118,6 +118,50 @@ class ValueDecoderTest {
     }
 
     @Test
+    @DisplayName("throws on a tab-indented hash line in strict mode, which is not a comment")
+    void decode_throwsOnTabIndentedHashLineInStrictMode() {
+        // Given
+        // Spec §5.1: only U+0020 spaces may precede the '#', so a tab keeps the
+        // line out of the comment pre-pass; §12 then rejects the tab as
+        // indentation in strict mode.
+        final String input = "items[1]{tag}:\n\t#a";
+
+        // When
+        assertThrows(IllegalArgumentException.class,
+            () -> ValueDecoder.decode(input, DecodeOptions.DEFAULT));
+    }
+
+    @Test
+    @DisplayName("decodes a tab-indented hash row as data in non-strict mode")
+    void decode_tabIndentedHashRowInNonStrictMode() {
+        // Given
+        // Spec §12 non-strict: leading tabs are accepted as indentation and
+        // removed from the line's content before classification (§5.2).
+        final String input = "items[3]{id}:\n  1\n\t#x\n  2";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.withStrict(false));
+
+        // Then
+        assertEquals("{items=[{id=1}, {id=#x}, {id=2}]}", result.toString());
+    }
+
+    @Test
+    @DisplayName("expands a leading tab to one indentation level in non-strict mode")
+    void decode_expandsLeadingTabToOneIndentLevelInNonStrictMode() {
+        // Given
+        // Spec §12: depth computation for tabs is implementation-defined; JToon
+        // expands each leading tab to indentSize spaces (one level).
+        final String input = "outer:\n\tinner: 1";
+
+        // When
+        final Object result = ValueDecoder.decode(input, DecodeOptions.withStrict(false));
+
+        // Then
+        assertEquals("{outer={inner=1}}", result.toString());
+    }
+
+    @Test
     @DisplayName("treats a hash not at line start as data")
     void decode_hashInsideLineIsData() {
         // When

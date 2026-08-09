@@ -710,7 +710,9 @@ class DecodeHelperTest {
 
         @Test
         void testTabNonStrictStopsCounting() throws Exception {
-            // in non-strict mode, indentation stops at first non-space (including tab)
+            // Direct calls to computeLeadingSpaces stop at the first non-space.
+            // The §12 tab leniency is applied earlier, in the ValueDecoder
+            // pre-pass, where leading tabs are expanded to indentSize spaces.
             assertEquals(2, invokeCompute("  \t   text", ctxNonStrict2));
         }
 
