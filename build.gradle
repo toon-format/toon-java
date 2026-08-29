@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
-    id 'com.github.spotbugs' version '6.5.10'
+    id 'com.github.spotbugs' version '6.5.11'
     id 'pmd'
     id 'checkstyle'
     id 'org.owasp.dependencycheck' version '13.0.0'
