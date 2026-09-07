@@ -7,6 +7,12 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag/version to release (e.g. v2.0.4). Leave empty to derive from the running ref.'
+        required: false
+        default: ''
 
 jobs:
   build-and-release:
@@ -24,7 +30,7 @@ jobs:
       - name: Extract version from tag
         id: get_version
         env:
-          TAG_NAME: ${{ github.event.release.tag_name || github.ref_name }}
+          TAG_NAME: ${{ github.event.inputs.tag || github.event.release.tag_name || github.ref_name }}
         run: echo "VERSION=${TAG_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Skip duplicate run (release created by this workflow)
@@ -122,7 +128,7 @@ jobs:
             if [[ "${{ steps.get_version.outputs.VERSION }}" == *-* ]]; then
               ARGS+=(--prerelease)
             fi
-            gh release create "$TAG" --generate-notes "${ARGS[@]}"
+            gh release create "$TAG" --generate-notes --target main "${ARGS[@]}"
           fi
 
       - name: Upload release assets
