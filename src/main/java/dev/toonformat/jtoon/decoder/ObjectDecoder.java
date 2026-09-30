@@ -159,8 +159,8 @@ public final class ObjectDecoder {
 
         final int colonIdx = DecodeHelper.findUnquotedColon(content);
         if (colonIdx > 0) {
-            final String key = content.substring(0, colonIdx).trim();
-            final String value = content.substring(colonIdx + 1).trim();
+            final String key = DecodeHelper.trimSpaces(content.substring(0, colonIdx));
+            final String value = DecodeHelper.trimSpaces(content.substring(colonIdx + 1));
 
             KeyDecoder.parseKeyValuePairIntoMap(obj, key, value, depth, context);
             return true;
@@ -188,7 +188,7 @@ public final class ObjectDecoder {
         }
 
         final String originalKey = keyedHeader.key();
-        final String originalKeyTrimmed = originalKey.trim();
+        final String originalKeyTrimmed = DecodeHelper.trimSpaces(originalKey);
         final String key = StringEscaper.unescape(originalKey);
         final String arrayHeader = content.substring(originalKey.length());
 
@@ -199,8 +199,8 @@ public final class ObjectDecoder {
             final int colonIdx = DecodeHelper.findUnquotedColon(content);
             if (colonIdx > 0) {
                 KeyDecoder.parseKeyValuePairIntoMap(objectMap,
-                    content.substring(0, colonIdx).trim(),
-                    content.substring(colonIdx + 1).trim(), depth, context);
+                    DecodeHelper.trimSpaces(content.substring(0, colonIdx)),
+                    DecodeHelper.trimSpaces(content.substring(colonIdx + 1)), depth, context);
                 return;
             }
         }
@@ -259,7 +259,7 @@ public final class ObjectDecoder {
      * @return the parsed value (Map or primitive)
      */
     private static Object parseFieldScalar(final String value, final DecodeContext context) {
-        if (value.isBlank()) {
+        if (DecodeHelper.trimSpaces(value).isEmpty()) {
             return new LinkedHashMap<>();
         }
         return PrimitiveDecoder.parse(value, context);
@@ -282,7 +282,7 @@ public final class ObjectDecoder {
         if (context.currentLine + 1 < context.lines.length) {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > depth) {
-                if (!value.isBlank()) {
+                if (!DecodeHelper.trimSpaces(value).isEmpty()) {
                     return parseInlineValueWithOrphanLines(value, depth, nextDepth, context, scalarParser);
                 }
                 context.currentLine++;
@@ -334,7 +334,7 @@ public final class ObjectDecoder {
      * @return the parsed value (Map, List, or primitive)
      */
     static Object parseObjectItemValue(final String value, final int depth, final DecodeContext context) {
-        final boolean isEmpty = value.isBlank();
+        final boolean isEmpty = DecodeHelper.trimSpaces(value).isEmpty();
 
         // Find the next non-blank line and its depth
         final Integer nextDepth = DecodeHelper.findNextNonBlankLineDepth(context);

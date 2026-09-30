@@ -88,7 +88,7 @@ public final class KeyedObjectDecoder {
             throw new IllegalArgumentException(
                 "Keyed header requires a field list at line " + (context.currentLine + 1));
         }
-        if (!content.substring(header.headerEnd() + 1).isBlank()) {
+        if (!DecodeHelper.trimSpaces(content.substring(header.headerEnd() + 1)).isEmpty()) {
             throw new IllegalArgumentException(
                 "Inline content after keyed header at line " + (context.currentLine + 1));
         }
@@ -189,7 +189,7 @@ public final class KeyedObjectDecoder {
             return;
         }
 
-        final String entryKey = StringEscaper.unescape(entryContent.substring(0, colonIdx).trim());
+        final String entryKey = StringEscaper.unescape(DecodeHelper.trimSpaces(entryContent.substring(0, colonIdx)));
         final Map<String, Object> entry = TabularArrayDecoder.parseTabularRow(
             entryContent.substring(colonIdx + 1), fields, arrayDelimiter, context);
 

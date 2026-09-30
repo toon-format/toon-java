@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import dev.toonformat.jtoon.DecodeOptions;
 import dev.toonformat.jtoon.Delimiter;
 import org.junit.jupiter.api.DisplayName;
@@ -103,16 +104,13 @@ class ArrayDecoderTest {
     @DisplayName("Should parse TOON format list array to JSON")
     void parseListArray() {
         // Given
-        setUpContext("[1]:\n  - first\n  - second\n  -");
+        setUpContext("[3]:\n  - first\n  - second\n  -");
 
         // When
-        final List<Object> result = ArrayDecoder.parseArray("[1]:\n  - first\n  - second\n  -", 0, context);
+        final List<Object> result = ArrayDecoder.parseArray("[3]:", 0, context);
 
         // Then
-        assertEquals("""
-            [- first
-              - second
-              -]""", result.toString());
+        assertEquals(List.of("first", "second", Map.of()), result);
     }
 
     @Test
@@ -205,7 +203,7 @@ class ArrayDecoderTest {
         final List<String> result = ArrayDecoder.parseDelimitedValues("a ,  b\t,\nc", Delimiter.COMMA);
 
         // Then
-        assertEquals(List.of("a", "b", "c"), result);
+        assertEquals(List.of("a", "b\t", "\nc"), result);
     }
 
     @Test

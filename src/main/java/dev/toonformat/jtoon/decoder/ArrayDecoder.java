@@ -120,7 +120,7 @@ public final class ArrayDecoder {
         if (arrayMatcher.find()) {
             rejectLeadingZeroLength(arrayMatcher, context.options.strict());
             final int headerEndIdx = arrayMatcher.end();
-            final String afterHeader = header.substring(headerEndIdx).trim();
+            final String afterHeader = DecodeHelper.trimSpaces(header.substring(headerEndIdx));
 
             if (hasInlineContent(afterHeader)) {
                 return parseInlineArray(afterHeader, header, arrayDelimiter, context);
@@ -138,7 +138,7 @@ public final class ArrayDecoder {
         }
 
         // Spec §9.1/§9.2: a bare bracket pair is an empty array header
-        if ("[]".equals(header.trim())) {
+        if ("[]".equals(DecodeHelper.trimSpaces(header))) {
             context.currentLine++;
             return Collections.emptyList();
         }
@@ -175,7 +175,7 @@ public final class ArrayDecoder {
      * @return true when inline values follow the colon
      */
     private static boolean hasInlineContent(final String afterHeader) {
-        return afterHeader.startsWith(COLON) && !afterHeader.substring(1).isBlank();
+        return afterHeader.startsWith(COLON) && !DecodeHelper.trimSpaces(afterHeader.substring(1)).isEmpty();
     }
 
     /**
@@ -189,7 +189,7 @@ public final class ArrayDecoder {
      */
     private static List<Object> parseInlineArray(final String afterHeader, final String header,
             final Delimiter arrayDelimiter, final DecodeContext context) {
-        final String inlineContent = afterHeader.substring(1).trim();
+        final String inlineContent = DecodeHelper.trimSpaces(afterHeader.substring(1));
         final List<Object> result = parseArrayValues(inlineContent, arrayDelimiter,
             context.options.maxArraySize(), context.options.maxStringLength());
         validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
@@ -305,7 +305,7 @@ public final class ArrayDecoder {
 
     /**
      * Splits a string by delimiter, respecting quoted sections.
-     * Whitespace around delimiters is tolerated and trimmed.
+     * Spaces (U+0020 only) around delimiters are tolerated and trimmed (§12).
      *
      * @param input          the input string to parse
      * @param arrayDelimiter array delimiter
@@ -336,10 +336,10 @@ public final class ArrayDecoder {
                 i++;
             } else if (currentChar == delimiterChar && !inQuotes) {
                 // Found delimiter - add stringBuilder value (trimmed) and reset
-                final String value = stringBuilder.toString().trim();
+                final String value = DecodeHelper.trimSpaces(stringBuilder.toString());
                 result.add(value);
                 stringBuilder.setLength(0);
-                i = skipWhitespace(input, i + 1);
+                i = skipSpaces(input, i + 1);
             } else {
                 stringBuilder.append(currentChar);
                 i++;
@@ -348,23 +348,24 @@ public final class ArrayDecoder {
 
         // Add final value
         if (!stringBuilder.isEmpty() || input.endsWith(arrayDelimiter.toString())) {
-            result.add(stringBuilder.toString().trim());
+            result.add(DecodeHelper.trimSpaces(stringBuilder.toString()));
         }
 
         return result;
     }
 
     /**
-     * Returns the index of the first non-whitespace character at or after
-     * the given position.
+     * Returns the index of the first non-space character at or after the
+     * given position. Only U+0020 is skipped – a tab may be the active
+     * delimiter or part of the next token (§12).
      *
      * @param input the input string
      * @param start the position to scan from
-     * @return the first non-whitespace index, or the input length
+     * @return the first non-space index, or the input length
      */
-    private static int skipWhitespace(final String input, final int start) {
+    private static int skipSpaces(final String input, final int start) {
         int i = start;
-        while (i < input.length() && Character.isWhitespace(input.charAt(i))) {
+        while (i < input.length() && input.charAt(i) == ' ') {
             i++;
         }
         return i;

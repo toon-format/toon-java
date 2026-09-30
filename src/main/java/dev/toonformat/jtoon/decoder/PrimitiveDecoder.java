@@ -111,7 +111,7 @@ public final class PrimitiveDecoder {
      * @return the parsed number, or the token as string
      */
     private static Object parseNumericToken(final String value) {
-        final String trimmed = value.trim();
+        final String trimmed = DecodeHelper.trimSpaces(value);
 
         // Normative number grammar gate (§4): tokens that do not match decode as
         // strings, without delegating to a host-language number parser (§4).
@@ -204,7 +204,7 @@ public final class PrimitiveDecoder {
                 escaped = true;
             } else if (c == '"') {
                 for (int j = i + 1; j < value.length(); j++) {
-                    if (!Character.isWhitespace(value.charAt(j))) {
+                    if (value.charAt(j) != ' ') {
                         throw new FatalDecodeException(
                             "Characters after closing quote in token: " + value);
                     }

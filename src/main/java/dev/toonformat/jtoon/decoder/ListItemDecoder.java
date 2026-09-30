@@ -100,7 +100,7 @@ public final class ListItemDecoder {
      */
     private static String extractItemContent(final String content) {
         if (content.length() > 2) {
-            return content.substring(2).trim();
+            return DecodeHelper.trimSpaces(content.substring(2));
         }
         return "";
     }
@@ -153,7 +153,7 @@ public final class ListItemDecoder {
      */
     private static Map<String, Object> parseKeyedTabularListItem(final String itemContent,
             final Headers.KeyedHeaderMatch keyedHeader, final int depth, final DecodeContext context) {
-        final String originalKey = keyedHeader.key().trim();
+        final String originalKey = DecodeHelper.trimSpaces(keyedHeader.key());
         final String key = StringEscaper.unescape(originalKey);
         final Map<String, Object> item = new LinkedHashMap<>();
 
@@ -183,7 +183,7 @@ public final class ListItemDecoder {
      */
     private static Map<String, Object> parseKeyedArrayListItem(final String itemContent,
             final Headers.KeyedHeaderMatch keyedHeader, final int depth, final DecodeContext context) {
-        final String originalKey = keyedHeader.key().trim();
+        final String originalKey = DecodeHelper.trimSpaces(keyedHeader.key());
         final String key = StringEscaper.unescape(originalKey);
         final String arrayHeader = itemContent.substring(keyedHeader.keyEnd());
 
@@ -218,8 +218,8 @@ public final class ListItemDecoder {
     private static Map<String, Object> parseObjectListItem(final String itemContent, final int colonIdx,
             final int depth, final DecodeContext context) {
         // Object item: - key: value
-        final String key = StringEscaper.unescape(itemContent.substring(0, colonIdx).trim());
-        final String value = itemContent.substring(colonIdx + 1).trim();
+        final String key = StringEscaper.unescape(DecodeHelper.trimSpaces(itemContent.substring(0, colonIdx)));
+        final String value = DecodeHelper.trimSpaces(itemContent.substring(colonIdx + 1));
 
         context.currentLine++;
 
@@ -227,7 +227,7 @@ public final class ListItemDecoder {
         final Object parsedValue;
         // If no next line exists, handle a simple case
         if (context.currentLine >= context.lines.length) {
-            parsedValue = value.isBlank() ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value, context);
+            parsedValue = value.isEmpty() ? new LinkedHashMap<>() : PrimitiveDecoder.parse(value, context);
         } else {
             // List item is at depth + 1, so pass depth + 1 to parseObjectItemValue
             parsedValue = ObjectDecoder.parseObjectItemValue(value, depth + 1, context);

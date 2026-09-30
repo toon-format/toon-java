@@ -19,6 +19,26 @@ public final class DecodeHelper {
     }
 
     /**
+     * Trims surrounding spaces from a token – exactly U+0020, no other
+     * characters (§12). Tabs, control characters, and NBSP stay part of the
+     * token, unlike {@link String#trim()}.
+     *
+     * @param token the raw token
+     * @return the token without leading and trailing U+0020
+     */
+    static String trimSpaces(final String token) {
+        int start = 0;
+        int end = token.length();
+        while (start < end && token.charAt(start) == ' ') {
+            start++;
+        }
+        while (end > start && token.charAt(end - 1) == ' ') {
+            end--;
+        }
+        return token.substring(start, end);
+    }
+
+    /**
      * Calculates indentation depth (nesting level) of a line.
      * Counts leading spaces in multiples of the configured indent size.
      * In strict mode, validates indentation (no tabs, proper multiples).
@@ -77,13 +97,13 @@ public final class DecodeHelper {
 
 
     /**
-     * Checks if a line is blank (empty or only whitespace).
+     * Checks if a line is blank (empty or only spaces).
      *
      * @param line the line string to parse
      * @return true or false depending on if the line is blank or not
      */
     static boolean isBlankLine(final String line) {
-        return line.isBlank();
+        return trimSpaces(line).isEmpty();
     }
 
     /**

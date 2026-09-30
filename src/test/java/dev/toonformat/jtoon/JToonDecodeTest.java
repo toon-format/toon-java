@@ -484,7 +484,7 @@ public class JToonDecodeTest {
         @DisplayName("should decode tab-delimited array")
         void testTabDelimiter() {
             // Given
-            final String toon = "tags[3\t]:\ta\tb\tc";
+            final String toon = "tags[3\t]: a\tb\tc";
             final DecodeOptions options = DecodeOptions.withDelimiter(Delimiter.TAB);
 
 

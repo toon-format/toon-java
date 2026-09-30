@@ -75,11 +75,7 @@ public final class ValueDecoder {
         // byte-order mark, not content; remove it before any processing.
         final String input = stripByteOrderMark(toon);
 
-        if (input.isBlank()) {
-            return new LinkedHashMap<>();
-        }
-
-        final String trimmed = input.trim();
+        final String trimmed = DecodeHelper.trimSpaces(input);
         if (NULL_LITERAL.equals(trimmed)) {
             return null;
         }
@@ -143,12 +139,31 @@ public final class ValueDecoder {
         // anywhere else is data, not a comment.
         final List<String> contentLines = new ArrayList<>(rawLines.length);
         for (final String rawLine : rawLines) {
-            final String stripped = rawLine.stripTrailing();
+            final String stripped = stripTrailingSpaces(rawLine);
             if (!isCommentLine(stripped)) {
                 contentLines.add(expandLeadingTabs(stripped, options));
             }
         }
         return contentLines.toArray(new String[0]);
+    }
+
+    /**
+     * Excludes a line-terminating CR, then strips trailing U+0020 (§12). Unlike
+     * {@link String#stripTrailing()}, a trailing tab or other whitespace stays
+     * part of the line's content.
+     *
+     * @param line the raw line
+     * @return the line without its terminating CR and trailing spaces
+     */
+    private static String stripTrailingSpaces(final String line) {
+        int end = line.length();
+        if (end > 0 && line.charAt(end - 1) == '\r') {
+            end--;
+        }
+        while (end > 0 && line.charAt(end - 1) == ' ') {
+            end--;
+        }
+        return line.substring(0, end);
     }
 
     /**
@@ -188,7 +203,7 @@ public final class ValueDecoder {
 
     private static boolean isEmptyDocument(final String... lines) {
         for (final String line : lines) {
-            if (!line.isBlank()) {
+            if (!DecodeHelper.isBlankLine(line)) {
                 return false;
             }
         }
@@ -230,7 +245,7 @@ public final class ValueDecoder {
     private static Object parseRootKeyValueLine(final String line, final int colonIdx, final int depth,
             final DecodeContext context) {
         if (context.options.strict()) {
-            final String key = line.substring(0, colonIdx).trim();
+            final String key = DecodeHelper.trimSpaces(line.substring(0, colonIdx));
             // In strict mode, reject keys with unquoted brackets that didn't match
             // KEYED_ARRAY_PATTERN. This catches:
             //   - extra brackets between bracket segment and colon (foo[1][bar])
@@ -244,8 +259,8 @@ public final class ValueDecoder {
                     "Invalid array header syntax at line " + (context.currentLine + 1));
             }
         }
-        final String key = line.substring(0, colonIdx).trim();
-        final String value = line.substring(colonIdx + 1).trim();
+        final String key = DecodeHelper.trimSpaces(line.substring(0, colonIdx));
+        final String value = DecodeHelper.trimSpaces(line.substring(colonIdx + 1));
         return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
     }
 
