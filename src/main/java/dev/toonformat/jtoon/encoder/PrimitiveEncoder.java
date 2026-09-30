@@ -99,6 +99,7 @@ public final class PrimitiveEncoder {
      * @return the encoded string, quoted if necessary
      */
     static String encodeStringLiteral(final String value, final String delimiter) {
+        requireScalarValues(value);
         if (StringValidator.isSafeUnquoted(value, delimiter)) {
             return value;
         }
@@ -114,11 +115,35 @@ public final class PrimitiveEncoder {
      * @return the encoded key, quoted if necessary
      */
     public static String encodeKey(final String key) {
+        requireScalarValues(key);
         if (StringValidator.isValidUnquotedKey(key)) {
             return key;
         }
 
         return DOUBLE_QUOTE + StringEscaper.escape(key) + DOUBLE_QUOTE;
+    }
+
+    /**
+     * Rejects strings containing an unpaired surrogate, which TOON cannot
+     * represent (§3).
+     *
+     * @param value the key or string value to check
+     * @throws IllegalArgumentException if the string contains an unpaired surrogate
+     */
+    static void requireScalarValues(final String value) {
+        final int len = value.length();
+        for (int i = 0; i < len; i++) {
+            final char c = value.charAt(i);
+            if (!Character.isSurrogate(c)) {
+                continue;
+            }
+            if (Character.isHighSurrogate(c) && i + 1 < len && Character.isLowSurrogate(value.charAt(i + 1))) {
+                i++;
+                continue;
+            }
+            throw new IllegalArgumentException(String.format(
+                "Cannot encode string containing an unpaired surrogate U+%04X at index %d", (int) c, i));
+        }
     }
 
     /**

@@ -329,6 +329,36 @@ class PrimitiveEncoderTest {
     }
 
     @Nested
+    @DisplayName("unpaired surrogates")
+    class UnpairedSurrogates {
+
+        @Test
+        @DisplayName("should reject a lone high surrogate in a string value")
+        void testLoneHighSurrogateValue() {
+            // Given
+            final JsonNode node = new StringNode("a" + (char) 0xD800 + "b");
+
+            // When
+            final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> PrimitiveEncoder.encodePrimitive(node, Delimiter.COMMA.toString()));
+
+            // Then
+            assertEquals("Cannot encode string containing an unpaired surrogate U+D800 at index 1",
+                exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("should reject a lone low surrogate in a key")
+        void testLoneLowSurrogateKey() {
+            // Given
+            final String key = "k" + (char) 0xDC00;
+
+            // When / Then
+            assertThrows(IllegalArgumentException.class, () -> PrimitiveEncoder.encodeKey(key));
+        }
+    }
+
+    @Nested
     @DisplayName("encodeKey")
     class EncodeKey {
 
