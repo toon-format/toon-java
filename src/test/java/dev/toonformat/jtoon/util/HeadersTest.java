@@ -102,19 +102,6 @@ class HeadersTest {
     }
 
     @Test
-    @DisplayName("matchKeyedArrayHeader scans hash marker and field spec")
-    void matchKeyedArrayHeader_givenHashMarker_thenLengthDeclared() {
-        // Given / When
-        final Headers.KeyedHeaderMatch match = Headers.matchKeyedArrayHeader("items[#2]{a,b}:");
-
-        // Then
-        assertNotNull(match);
-        assertEquals(2L, match.declaredLength());
-        assertFalse(match.keyed());
-        assertEquals("items", match.key());
-    }
-
-    @Test
     @DisplayName("matchKeyedArrayHeader scans quoted keys with spaces")
     void matchKeyedArrayHeader_givenQuotedKey_thenKey() {
         // Given / When

@@ -171,7 +171,7 @@ public final class Headers {
     }
 
     /**
-     * Scans the bracket segment: {@code [ (#?) \d+ (:)? ([\t|])? ]}.
+     * Scans the bracket segment: {@code [ \d+ (:)? ([\t|])? ]}.
      *
      * @param content the line content to scan
      * @param start   the index of the opening bracket
@@ -184,7 +184,7 @@ public final class Headers {
         if (i >= n || content.charAt(i) != '[') {
             return null;
         }
-        i = skipHashMarker(content, i + 1, n);
+        i++;
         final int digitsStart = i;
         while (i < n && Character.isDigit(content.charAt(i))) {
             i++;
@@ -212,21 +212,6 @@ public final class Headers {
             return null;
         }
         return new BracketSegment(declaredLength, keyed, delimiter, i + 1);
-    }
-
-    /**
-     * Skips an optional length-marker hash in the bracket segment.
-     *
-     * @param content the line content to scan
-     * @param i       the index to inspect
-     * @param n       the content length
-     * @return the index just past the hash, or the unchanged index
-     */
-    private static int skipHashMarker(final String content, final int i, final int n) {
-        if (i < n && content.charAt(i) == '#') {
-            return i + 1;
-        }
-        return i;
     }
 
     /**

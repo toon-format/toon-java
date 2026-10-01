@@ -153,7 +153,7 @@ class KeyDecoderTest {
     void testCallsExpandPathIntoMapWhenShouldExpandKeyTrue() {
         // Given
         final Map<String, Object> result = new LinkedHashMap<>();
-        final String content = "foo.bar[#0]:";
+        final String content = "foo.bar[0]:";
         final int parentDepth = 0;
 
         final DecodeContext context = new DecodeContext();

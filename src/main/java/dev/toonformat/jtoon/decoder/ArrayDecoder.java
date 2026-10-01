@@ -114,10 +114,12 @@ public final class ArrayDecoder {
         final Matcher arrayMatcher = ARRAY_HEADER_PATTERN.matcher(header);
 
         if (tabularMatcher.find()) {
+            rejectLengthMarker(tabularMatcher, context.options.strict());
             return TabularArrayDecoder.parseTabularArray(header, depth, arrayDelimiter, context);
         }
 
         if (arrayMatcher.find()) {
+            rejectLengthMarker(arrayMatcher, context.options.strict());
             rejectLeadingZeroLength(arrayMatcher, context.options.strict());
             final int headerEndIdx = arrayMatcher.end();
             final String afterHeader = header.substring(headerEndIdx).trim();
@@ -148,6 +150,18 @@ public final class ArrayDecoder {
         }
         context.currentLine++;
         return Collections.emptyList();
+    }
+
+    /**
+     * In strict mode, rejects the removed {@code [#N]} length marker (§6).
+     *
+     * @param headerMatcher the matched array or tabular header
+     * @param strict        strict mode flag
+     */
+    private static void rejectLengthMarker(final Matcher headerMatcher, final boolean strict) {
+        if (strict && !headerMatcher.group(1).isEmpty()) {
+            throw new IllegalArgumentException("Invalid array header: " + headerMatcher.group());
+        }
     }
 
     /**
