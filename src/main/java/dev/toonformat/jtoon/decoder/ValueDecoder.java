@@ -94,6 +94,8 @@ public final class ValueDecoder {
             return new LinkedHashMap<>();
         }
 
+        // Spec §5: root-form discovery starts at the first non-blank line
+        context.currentLine = DecodeHelper.findNextNonBlankLine(0, context);
         final int lineIndex = context.currentLine;
         final String line = context.lines[lineIndex];
         final int depth = DecodeHelper.getDepth(line, context);
