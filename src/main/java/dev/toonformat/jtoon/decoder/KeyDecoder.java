@@ -177,6 +177,7 @@ public final class KeyDecoder {
      */
     static void parseKeyValuePairIntoMap(final Map<String, Object> map, final String key, final String value,
                                          final int depth, final DecodeContext context) {
+        DecodeHelper.validateKeyHasNoUnquotedBrackets(key, context);
         final String unescapedKey = StringEscaper.unescape(key);
 
         final Object parsedValue = parseKeyValue(value, depth, context);
@@ -407,7 +408,9 @@ public final class KeyDecoder {
             return false;
         }
 
-        final String fieldKey = StringEscaper.unescape(fieldContent.substring(0, colonIdx).trim());
+        final String rawFieldKey = fieldContent.substring(0, colonIdx).trim();
+        DecodeHelper.validateKeyHasNoUnquotedBrackets(rawFieldKey, context);
+        final String fieldKey = StringEscaper.unescape(rawFieldKey);
         final String fieldValue = fieldContent.substring(colonIdx + 1).trim();
 
         final Object parsedValue = ObjectDecoder.parseFieldValue(fieldValue, depth + 2, context);

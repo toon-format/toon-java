@@ -235,6 +235,31 @@ public final class DecodeHelper {
     }
 
     /**
+     * In strict mode, rejects a key-value key with unquoted brackets: the line
+     * did not match the header grammar, so its bracket segment is malformed
+     * (§6, §14.2). This catches:
+     * <ul>
+     * <li>the removed length marker ({@code xs[#2]})</li>
+     * <li>extra brackets between bracket segment and colon ({@code foo[1][bar]})</li>
+     * <li>text between bracket segment and colon ({@code foo[2]extra})</li>
+     * <li>noninteger bracket segment ({@code foo[bar]})</li>
+     * <li>negative bracket length ({@code items[-1]})</li>
+     * <li>whitespace between bracket segment and colon/fields segment
+     * ({@code items[2] :}, {@code items[2] {a,b}:})</li>
+     * </ul>
+     *
+     * @param key     the raw key token before the colon
+     * @param context decode an object to deal with lines, delimiter and options
+     * @throws IllegalArgumentException in strict mode if the key has unquoted brackets
+     */
+    static void validateKeyHasNoUnquotedBrackets(final String key, final DecodeContext context) {
+        if (context.options.strict() && hasUnquotedBrackets(key)) {
+            throw new IllegalArgumentException(
+                "Invalid array header syntax at line " + (context.currentLine + 1));
+        }
+    }
+
+    /**
      * Validates that there are no multiple primitives at root level in strict mode.
      *
      * @param context decode an object to deal with lines, delimiter and options
