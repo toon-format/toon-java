@@ -43,6 +43,7 @@ public final class JToon {
      * @param input   The object to encode (can be null)
      * @param options Encoding options (indent, delimiter, length marker)
      * @return The JToon-formatted string
+     * @throws IllegalArgumentException if a key or string value contains an unpaired surrogate
      * @throws NullPointerException if options is null
      */
     public static String encode(final Object input, final EncodeOptions options) {
@@ -62,7 +63,8 @@ public final class JToon {
      *
      * @param json The JSON string to encode (must be valid JSON)
      * @return The TOON-formatted string
-     * @throws IllegalArgumentException if the input is not valid JSON
+     * @throws IllegalArgumentException if the input is not valid JSON, or a key or
+     *                                  string value contains an unpaired surrogate
      */
     public static String encodeJson(final String json) {
         return encodeJson(json, EncodeOptions.DEFAULT);
@@ -78,7 +80,8 @@ public final class JToon {
      * @param json    The JSON string to encode (must be valid JSON)
      * @param options Encoding options (indent, delimiter, length marker)
      * @return The TOON-formatted string
-     * @throws IllegalArgumentException if the input is not valid JSON
+     * @throws IllegalArgumentException if the input is not valid JSON, or a key or
+     *                                  string value contains an unpaired surrogate
      * @throws NullPointerException if options is null
      */
     public static String encodeJson(final String json, final EncodeOptions options) {
