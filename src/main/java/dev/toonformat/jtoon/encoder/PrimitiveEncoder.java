@@ -131,18 +131,14 @@ public final class PrimitiveEncoder {
      * @throws IllegalArgumentException if the string contains an unpaired surrogate
      */
     static void requireScalarValues(final String value) {
-        final int len = value.length();
-        for (int i = 0; i < len; i++) {
-            final char c = value.charAt(i);
-            if (!Character.isSurrogate(c)) {
-                continue;
+        int index = 0;
+        while (index < value.length()) {
+            final int codePoint = value.codePointAt(index);
+            if (Character.getType(codePoint) == Character.SURROGATE) {
+                throw new IllegalArgumentException(String.format(
+                    "Cannot encode string containing an unpaired surrogate U+%04X at index %d", codePoint, index));
             }
-            if (Character.isHighSurrogate(c) && i + 1 < len && Character.isLowSurrogate(value.charAt(i + 1))) {
-                i++;
-                continue;
-            }
-            throw new IllegalArgumentException(String.format(
-                "Cannot encode string containing an unpaired surrogate U+%04X at index %d", (int) c, i));
+            index += Character.charCount(codePoint);
         }
     }
 
