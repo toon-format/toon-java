@@ -218,7 +218,9 @@ public final class ListItemDecoder {
     private static Map<String, Object> parseObjectListItem(final String itemContent, final int colonIdx,
             final int depth, final DecodeContext context) {
         // Object item: - key: value
-        final String key = StringEscaper.unescape(DecodeHelper.trimSpaces(itemContent.substring(0, colonIdx)));
+        final String rawKey = DecodeHelper.trimSpaces(itemContent.substring(0, colonIdx));
+        DecodeHelper.validateQuotedTokenBoundary(rawKey);
+        final String key = StringEscaper.unescape(rawKey);
         final String value = DecodeHelper.trimSpaces(itemContent.substring(colonIdx + 1));
 
         context.currentLine++;

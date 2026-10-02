@@ -91,9 +91,9 @@ public final class PrimitiveDecoder {
         // Check for quoted strings
         if (value.startsWith("\"")) {
             // Spec §7.4: a quoted token is terminated by its closing quote;
-            // only whitespace may follow within the same token. The boundary
+            // only spaces may follow within the same token. The boundary
             // rule applies in strict and non-strict mode alike.
-            validateQuotedTokenBoundary(value);
+            DecodeHelper.validateQuotedTokenBoundary(value);
             // Validate string before unescaping
             StringEscaper.validateString(value);
             return StringEscaper.unescape(value);
@@ -186,31 +186,5 @@ public final class PrimitiveDecoder {
         }
 
         return parsed;
-    }
-
-    /**
-     * Spec §7.4: after the closing quote of a quoted token only whitespace may
-     * follow. An unterminated token is left to {@link StringEscaper#validateString}.
-     *
-     * @param value the token to validate
-     */
-    private static void validateQuotedTokenBoundary(final String value) {
-        boolean escaped = false;
-        for (int i = 1; i < value.length(); i++) {
-            final char c = value.charAt(i);
-            if (escaped) {
-                escaped = false;
-            } else if (c == '\\') {
-                escaped = true;
-            } else if (c == '"') {
-                for (int j = i + 1; j < value.length(); j++) {
-                    if (value.charAt(j) != ' ') {
-                        throw new FatalDecodeException(
-                            "Characters after closing quote in token: " + value);
-                    }
-                }
-                return;
-            }
-        }
     }
 }

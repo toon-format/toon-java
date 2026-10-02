@@ -189,7 +189,9 @@ public final class KeyedObjectDecoder {
             return;
         }
 
-        final String entryKey = StringEscaper.unescape(DecodeHelper.trimSpaces(entryContent.substring(0, colonIdx)));
+        final String rawEntryKey = DecodeHelper.trimSpaces(entryContent.substring(0, colonIdx));
+        DecodeHelper.validateQuotedTokenBoundary(rawEntryKey);
+        final String entryKey = StringEscaper.unescape(rawEntryKey);
         final Map<String, Object> entry = TabularArrayDecoder.parseTabularRow(
             entryContent.substring(colonIdx + 1), fields, arrayDelimiter, context);
 
