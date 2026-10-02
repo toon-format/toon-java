@@ -150,9 +150,8 @@ public final class ValueDecoder {
     }
 
     /**
-     * Excludes a line-terminating CR, then strips trailing U+0020 (§12). Unlike
-     * {@link String#stripTrailing()}, a trailing tab or other whitespace stays
-     * part of the line's content.
+     * Excludes a line-terminating CR, then strips trailing U+0020 (§12). A
+     * trailing tab or other whitespace stays part of the line's content.
      *
      * @param line the raw line
      * @return the line without its terminating CR and trailing spaces

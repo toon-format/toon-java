@@ -21,7 +21,7 @@ public final class DecodeHelper {
     /**
      * Trims surrounding spaces from a token – exactly U+0020, no other
      * characters (§12). Tabs, control characters, and NBSP stay part of the
-     * token, unlike {@link String#trim()}.
+     * token.
      *
      * @param token the raw token
      * @return the token without leading and trailing U+0020
