@@ -26,7 +26,6 @@ class HeadersTest {
     @DisplayName("ARRAY_HEADER_PATTERN matches array headers")
     void arrayHeaderPatternMatches() {
         assertNotNull(Headers.ARRAY_HEADER_PATTERN.matcher("[3]").matches());
-        assertNotNull(Headers.ARRAY_HEADER_PATTERN.matcher("[#2]").matches());
         assertNotNull(Headers.ARRAY_HEADER_PATTERN.matcher("[3\t]").matches());
         assertNotNull(Headers.ARRAY_HEADER_PATTERN.matcher("[2|]").matches());
     }
@@ -35,7 +34,6 @@ class HeadersTest {
     @DisplayName("TABULAR_HEADER_PATTERN matches tabular headers")
     void tabularHeaderPatternMatches() {
         assertNotNull(Headers.TABULAR_HEADER_PATTERN.matcher("[2]{id,name,role}:").matches());
-        assertNotNull(Headers.TABULAR_HEADER_PATTERN.matcher("[#3]{a,b,c}:").matches());
     }
 
     @Test

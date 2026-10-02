@@ -65,7 +65,7 @@
  * <ul>
  *   <li>{@code \[(#?)\d+[\t|]?]} - Standalone array header</li>
  *   <li>{@code \[(#?)\d+[\t|]?]\{(.+)\}:} - Tabular array header with fields</li>
- *   <li>{@code ^(.+?)\[(#?)\d+[\t|]?](\{[^}]+\})?:.*$} - Keyed array pattern</li>
+ *   <li>{@code ^(.+?)\[\d+[\t|]?](\{[^}]+\})?:.*$} - Keyed array pattern</li>
  * </ul>
  *
  * <h3>Depth Tracking</h3>

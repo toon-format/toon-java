@@ -9,15 +9,16 @@ import org.jspecify.annotations.Nullable;
 public final class Headers {
 
     /**
-     * Matches standalone array headers: [3], [#2], [3\t], [2|].
-     * Group 1: optional # marker, Group 2: digits, Group 3: optional delimiter
+     * Matches standalone array headers: [3], [3\t], [2|].
+     * Group 1: optional # marker, captured so strict mode can reject it (§6),
+     * Group 2: digits, Group 3: optional delimiter
      */
     public static final Pattern ARRAY_HEADER_PATTERN = Pattern.compile("^\\[(#?)(\\d+)([\\t|])?]");
 
     /**
      * Matches tabular array headers with field names: [2]{id,name,role}:.
-     * Group 1: optional # marker, Group 2: digits, Group 3: optional delimiter,
-     * Group 4: field spec
+     * Group 1: optional # marker, captured so strict mode can reject it (§6),
+     * Group 2: digits, Group 3: optional delimiter, Group 4: field spec
      */
     public static final Pattern TABULAR_HEADER_PATTERN = Pattern.compile("^\\[(#?)(\\d+)([\\t|])?]\\{(.+)}:");
 
@@ -28,10 +29,10 @@ public final class Headers {
      * express. The former KEYED_ARRAY_PATTERN is kept only for its key and
      * bracket-segment grammar, documented below.
      * Matches keyed array headers: items[2]{id,name}: or tags[3]:.
-     * Group 1: key, Group 2: #marker, Group 3: delimiter, Group 4: flat field spec.
+     * Group 1: key, Group 2: delimiter, Group 3: flat field spec.
      */
     public static final Pattern KEYED_ARRAY_PATTERN = Pattern.compile(
-        "^(\"(?:[^\"\\\\]|\\\\.)*+\"|[^\\[\\]:\\s]++)\\[(#?)\\d++([\\t|])?](\\{[^}]+})?:.*+$");
+        "^(\"(?:[^\"\\\\]|\\\\.)*+\"|[^\\[\\]:\\s]++)\\[\\d++([\\t|])?](\\{[^}]+})?:.*+$");
 
     /**
      * Result of {@link #matchKeyedArrayHeader} and {@link #matchKeylessKeyedHeader}:
