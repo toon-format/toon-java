@@ -231,7 +231,7 @@ public final class KeyDecoder {
     }
 
     private static Object parseScalarValue(final String value, final DecodeContext context) {
-        if (DecodeHelper.trimSpaces(value).isEmpty()) {
+        if (value.isEmpty()) {
             return new LinkedHashMap<>();
         }
         if ("[]".equals(value)) {

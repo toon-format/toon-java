@@ -240,7 +240,7 @@ class KeyDecoderTest {
     @Test
     void testEmptyValueCreatesLinkedHashMap() throws Exception {
         // Given
-        final String value = " ";
+        final String value = "";
         final int depth = 25;
 
         final DecodeContext context = new DecodeContext();

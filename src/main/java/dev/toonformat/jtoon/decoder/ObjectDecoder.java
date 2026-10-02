@@ -259,7 +259,7 @@ public final class ObjectDecoder {
      * @return the parsed value (Map or primitive)
      */
     private static Object parseFieldScalar(final String value, final DecodeContext context) {
-        if (DecodeHelper.trimSpaces(value).isEmpty()) {
+        if (value.isEmpty()) {
             return new LinkedHashMap<>();
         }
         return PrimitiveDecoder.parse(value, context);
@@ -282,7 +282,7 @@ public final class ObjectDecoder {
         if (context.currentLine + 1 < context.lines.length) {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > depth) {
-                if (!DecodeHelper.trimSpaces(value).isEmpty()) {
+                if (!value.isEmpty()) {
                     return parseInlineValueWithOrphanLines(value, depth, nextDepth, context, scalarParser);
                 }
                 context.currentLine++;
@@ -334,7 +334,7 @@ public final class ObjectDecoder {
      * @return the parsed value (Map, List, or primitive)
      */
     static Object parseObjectItemValue(final String value, final int depth, final DecodeContext context) {
-        final boolean isEmpty = DecodeHelper.trimSpaces(value).isEmpty();
+        final boolean isEmpty = value.isEmpty();
 
         // Find the next non-blank line and its depth
         final Integer nextDepth = DecodeHelper.findNextNonBlankLineDepth(context);
