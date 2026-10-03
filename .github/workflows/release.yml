@@ -132,14 +132,12 @@ jobs:
 
       - name: Upload release assets
         if: steps.skip_duplicate.outputs.skip != 'true'
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/libs/*.jar
-          asset_name: jtoon-${{ steps.get_version.outputs.VERSION }}.jar
-          asset_content_type: application/java-archive
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.get_version.outputs.VERSION }}"
+          JAR=$(ls build/libs/*.jar | head -1)
+          gh release upload "$TAG" "$JAR"
 
       - name: Generate JaCoCo Badge
         if: steps.skip_duplicate.outputs.skip != 'true'
