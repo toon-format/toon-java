@@ -1,6 +1,6 @@
 # Documentation
 
-For a complete API documentation see the library [Javadoc](/toon-java/javadoc)
+For a complete API documentation see the library [Javadoc](https://javadoc.io/doc/dev.toonformat/jtoon)
 
 ## Type Conversions
 

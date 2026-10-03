@@ -378,7 +378,7 @@ This project is 100% compliant with TOON specification 4.1.2. Release conformanc
 ## Documentation
 
 - [📘 Full Documentation](docs/) - Extended guides and references
-- [🔧 API Reference](https://toon-format.github.io/toon-java/javadoc/) - Detailed Javadoc
+- [🔧 API Reference](https://javadoc.io/doc/dev.toonformat/jtoon) - Detailed Javadoc
 - [📋 Format Specification](docs/FORMAT.md) - TOON syntax and rules
 - [📜 TOON Spec](https://github.com/toon-format/spec) - Official specification
 - [🐛 Issues](https://github.com/toon-format/toon-java/issues) - Bug reports and features
