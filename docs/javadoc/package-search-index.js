@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"Alle Packages","u":"allpackages-index.html","k":"18"},{"l":"dev.toonformat.jtoon"},{"l":"dev.toonformat.jtoon.decoder"},{"l":"dev.toonformat.jtoon.encoder"},{"l":"dev.toonformat.jtoon.normalizer"},{"l":"dev.toonformat.jtoon.util"},{"l":"dev.toonformat.jtoon.validator"}];updateSearchResults();
