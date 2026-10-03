@@ -143,9 +143,10 @@ jobs:
         if: steps.skip_duplicate.outputs.skip != 'true'
         uses: cicirello/jacoco-badge-generator@v2.12.1
         with:
-          generate: badge
-          jacoco-report-path: build/reports/jacoco/test/jacocoTestReport.xml
-          output-path: .github/badges/jacoco.svg
+          jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
+          badges-directory: .github/badges
+          generate-coverage-badge: 'true'
+          generate-branches-badge: 'true'
 
       - name: Commit and push the badge
         if: steps.skip_duplicate.outputs.skip != 'true'
