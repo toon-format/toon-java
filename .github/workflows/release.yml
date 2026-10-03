@@ -136,8 +136,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.get_version.outputs.VERSION }}"
-          JAR=$(ls build/libs/*.jar | head -1)
-          gh release upload "$TAG" "$JAR"
+          for JAR in build/libs/*.jar; do
+            gh release upload "$TAG" "$JAR" --clobber
+          done
 
       - name: Generate JaCoCo Badge
         if: steps.skip_duplicate.outputs.skip != 'true'
