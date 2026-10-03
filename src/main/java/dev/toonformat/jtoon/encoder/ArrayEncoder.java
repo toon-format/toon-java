@@ -121,7 +121,8 @@ public final class ArrayEncoder {
             writer.push(depth, encodedKey + ": []");
             return;
         }
-        final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString());
+        // key is null here (depth > 0, no key)
+        final String header = PrimitiveEncoder.formatHeader(0, (String) null, null, options.delimiter().toString());
         writer.push(depth, header);
     }
 
