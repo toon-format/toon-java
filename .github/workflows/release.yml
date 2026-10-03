@@ -142,6 +142,7 @@ jobs:
 
       - name: Generate JaCoCo Badge
         if: steps.skip_duplicate.outputs.skip != 'true'
+        continue-on-error: true
         uses: cicirello/jacoco-badge-generator@v2.12.1
         with:
           jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
