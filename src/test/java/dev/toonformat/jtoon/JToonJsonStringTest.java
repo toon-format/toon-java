@@ -81,21 +81,21 @@ public class JToonJsonStringTest {
         }
 
         @Test
-        @DisplayName("supports custom options with pipe delimiter and length marker")
+        @DisplayName("supports custom options with pipe delimiter")
         void encodesWithCustomOptions() {
             // Given
             final String json = "{\"tags\":[\"reading\",\"gaming\",\"coding\"],"
                     + "\"items\":[{\"sku\":\"A1\",\"qty\":2,\"price\":9.99},"
                     + "{\"sku\":\"B2\",\"qty\":1,\"price\":14.5}]}";
-            final EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, Integer.MAX_VALUE);
+            final EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE);
 
             // When
             final String result = JToon.encodeJson(json, options);
 
             // Then
             final String expected = """
-                    tags[#3|]: reading|gaming|coding
-                    items[#2|]{sku|qty|price}:
+                    tags[3|]: reading|gaming|coding
+                    items[2|]{sku|qty|price}:
                       A1|2|9.99
                       B2|1|14.5""";
             assertEquals(expected, result);

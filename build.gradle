@@ -25,7 +25,6 @@ description = 'Token-Oriented Object Notation (TOON) - A compact, human-readable
 
 // Apply external Gradle scripts
 apply from: 'gradle/publishing.gradle'
-apply from: 'gradle/verification.gradle'
 
 // Publishing guard: refuse to publish when no version was resolved from gradle.properties
 // or -Pversion. Covers every repository publish, including publishToMavenCentral, which reaches

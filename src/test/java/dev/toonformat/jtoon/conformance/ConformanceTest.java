@@ -101,12 +101,11 @@ public class ConformanceTest {
                 };
             }
 
-            final boolean lengthMarker = options.lengthMarker() != null && "#".equals(options.lengthMarker());
             final KeyFolding flatten = options.keyFolding() != null && options.keyFolding().equals("safe") ?
                 KeyFolding.SAFE :
                 KeyFolding.OFF;
             final int depth = options.flattenDepth() != null ? options.flattenDepth() : Integer.MAX_VALUE;
-            return new EncodeOptions(indent, delimiter, lengthMarker, flatten, depth);
+            return new EncodeOptions(indent, delimiter, flatten, depth);
         }
 
         private record EncodeTestFile(File file, EncodeTestFixture fixture) {

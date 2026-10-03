@@ -75,7 +75,7 @@ public final class KeyedObjectEncoder {
             final List<TabularField> fields, final LineWriter writer, final int depth,
             final EncodeOptions options) {
         final String headerStr = HeaderFormatter.formatKeyedHeader(entries.size(), prefix, fields,
-                options.delimiter().toString(), options.lengthMarker());
+                options.delimiter().toString());
         writer.push(depth, headerStr);
 
         writeKeyedRows(entries, fields, writer, depth + 1, options);

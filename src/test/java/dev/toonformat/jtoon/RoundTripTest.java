@@ -320,7 +320,7 @@ class RoundTripTest {
             final Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
-            final EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF,
+            final EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF,
                     Integer.MAX_VALUE);
             final DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.TAB, true, PathExpansion.OFF,
                     DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
@@ -341,7 +341,7 @@ class RoundTripTest {
             final Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", Arrays.asList("a", "b", "c"));
 
-            final EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF,
+            final EncodeOptions encodeOpts = new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF,
                     Integer.MAX_VALUE);
             final DecodeOptions decodeOpts = new DecodeOptions(2, Delimiter.PIPE, true, PathExpansion.OFF,
                     DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,

@@ -34,7 +34,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format simple array header without key")
         void testSimpleArrayWithoutKey() {
             // Given
-            final String result = HeaderFormatter.format(3, null, null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, null, null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("[3]:", result);
@@ -44,7 +44,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format simple array header with key")
         void testSimpleArrayWithKey() {
             // Given
-            final String result = HeaderFormatter.format(5, "items", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(5, "items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[5]:", result);
@@ -54,20 +54,10 @@ public class HeaderFormatterTest {
         @DisplayName("should format empty array")
         void testEmptyArray() {
             // Given
-            final String result = HeaderFormatter.format(0, "items", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(0, "items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[0]:", result);
-        }
-
-        @Test
-        @DisplayName("should format array with length marker")
-        void testArrayWithLengthMarker() {
-            // Given
-            final String result = HeaderFormatter.format(3, "items", null, Delimiter.COMMA.toString(), true);
-
-            // Then
-            assertEquals("items[#3]:", result);
         }
     }
 
@@ -82,7 +72,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("id", "name", "age");
 
             // When
-            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("users[2]{id,name,age}:", result);
@@ -95,7 +85,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("value");
 
             // When
-            final String result = HeaderFormatter.format(5, "data", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(5, "data", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("data[5]{value}:", result);
@@ -108,7 +98,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("x", "y");
 
             // When
-            final String result = HeaderFormatter.format(10, null, fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(10, null, fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("[10]{x,y}:", result);
@@ -121,23 +111,10 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields();
 
             // When
-            final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[3]:", result);
-        }
-
-        @Test
-        @DisplayName("should format tabular header with length marker")
-        void testTabularWithLengthMarker() {
-            // Given
-            final List<TabularField> fields = leafFields("id", "name");
-
-            // When
-            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), true);
-
-            // Then
-            assertEquals("users[#2]{id,name}:", result);
         }
     }
 
@@ -153,7 +130,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("a", "b", "c");
 
             // When
-            final String result = HeaderFormatter.format(3, "data", fields, delimiter, false);
+            final String result = HeaderFormatter.format(3, "data", fields, delimiter);
 
             // Then
             assertEquals(expected, result);
@@ -170,7 +147,7 @@ public class HeaderFormatterTest {
         @DisplayName("should format array with pipe delimiter")
         void testArrayWithPipeDelimiter() {
             // Given
-            final String result = HeaderFormatter.format(5, "items", null, Delimiter.PIPE.toString(), false);
+            final String result = HeaderFormatter.format(5, "items", null, Delimiter.PIPE.toString());
 
             // Then
             assertEquals("items[5|]:", result);
@@ -180,23 +157,10 @@ public class HeaderFormatterTest {
         @DisplayName("should format array with tab delimiter")
         void testArrayWithTabDelimiter() {
             // Given
-            final String result = HeaderFormatter.format(5, "items", null, Delimiter.TAB.toString(), false);
+            final String result = HeaderFormatter.format(5, "items", null, Delimiter.TAB.toString());
 
             // Then
             assertEquals("items[5\t]:", result);
-        }
-
-        @Test
-        @DisplayName("should format with pipe delimiter and length marker")
-        void testPipeWithLengthMarker() {
-            // Given
-            final List<TabularField> fields = leafFields("x", "y");
-
-            // When
-            final String result = HeaderFormatter.format(2, "points", fields, Delimiter.PIPE.toString(), true);
-
-            // Then
-            assertEquals("points[#2|]{x|y}:", result);
         }
     }
 
@@ -208,7 +172,7 @@ public class HeaderFormatterTest {
         @DisplayName("should quote key with spaces")
         void testKeyWithSpaces() {
             // Given
-            final String result = HeaderFormatter.format(3, "my items", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, "my items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("\"my items\"[3]:", result);
@@ -218,7 +182,7 @@ public class HeaderFormatterTest {
         @DisplayName("should quote numeric key")
         void testNumericKey() {
             // Given
-            final String result = HeaderFormatter.format(2, "123", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(2, "123", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("\"123\"[2]:", result);
@@ -228,7 +192,7 @@ public class HeaderFormatterTest {
         @DisplayName("should not quote simple alphanumeric key")
         void testSimpleKey() {
             // Given
-            final String result = HeaderFormatter.format(3, "items", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, "items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[3]:", result);
@@ -241,7 +205,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("first name", "last name");
 
             // When
-            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("users[2]{\"first name\",\"last name\"}:", result);
@@ -254,7 +218,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("id", "full name", "age");
 
             // When
-            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(2, "users", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("users[2]{id,\"full name\",age}:", result);
@@ -270,7 +234,7 @@ public class HeaderFormatterTest {
         void testRecordFormat() {
             // Given
             final HeaderFormatter.HeaderConfig config = new HeaderFormatter.HeaderConfig(
-                3, "items", leafFields("id", "name"), Delimiter.COMMA.toString(), false);
+                3, "items", leafFields("id", "name"), Delimiter.COMMA.toString());
 
             // When
             final String result = HeaderFormatter.format(config);
@@ -284,7 +248,7 @@ public class HeaderFormatterTest {
         void testRecordWithNullKey() {
             // Given
             final HeaderFormatter.HeaderConfig config = new HeaderFormatter.HeaderConfig(
-                5, null, null, Delimiter.COMMA.toString(), false);
+                5, null, null, Delimiter.COMMA.toString());
 
             // When
             final String result = HeaderFormatter.format(config);
@@ -298,12 +262,12 @@ public class HeaderFormatterTest {
         void testRecordWithPipeDelimiter() {
             // Given
             final HeaderFormatter.HeaderConfig config = new HeaderFormatter.HeaderConfig(
-                2, "data", leafFields("x", "y"), Delimiter.PIPE.toString(), true);
+                2, "data", leafFields("x", "y"), Delimiter.PIPE.toString());
             // When
             final String result = HeaderFormatter.format(config);
 
             // Then
-            assertEquals("data[#2|]{x|y}:", result);
+            assertEquals("data[2|]{x|y}:", result);
         }
     }
 
@@ -315,7 +279,7 @@ public class HeaderFormatterTest {
         @DisplayName("should handle large array length")
         void testLargeLength() {
             // Given
-            final String result = HeaderFormatter.format(999999, "data", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(999999, "data", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("data[999999]:", result);
@@ -328,7 +292,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("id", "name");
 
             // When
-            final String result = HeaderFormatter.format(0, "empty", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(0, "empty", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("empty[0]{id,name}:", result);
@@ -341,7 +305,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10");
 
             // When
-            final String result = HeaderFormatter.format(1, "data", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(1, "data", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("data[1]{f1,f2,f3,f4,f5,f6,f7,f8,f9,f10}:", result);
@@ -351,7 +315,7 @@ public class HeaderFormatterTest {
         @DisplayName("should handle null fields list (treated as no fields)")
         void testNullFields() {
             // Given
-            final String result = HeaderFormatter.format(3, "items", null, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, "items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[3]:", result);
@@ -370,7 +334,7 @@ public class HeaderFormatterTest {
 
             // When
             final String result = HeaderFormatter.format(100, "repositories", fields,
-                Delimiter.COMMA.toString(), false);
+                Delimiter.COMMA.toString());
 
             // Then
             assertEquals("repositories[100]{id,name,stars,forks}:", result);
@@ -383,7 +347,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("date", "views", "clicks", "conversions", "revenue");
 
             // When
-            final String result = HeaderFormatter.format(180, "metrics", fields, ",", false);
+            final String result = HeaderFormatter.format(180, "metrics", fields, ",");
 
             // Then
             assertEquals("metrics[180]{date,views,clicks,conversions,revenue}:", result);
@@ -396,7 +360,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("id", "name", "department", "salary");
 
             // When
-            final String result = HeaderFormatter.format(50, "employees", fields, Delimiter.TAB.toString(), false);
+            final String result = HeaderFormatter.format(50, "employees", fields, Delimiter.TAB.toString());
 
             // Then
             assertEquals("employees[50\t]{id\tname\tdepartment\tsalary}:", result);
@@ -409,7 +373,7 @@ public class HeaderFormatterTest {
             final List<TabularField> fields = leafFields("sku", "qty", "price");
 
             // When
-            final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString(), false);
+            final String result = HeaderFormatter.format(3, "items", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[3]{sku,qty,price}:", result);

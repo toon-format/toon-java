@@ -109,21 +109,19 @@ public final class ArrayEncoder {
 
     /**
      * Encodes an empty array per spec §9.1: emitters SHOULD use key: [].
-     * With the length marker enabled, the legacy header form is used instead.
      */
     private static void encodeEmptyArray(@Nullable final String key,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         if (key == null && depth == 0) {
-            writer.push(depth, options.lengthMarker() ? "[0]: " : "[]");
+            writer.push(depth, "[]");
             return;
         }
-        if (key != null && !options.lengthMarker()) {
+        if (key != null) {
             final String encodedKey = PrimitiveEncoder.encodeKey(key);
             writer.push(depth, encodedKey + ": []");
             return;
         }
-        final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString(),
-                options.lengthMarker());
+        final String header = PrimitiveEncoder.formatHeader(0, key, null, options.delimiter().toString());
         writer.push(depth, header);
     }
 
@@ -200,8 +198,7 @@ public final class ArrayEncoder {
      */
     private static void encodeInlinePrimitiveArray(@Nullable final String prefix, final ArrayNode values,
             final LineWriter writer, final int depth, final EncodeOptions options) {
-        final String formatted = formatInlineArray(values, options.delimiter().toString(), prefix,
-                options.lengthMarker());
+        final String formatted = formatInlineArray(values, options.delimiter().toString(), prefix);
         writer.push(depth, formatted);
     }
 
@@ -211,16 +208,15 @@ public final class ArrayEncoder {
      * @param values       the array of primitive values to format
      * @param delimiter    the delimiter to use between values
      * @param prefix       optional key prefix for the array
-     * @param lengthMarker whether to include the # marker before the length
      * @return the formatted inline array string
      */
     public static String formatInlineArray(final ArrayNode values, final String delimiter,
-            @Nullable final String prefix, final boolean lengthMarker) {
-        final String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null, delimiter, lengthMarker);
+            @Nullable final String prefix) {
+        final String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null, delimiter);
 
         // Early return for empty arrays
         if (values.isEmpty()) {
-            if (!lengthMarker && prefix != null) {
+            if (prefix != null) {
                 return PrimitiveEncoder.encodeKey(prefix) + ": []";
             }
             return header;
@@ -246,13 +242,12 @@ public final class ArrayEncoder {
     private static void encodeArrayOfArraysAsListItems(@Nullable final String prefix, final ArrayNode values,
             final LineWriter writer, final int depth, final EncodeOptions options) {
         final String header = PrimitiveEncoder.formatHeader(values.size(), prefix, null,
-                                                            options.delimiter().toString(), options.lengthMarker());
+                                                            options.delimiter().toString());
         writer.push(depth, header);
 
         for (JsonNode arr : values) {
             if (arr.isArray() && isArrayOfPrimitives(arr)) {
-                final String inline = formatInlineArray((ArrayNode) arr, options.delimiter().toString(), null,
-                                                        options.lengthMarker());
+                final String inline = formatInlineArray((ArrayNode) arr, options.delimiter().toString(), null);
                 writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
             }
         }
@@ -267,7 +262,7 @@ public final class ArrayEncoder {
                                                     final int depth,
                                                     final EncodeOptions options) {
         final String header = PrimitiveEncoder.formatHeader(items.size(), prefix, null,
-                                                            options.delimiter().toString(), options.lengthMarker());
+                                                            options.delimiter().toString());
         writer.push(depth, header);
 
         for (JsonNode item : items) {
@@ -278,15 +273,13 @@ public final class ArrayEncoder {
             } else if (item.isArray()) {
                 // Direct array as list item
                 if (isArrayOfPrimitives(item)) {
-                    final String inline = formatInlineArray((ArrayNode) item, options.delimiter().toString(), null,
-                                                            options.lengthMarker());
+                    final String inline = formatInlineArray((ArrayNode) item, options.delimiter().toString(), null);
                     writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
                 }
                 if (isArrayOfObjects(item)) {
                     final ArrayNode arrayItems = (ArrayNode) item;
                     final String nestedHeader = PrimitiveEncoder.formatHeader(arrayItems.size(), null, null,
-                                                                              options.delimiter().toString(),
-                                                                              options.lengthMarker());
+                                                                              options.delimiter().toString());
                     writer.push(depth + 1, LIST_ITEM_PREFIX + nestedHeader);
 
                     arrayItems.elements().forEach(e -> ListItemEncoder.encodeObjectAsListItem((ObjectNode) e, writer,

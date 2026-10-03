@@ -152,7 +152,7 @@ public final class TabularArrayEncoder {
             final List<TabularField> header, final LineWriter writer, final int depth,
             final EncodeOptions options) {
         final String headerStr = PrimitiveEncoder.formatHeader(rows.size(), prefix, header,
-                options.delimiter().toString(), options.lengthMarker());
+                options.delimiter().toString());
         writer.push(depth, headerStr);
 
         writeTabularRows(rows, header, writer, depth + 1, options);

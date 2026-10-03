@@ -115,8 +115,7 @@ Converts any Java object or JSON-string to TOON format.
 - `options` – Optional encoding options (`EncodeOptions` record):
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Delimiter enum for array values and tabular rows: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
-  - `lengthMarker` – Boolean to prefix array lengths with `#` (default: `false`)
-  - `flatten` – Boolean to key folding to collapse single-key wrapper chains (default: `OFF`).
+  - `flatten` – Key folding to collapse single-key wrapper chains (default: `OFF`).
   - `flattenDepth` – maximum number of segments to fold  (default: `Infinity`)
 
 For `encodeJson` overloads:
@@ -198,7 +197,7 @@ Item item1 = new Item("A1", "Widget", 2, 9.99);
 Item item2 = new Item("B2", "Gadget", 1, 14.5);
 Data data = new Data(List.of(item1, item2));
 
-EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, 3);
+EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -227,7 +226,7 @@ Pipe delimiters offer a middle ground between commas and tabs:
 
 ```java
 // Using the same Item and Data records from above
-EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, 3);
+EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, 3);
 System.out.println(JToon.encode(data, options));
 ```
 
@@ -237,36 +236,6 @@ System.out.println(JToon.encode(data, options));
 items[2|]{sku|name|qty|price}:
   A1|Widget|2|9.99
   B2|Gadget|1|14.5
-```
-
-#### Length Marker Option
-
-The `lengthMarker` option adds an optional hash (`#`) prefix to array lengths to emphasize that the bracketed value represents a count, not an index:
-
-```java
-import dev.toonformat.jtoon.*;
-import java.util.*;
-
-record Item(String sku, int qty, double price) {}
-
-record Data(List<String> tags, List<Item> items) {}
-
-Item item1 = new Item("A1", 2, 9.99);
-Item item2 = new Item("B2", 1, 14.5);
-Data data = new Data(List.of("reading", "gaming", "coding"), List.of(item1, item2));
-
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, 3)));
-// tags[#3]: reading,gaming,coding
-// items[#2]{sku,qty,price}:
-//   A1,2,9.99
-//   B2,1,14.5
-
-// Works with custom delimiters
-System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, 3)));
-// tags[#3|]: reading|gaming|coding
-// items[#2|]{sku|qty|price}:
-//   A1|2|9.99
-//   B2|1|14.5
 ```
 
 ### `JToon.decode(String toon): Object`

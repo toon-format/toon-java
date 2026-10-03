@@ -9,7 +9,6 @@ import static dev.toonformat.jtoon.util.Constants.COMMA;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACE;
 import static dev.toonformat.jtoon.util.Constants.CLOSE_BRACE;
 import static dev.toonformat.jtoon.util.Constants.CLOSE_BRACKET;
-import static dev.toonformat.jtoon.util.Constants.HASHTAG;
 
 /**
  * Formats headers for arrays and tables in TOON format.
@@ -27,14 +26,12 @@ public final class HeaderFormatter {
      * @param key          Optional key prefix
      * @param fields       Optional header fields for tabular format
      * @param delimiter    The delimiter being used
-     * @param lengthMarker Whether to include # marker before length
      */
     public record HeaderConfig(
             int length,
             @Nullable String key,
             @Nullable List<TabularField> fields,
-            String delimiter,
-            boolean lengthMarker) {
+            String delimiter) {
     }
 
     /**
@@ -47,7 +44,7 @@ public final class HeaderFormatter {
         final StringBuilder header = new StringBuilder();
 
         appendKeyIfPresent(header, config.key());
-        appendArrayLength(header, config.length(), config.delimiter(), config.lengthMarker());
+        appendArrayLength(header, config.length(), config.delimiter());
         appendFieldsIfPresent(header, config.fields(), config.delimiter());
         header.append(COLON);
 
@@ -61,16 +58,14 @@ public final class HeaderFormatter {
      * @param key optional key prefix
      * @param fields optional header fields for tabular format
      * @param delimiter the delimiter being used
-     * @param lengthMarker whether to include # marker before length
      * @return formatted header string
      */
     public static String format(
             final int length,
             @Nullable final String key,
             @Nullable final List<TabularField> fields,
-            final String delimiter,
-            final boolean lengthMarker) {
-        final HeaderConfig config = new HeaderConfig(length, key, fields, delimiter, lengthMarker);
+            final String delimiter) {
+        final HeaderConfig config = new HeaderConfig(length, key, fields, delimiter);
         return format(config);
     }
 
@@ -83,22 +78,17 @@ public final class HeaderFormatter {
      * @param key          optional key prefix (omitted for the root form)
      * @param fields       header fields for keyed tabular form
      * @param delimiter    the delimiter being used
-     * @param lengthMarker whether to include # marker before the count
      * @return formatted keyed header string
      */
     public static String formatKeyedHeader(
             final int count,
             @Nullable final String key,
             @Nullable final List<TabularField> fields,
-            final String delimiter,
-            final boolean lengthMarker) {
+            final String delimiter) {
         final StringBuilder header = new StringBuilder();
 
         appendKeyIfPresent(header, key);
         header.append(OPEN_BRACKET);
-        if (lengthMarker) {
-            header.append(HASHTAG);
-        }
         header.append(count);
         header.append(COLON);
         appendDelimiterIfNotDefault(header, delimiter);
@@ -118,14 +108,8 @@ public final class HeaderFormatter {
     private static void appendArrayLength(
             final StringBuilder header,
             final int length,
-            final String delimiter,
-            final boolean lengthMarker) {
+            final String delimiter) {
         header.append(OPEN_BRACKET);
-        
-        if (lengthMarker) {
-            header.append(HASHTAG);
-        }
-        
         header.append(length);
         appendDelimiterIfNotDefault(header, delimiter);
         header.append(CLOSE_BRACKET);

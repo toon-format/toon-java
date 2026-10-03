@@ -140,7 +140,7 @@ class ArrayEncoderTest {
     }
 
     @Test
-    @DisplayName("should encode empty keyed array as key: [] without lengthMarker")
+    @DisplayName("should encode empty keyed array as key: []")
     void encodeEmptyArrayAsKeyValue() {
         // Given
         final ArrayNode emptyArray = jsonNodeFactory.arrayNode();
@@ -155,22 +155,7 @@ class ArrayEncoderTest {
     }
 
     @Test
-    @DisplayName("should encode empty keyed array with lengthMarker as header form")
-    void encodeEmptyArrayWithLengthMarker() {
-        // Given
-        final ArrayNode emptyArray = jsonNodeFactory.arrayNode();
-        final EncodeOptions options = EncodeOptions.withLengthMarker(true);
-        final LineWriter writer = new LineWriter(2);
-
-        // When
-        ArrayEncoder.encodeArray("tags", emptyArray, writer, 0, options);
-
-        // Then
-        assertEquals("tags[#0]:", writer.toString());
-    }
-
-    @Test
-    @DisplayName("should encode top-level empty array as [] without lengthMarker")
+    @DisplayName("should encode top-level empty array as []")
     void encodeRootEmptyArray() {
         // Given
         final ArrayNode emptyArray = jsonNodeFactory.arrayNode();
@@ -182,21 +167,6 @@ class ArrayEncoderTest {
 
         // Then
         assertEquals("[]", writer.toString());
-    }
-
-    @Test
-    @DisplayName("should encode top-level empty array with lengthMarker as [0]:")
-    void encodeRootEmptyArrayWithLengthMarker() {
-        // Given
-        final ArrayNode emptyArray = jsonNodeFactory.arrayNode();
-        final EncodeOptions options = EncodeOptions.withLengthMarker(true);
-        final LineWriter writer = new LineWriter(2);
-
-        // When
-        ArrayEncoder.encodeArray(null, emptyArray, writer, 0, options);
-
-        // Then
-        assertEquals("[0]:", writer.toString());
     }
 
     @Test

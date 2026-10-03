@@ -1002,7 +1002,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("tags[3\t]: reading\tgaming\tcoding",
-                    encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1013,7 +1013,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("tags[3|]: reading|gaming|coding",
-                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1024,7 +1024,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("tags[3]: reading,gaming,coding",
-                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.COMMA, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1038,7 +1038,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("items[2\t]{sku\tqty\tprice}:\n  A1\t2\t9.99\n  B2\t1\t14.5",
-                    encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1052,7 +1052,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("items[2|]{sku|qty|price}:\n  A1|2|9.99\n  B2|1|14.5",
-                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1063,7 +1063,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("pairs[2\t]:\n  - [2\t]: a\tb\n  - [2\t]: c\td",
-                    encode(obj, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1074,7 +1074,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("pairs[2|]:\n  - [2|]: a|b\n  - [2|]: c|d",
-                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                    encode(obj, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1085,7 +1085,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("[3\t]: x\ty\tz",
-                    encode(arr, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF,
+                    encode(arr, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF,
                             Integer.MAX_VALUE)));
             }
 
@@ -1097,7 +1097,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("[3|]: x|y|z",
-                    encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF,
+                    encode(arr, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF,
                             Integer.MAX_VALUE)));
             }
 
@@ -1109,7 +1109,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("[2\t]{id}:\n  1\n  2",
-                    encode(arr, new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF,
+                    encode(arr, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF,
                             Integer.MAX_VALUE)));
             }
 
@@ -1121,7 +1121,7 @@ class JToonTest {
 
                 // Then
                 assertEquals("[2|]{id}:\n  1\n  2",
-                    encode(arr, new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF,
+                    encode(arr, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF,
                             Integer.MAX_VALUE)));
             }
         }
@@ -1139,7 +1139,7 @@ class JToonTest {
                 // Then
                 assertEquals("items[3\t]: a\t\"b\\tc\"\td",
                     encode(obj("items", input),
-                        new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1151,7 +1151,7 @@ class JToonTest {
                 // Then
                 assertEquals("items[3|]: a|\"b|c\"|d",
                     encode(obj("items", input),
-                        new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1163,7 +1163,7 @@ class JToonTest {
                 // Then
                 assertEquals("items[2\t]: a,b\tc,d",
                     encode(obj("items", input),
-                        new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1175,7 +1175,7 @@ class JToonTest {
                 // Then
                 assertEquals("items[2|]: a,b|c,d",
                     encode(obj("items", input),
-                        new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1190,10 +1190,10 @@ class JToonTest {
                 // Then
                 assertEquals("items[2]{id,note}:\n  1,\"a,b\"\n  2,\"c,d\"",
                     encode(obj,
-                        new EncodeOptions(2, Delimiter.COMMA, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.COMMA, KeyFolding.OFF, Integer.MAX_VALUE)));
                 assertEquals("items[2\t]{id\tnote}:\n  1\ta,b\n  2\tc,d",
                     encode(obj,
-                        new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1202,10 +1202,10 @@ class JToonTest {
                 // Then
                 assertEquals("note: a,b",
                     encode(obj("note", "a,b"),
-                        new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
                 assertEquals("note: a,b",
                     encode(obj("note", "a,b"),
-                        new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
 
             @Test
@@ -1214,84 +1214,11 @@ class JToonTest {
                 // Then
                 assertEquals("pairs[1|]:\n  - [2|]: a|\"b|c\"",
                     encode(obj("pairs", list(list("a", "b|c"))),
-                        new EncodeOptions(2, Delimiter.PIPE, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, Integer.MAX_VALUE)));
                 assertEquals("pairs[1\t]:\n  - [2\t]: a\t\"b\\tc\"",
                     encode(obj("pairs", list(list("a", "b\tc"))),
-                        new EncodeOptions(2, Delimiter.TAB, false, KeyFolding.OFF, Integer.MAX_VALUE)));
+                        new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, Integer.MAX_VALUE)));
             }
-        }
-    }
-
-    @Nested
-    @DisplayName("length marker option")
-    class LengthMarker {
-
-        @Test
-        @DisplayName("adds length marker to primitive arrays")
-        void addsMarkerToPrimitives() {
-            // Given
-            final Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
-
-            // Then
-            assertEquals("tags[#3]: reading,gaming,coding",
-                encode(obj,
-                    new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
-        }
-
-        @Test
-        @DisplayName("handles empty arrays")
-        void handlesEmptyArrays() {
-            // Then
-            assertEquals("items[#0]:",
-                encode(obj("items", List.of()),
-                    new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
-        }
-
-        @Test
-        @DisplayName("adds length marker to tabular arrays")
-        void addsMarkerToTabular() {
-            // Given
-            final Map<String, Object> obj = obj(
-                "items", list(
-                    obj("sku", "A1", "qty", 2, "price", 9.99),
-                    obj("sku", "B2", "qty", 1, "price", 14.5)));
-
-            // Then
-            assertEquals("items[#2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5",
-                encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
-        }
-
-        @Test
-        @DisplayName("adds length marker to nested arrays")
-        void addsMarkerToNested() {
-            // Given
-            final Map<String, Object> obj = obj("pairs", list(list("a", "b"), list("c", "d")));
-
-            // Then
-            assertEquals("pairs[#2]:\n  - [#2]: a,b\n  - [#2]: c,d",
-                encode(obj, new EncodeOptions(2, Delimiter.COMMA, true, KeyFolding.OFF, Integer.MAX_VALUE)));
-        }
-
-        @Test
-        @DisplayName("works with delimiter option")
-        void worksWithDelimiter() {
-            // Given
-            final Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
-
-            // Then
-            assertEquals("tags[#3|]: reading|gaming|coding",
-                encode(obj,
-                    new EncodeOptions(2, Delimiter.PIPE, true, KeyFolding.OFF, Integer.MAX_VALUE)));
-        }
-
-        @Test
-        @DisplayName("default is false (no length marker)")
-        void defaultIsFalse() {
-            // Given
-            final Map<String, Object> obj = obj("tags", list("reading", "gaming", "coding"));
-
-            // Then
-            assertEquals("tags[3]: reading,gaming,coding", encode(obj));
         }
     }
 

@@ -103,27 +103,25 @@ public final class ListItemEncoder {
         }
     }
 
-    private static void encodeFirstArrayAsPrimitives(final String key,
-                                                     final ArrayNode arrayValue,
-                                                     final LineWriter writer,
-                                                     final int depth,
-                                                     final EncodeOptions options) {
-        final String formatted = ArrayEncoder.formatInlineArray(arrayValue, options.delimiter().toString(), key,
-                                                                options.lengthMarker());
+private static void encodeFirstArrayAsPrimitives(final String key,
+                                                      final ArrayNode arrayValue,
+                                                      final LineWriter writer,
+                                                      final int depth,
+                                                      final EncodeOptions options) {
+        final String formatted = ArrayEncoder.formatInlineArray(arrayValue, options.delimiter().toString(), key);
         writer.push(depth, LIST_ITEM_PREFIX + formatted);
     }
 
-    private static void encodeFirstArrayAsObjects(final String key,
-                                                  final String encodedKey,
-                                                  final ArrayNode arrayValue,
-                                                  final LineWriter writer,
-                                                  final int depth,
-                                                  final EncodeOptions options) {
+private static void encodeFirstArrayAsObjects(final String key,
+                                                   final String encodedKey,
+                                                   final ArrayNode arrayValue,
+                                                   final LineWriter writer,
+                                                   final int depth,
+                                                   final EncodeOptions options) {
         final List<TabularField> header = TabularArrayEncoder.detectTabularHeader(arrayValue);
         if (!header.isEmpty()) {
             final String headerStr = PrimitiveEncoder.formatHeader(arrayValue.size(), key, header,
-                                                                   options.delimiter().toString(),
-                                                                   options.lengthMarker());
+                                                                   options.delimiter().toString());
             writer.push(depth, LIST_ITEM_PREFIX + headerStr);
             // Write just the rows, header was already written above
             TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 2, options);
@@ -138,11 +136,11 @@ public final class ListItemEncoder {
         }
     }
 
-    private static void encodeFirstArrayAsComplex(final String encodedKey,
-                                                  final ArrayNode arrayValue,
-                                                  final LineWriter writer,
-                                                  final int depth,
-                                                  final EncodeOptions options) {
+private static void encodeFirstArrayAsComplex(final String encodedKey,
+                                                   final ArrayNode arrayValue,
+                                                   final LineWriter writer,
+                                                   final int depth,
+                                                   final EncodeOptions options) {
         writer.push(depth, LIST_ITEM_PREFIX + encodedKey + OPEN_BRACKET + arrayValue.size() + CLOSE_BRACKET + COLON);
 
         for (JsonNode item : arrayValue) {
@@ -151,7 +149,7 @@ public final class ListItemEncoder {
                         + PrimitiveEncoder.encodePrimitive(item, options.delimiter().toString()));
             } else if (item.isArray() && ArrayEncoder.isArrayOfPrimitives(item)) {
                 final String inline = ArrayEncoder.formatInlineArray((ArrayNode) item, options.delimiter().toString(),
-                                                                     null, options.lengthMarker());
+                                                                     null);
                 writer.push(depth + 2, LIST_ITEM_PREFIX + inline);
             } else if (item.isObject()) {
                 encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
@@ -159,16 +157,16 @@ public final class ListItemEncoder {
         }
     }
 
-    private static void encodeFirstValueAsObject(final String key,
-                                                final String encodedKey,
-                                                final ObjectNode nestedObj,
-                                                final LineWriter writer,
-                                                final int depth,
-                                                final EncodeOptions options) {
+private static void encodeFirstValueAsObject(final String key,
+                                                 final String encodedKey,
+                                                 final ObjectNode nestedObj,
+                                                 final LineWriter writer,
+                                                 final int depth,
+                                                 final EncodeOptions options) {
         final List<TabularField> keyedFields = KeyedObjectEncoder.detectKeyedFields(nestedObj);
         if (!keyedFields.isEmpty()) {
             final String headerStr = HeaderFormatter.formatKeyedHeader(nestedObj.size(), key, keyedFields,
-                    options.delimiter().toString(), options.lengthMarker());
+                    options.delimiter().toString());
             writer.push(depth, LIST_ITEM_PREFIX + headerStr);
             KeyedObjectEncoder.writeKeyedRows(nestedObj, keyedFields, writer, depth + 2, options);
             return;

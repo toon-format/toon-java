@@ -555,7 +555,7 @@ class PrimitiveEncoderTest {
         @DisplayName("should format simple array header")
         void testSimpleHeader() {
             // Given
-            final String result = PrimitiveEncoder.formatHeader(5, "items", null, Delimiter.COMMA.toString(), false);
+            final String result = PrimitiveEncoder.formatHeader(5, "items", null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("items[5]:", result);
@@ -568,20 +568,10 @@ class PrimitiveEncoderTest {
             final List<TabularField> fields = List.of(TabularField.leaf("id"), TabularField.leaf("name"));
 
             // When
-            final String result = PrimitiveEncoder.formatHeader(3, "users", fields, Delimiter.COMMA.toString(), false);
+            final String result = PrimitiveEncoder.formatHeader(3, "users", fields, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("users[3]{id,name}:", result);
-        }
-
-        @Test
-        @DisplayName("should format header with length marker")
-        void testWithLengthMarker() {
-            // Given
-            final String result = PrimitiveEncoder.formatHeader(5, "data", null, Delimiter.COMMA.toString(), true);
-
-            // Then
-            assertEquals("data[#5]:", result);
         }
 
         @Test
@@ -591,7 +581,7 @@ class PrimitiveEncoderTest {
             final List<TabularField> fields = List.of(TabularField.leaf("x"), TabularField.leaf("y"));
 
             // When
-            final String result = PrimitiveEncoder.formatHeader(2, "points", fields, Delimiter.PIPE.toString(), false);
+            final String result = PrimitiveEncoder.formatHeader(2, "points", fields, Delimiter.PIPE.toString());
 
             // Then
             assertEquals("points[2|]{x|y}:", result);
@@ -601,7 +591,7 @@ class PrimitiveEncoderTest {
         @DisplayName("should format header without key")
         void testWithoutKey() {
             // Given
-            final String result = PrimitiveEncoder.formatHeader(3, null, null, Delimiter.COMMA.toString(), false);
+            final String result = PrimitiveEncoder.formatHeader(3, null, null, Delimiter.COMMA.toString());
 
             // Then
             assertEquals("[3]:", result);

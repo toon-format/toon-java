@@ -10,7 +10,6 @@ class SecurityValidationTest {
 
     private static final int CUSTOM_INDENT = 4;
     private static final int CUSTOM_FLATTEN_DEPTH = 5;
-    private static final int SECURITY_INDENT = 10;
     private static final int CUSTOM_MAX_ARRAY_SIZE = 100;
 
     @Nested
@@ -20,35 +19,35 @@ class SecurityValidationTest {
         @DisplayName("should reject negative indent")
         void testNegativeIndent() {
             assertThrows(IllegalArgumentException.class,
-                () -> new EncodeOptions(-1, Delimiter.COMMA, false, KeyFolding.OFF, SECURITY_INDENT));
+                () -> new EncodeOptions(-1, Delimiter.COMMA, KeyFolding.OFF, CUSTOM_FLATTEN_DEPTH));
         }
 
         @Test
         @DisplayName("should reject indent exceeding MAX_INDENT")
         void testExcessiveIndent() {
             assertThrows(IllegalArgumentException.class,
-                () -> new EncodeOptions(EncodeOptions.MAX_ALLOWED_INDENT + 1, Delimiter.COMMA, false,
-                        KeyFolding.OFF, SECURITY_INDENT));
+                () -> new EncodeOptions(
+                    EncodeOptions.MAX_ALLOWED_INDENT + 1, Delimiter.COMMA, KeyFolding.OFF, CUSTOM_FLATTEN_DEPTH));
         }
 
         @Test
         @DisplayName("should reject null delimiter")
         void testNullDelimiter() {
             assertThrows(NullPointerException.class,
-                () -> new EncodeOptions(2, null, false, KeyFolding.OFF, SECURITY_INDENT));
+                () -> new EncodeOptions(2, null, KeyFolding.OFF, CUSTOM_FLATTEN_DEPTH));
         }
 
         @Test
         @DisplayName("should reject negative flattenDepth")
         void testNegativeFlattenDepth() {
             assertThrows(IllegalArgumentException.class,
-                () -> new EncodeOptions(2, Delimiter.COMMA, false, KeyFolding.SAFE, -1));
+                () -> new EncodeOptions(2, Delimiter.COMMA, KeyFolding.SAFE, -1));
         }
 
         @Test
         @DisplayName("should accept valid options")
         void testValidOptions() {
-            final EncodeOptions opts = new EncodeOptions(CUSTOM_INDENT, Delimiter.PIPE, true,
+            final EncodeOptions opts = new EncodeOptions(CUSTOM_INDENT, Delimiter.PIPE,
                     KeyFolding.SAFE, CUSTOM_FLATTEN_DEPTH);
             assertEquals(CUSTOM_INDENT, opts.indent());
             assertEquals(Delimiter.PIPE, opts.delimiter());

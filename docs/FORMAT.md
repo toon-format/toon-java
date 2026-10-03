@@ -595,29 +595,12 @@ Strict mode additionally enforces the whole §14 error set, not just indentation
 
 All arrays include `[N]` to indicate element count for validation.
 
-### Without Length Marker (Default)
-
 ```toon
 items[3]: a,b,c
 users[2,]{id,name}:
   1,Alice
   2,Bob
 ```
-
-### With Length Marker (`#`)
-
-```python
-encode(data, {"lengthMarker": "#"})
-```
-
-```toon
-items[#3]: a,b,c
-users[#2,]{id,name}:
-  1,Alice
-  2,Bob
-```
-
-The `#` prefix makes length indicators more explicit for validation-focused use cases.
 
 ---
 
@@ -816,5 +799,5 @@ users[3,]{id,name,age,active}:
 
 ## See Also
 
-- [API Reference](/javadoc) - Complete function documentation
+- [API Reference](https://javadoc.io/doc/dev.toonformat/jtoon) - Complete function documentation
 - [Official Specification](https://github.com/toon-format/spec/blob/main/SPEC.md) - Normative spec

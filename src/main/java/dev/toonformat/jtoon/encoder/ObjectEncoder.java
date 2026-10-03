@@ -238,7 +238,7 @@ public final class ObjectEncoder {
                 // to encode normally without flattening
                 newRemainingDepth = -1;
                 currentOptions = new EncodeOptions(currentOptions.indent(), currentOptions.delimiter(),
-                                                   currentOptions.lengthMarker(), KeyFolding.OFF,
+                                                   KeyFolding.OFF,
                                                    currentOptions.flattenDepth());
             }
 

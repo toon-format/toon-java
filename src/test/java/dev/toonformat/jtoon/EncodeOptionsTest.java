@@ -15,7 +15,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -31,7 +30,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -47,7 +45,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(indent, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -63,23 +60,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.TAB, opts.delimiter());
-        assertFalse(opts.lengthMarker());
-        assertEquals(KeyFolding.OFF, opts.flatten());
-        assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
-    }
-
-    @Test
-    void givenLengthMarkerFlag_whenUsingWithLengthMarker_thenOnlyLengthMarkerIsModified() {
-        // Given
-        final boolean marker = true;
-
-        // When
-        final EncodeOptions opts = EncodeOptions.withLengthMarker(marker);
-
-        // Then
-        assertEquals(2, opts.indent());
-        assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertTrue(opts.lengthMarker());
         assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -95,7 +75,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.SAFE, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -111,7 +90,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.OFF, opts.flatten());
         assertEquals(Integer.MAX_VALUE, opts.flattenDepth());
     }
@@ -127,7 +105,6 @@ class EncodeOptionsTest {
         // Then
         assertEquals(2, opts.indent());
         assertEquals(Delimiter.COMMA, opts.delimiter());
-        assertFalse(opts.lengthMarker());
         assertEquals(KeyFolding.SAFE, opts.flatten());
         assertEquals(flattenDepth, opts.flattenDepth());
     }

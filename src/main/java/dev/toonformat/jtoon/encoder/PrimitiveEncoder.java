@@ -219,15 +219,13 @@ public final class PrimitiveEncoder {
      * @param key          Optional key prefix
      * @param fields       Optional header fields for tabular format
      * @param delimiter    The delimiter being used
-     * @param lengthMarker Whether to include # marker before length
      * @return Formatted header string
      */
     public static String formatHeader(
         final int length,
         @Nullable final String key,
         @Nullable final List<TabularField> fields,
-        final String delimiter,
-        final boolean lengthMarker) {
-        return HeaderFormatter.format(length, key, fields, delimiter, lengthMarker);
+        final String delimiter) {
+        return HeaderFormatter.format(length, key, fields, delimiter);
     }
 }
