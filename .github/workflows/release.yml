@@ -81,6 +81,7 @@ jobs:
           if [ -z "${{ secrets.MAVEN_CENTRAL_TOKEN }}" ]; then
             echo "❌ MAVEN_CENTRAL_TOKEN secret is not set"
             exit 1
+          fi
           echo "✅ Maven Central token is set (length: ${#MAVEN_CENTRAL_TOKEN})"
         env:
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
