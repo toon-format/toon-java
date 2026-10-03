@@ -49,8 +49,6 @@ jobs:
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
-          # Bestehenden version-Key ersetzen statt anhaengen: gradle.properties enthaelt inzwischen
-          # bereits einen, und ein Anhaengen wuerde zwei Eintraege hinterlassen.
           sed -i '/^version=/d' gradle.properties
           echo "version=$VERSION" >> gradle.properties
           echo "gradle.properties updated:"
@@ -66,6 +64,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Regenerate dependency verification metadata
+        run: |
+          rm -f gradle/verification-metadata.xml
+          ./gradlew --write-verification-metadata sha256 build -x test
+
       - name: validate specs
         run: ./gradlew specsValidation
 
@@ -78,7 +81,6 @@ jobs:
           if [ -z "${{ secrets.MAVEN_CENTRAL_TOKEN }}" ]; then
             echo "❌ MAVEN_CENTRAL_TOKEN secret is not set"
             exit 1
-          fi
           echo "✅ Maven Central token is set (length: ${#MAVEN_CENTRAL_TOKEN})"
         env:
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
@@ -114,51 +116,47 @@ jobs:
           git add README.md build.gradle gradle/verification-metadata.xml
           git diff --staged --quiet || git commit -m "docs: update version to ${{ steps.get_version.outputs.VERSION }} in README"
           git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release (if not exists)
         if: steps.skip_duplicate.outputs.skip != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.get_version.outputs.VERSION }}"
           if gh release view "$TAG" --json tagName >/dev/null 2>&1; then
-            echo "Release $TAG already exists - skipping creation"
+            echo "Release $TAG already exists"
           else
-            ARGS=()
-            if [[ "${{ steps.get_version.outputs.VERSION }}" == *-* ]]; then
-              ARGS+=(--prerelease)
-            fi
-            gh release create "$TAG" --generate-notes --target main "${ARGS[@]}"
+            gh release create "$TAG" --title "$TAG" --notes "Release ${{ steps.get_version.outputs.VERSION }}"
           fi
 
       - name: Upload release assets
         if: steps.skip_duplicate.outputs.skip != 'true'
+        uses: actions/upload-release-asset@v1
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="v${{ steps.get_version.outputs.VERSION }}"
-          gh release upload "$TAG" build/libs/*.jar build/reports/jtoon-bom.json --clobber
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/libs/*.jar
+          asset_name: jtoon-${{ steps.get_version.outputs.VERSION }}.jar
+          asset_content_type: application/java-archive
 
       - name: Generate JaCoCo Badge
         if: steps.skip_duplicate.outputs.skip != 'true'
         uses: cicirello/jacoco-badge-generator@v2.12.1
         with:
-          generate-branches-badge: true
-          jacoco-csv-file: build/customJacocoReportDir/test/jacocoTestReport.csv
+          generate: badge
+          jacoco-report-path: build/reports/jacoco/test/jacocoTestReport.xml
+          output-path: .github/badges/jacoco.svg
 
       - name: Commit and push the badge
         if: steps.skip_duplicate.outputs.skip != 'true'
-        uses: EndBug/add-and-commit@v11.1.1
-        with:
-            default_author: github_actions
-            message: 'Update the Coverage Badge for the README.md'
-            add: '*.svg'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/badges/jacoco.svg
+          git diff --staged --quiet || git commit -m "ci: update JaCoCo badge"
+          git push origin main
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v7.0.1
-        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
