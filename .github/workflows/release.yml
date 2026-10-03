@@ -120,6 +120,8 @@ jobs:
 
       - name: Create GitHub Release (if not exists)
         if: steps.skip_duplicate.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.get_version.outputs.VERSION }}"
           if gh release view "$TAG" --json tagName >/dev/null 2>&1; then
