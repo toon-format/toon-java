@@ -147,13 +147,25 @@ public final class DecodeHelper {
      * @return the unquoted colon
      */
     static int findUnquotedColon(final String content) {
+        return findUnquoted(content, COLON.charAt(0), 0);
+    }
+
+    /**
+     * Finds the index of the first unquoted occurrence of a character.
+     *
+     * @param content the content string to scan
+     * @param target  the character to find
+     * @param from    the index to start scanning at
+     * @return the index of the character, or -1 if absent
+     */
+    private static int findUnquoted(final String content, final char target, final int from) {
         boolean inQuotes = false;
         boolean escaped = false;
 
-        for (int i = 0; i < content.length(); i++) {
+        for (int i = from; i < content.length(); i++) {
             final char c = content.charAt(i);
 
-            if (c == COLON.charAt(0) && !inQuotes) {
+            if (c == target && !inQuotes) {
                 return i;
             } else if (escaped) {
                 escaped = false;
@@ -179,15 +191,64 @@ public final class DecodeHelper {
     }
 
     /**
-     * Checks if content opens a keyless array: a bracket segment with an
-     * unquoted colon, or the bare empty-array token. A bracket-led line
-     * without a colon is a scalar, never a header.
+     * Checks if content opens a keyless array: the bare {@code []}, or a
+     * bracket segment followed by its header colon (§6). Any other
+     * bracket-led line is a key-value line or a scalar line, never a header.
      *
      * @param content the line content past its indentation
-     * @return true if the content is a keyless header or {@code []}
+     * @return true if the content has the shape of a keyless header or is {@code []}
      */
     static boolean opensKeylessArray(final String content) {
-        return content.startsWith(OPEN_BRACKET) && (findUnquotedColon(content) >= 0 || "[]".equals(content));
+        return "[]".equals(content) || content.startsWith(OPEN_BRACKET) && findHeaderColon(content) >= 0;
+    }
+
+    /**
+     * Finds the colon that ends a header whose bracket segment opens at index
+     * 0: the first unquoted colon past the closing bracket, and past the
+     * matching brace when a field list opens before that colon (§6).
+     *
+     * @param content the line content past its indentation
+     * @return the index of the header colon, or -1 if the line has no header shape
+     */
+    private static int findHeaderColon(final String content) {
+        final int bracketEnd = findUnquoted(content, ']', 0);
+        if (bracketEnd < 0) {
+            return -1;
+        }
+        int segmentEnd = bracketEnd;
+        final int braceStart = findUnquoted(content, '{', bracketEnd);
+        if (braceStart >= 0 && braceStart < findUnquoted(content, COLON.charAt(0), bracketEnd)) {
+            segmentEnd = Math.max(segmentEnd, findMatchingBrace(content, braceStart));
+        }
+        return findUnquoted(content, COLON.charAt(0), segmentEnd);
+    }
+
+    /**
+     * Finds the brace that closes the field list opening at the given index.
+     *
+     * @param content    the line content to scan
+     * @param braceStart the index of the opening brace
+     * @return the index of the matching closing brace, or -1 if unbalanced
+     */
+    private static int findMatchingBrace(final String content, final int braceStart) {
+        int depth = 0;
+        boolean inQuotes = false;
+        boolean escaped = false;
+        for (int i = braceStart; i < content.length(); i++) {
+            final char c = content.charAt(i);
+            if (escaped) {
+                escaped = false;
+            } else if (c == BACKSLASH) {
+                escaped = true;
+            } else if (c == DOUBLE_QUOTE) {
+                inQuotes = !inQuotes;
+            } else if (!inQuotes && c == '{') {
+                depth++;
+            } else if (!inQuotes && c == '}' && --depth == 0) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
