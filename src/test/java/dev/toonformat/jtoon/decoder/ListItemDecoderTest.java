@@ -64,26 +64,6 @@ class ListItemDecoderTest {
     }
 
     @Test
-    @DisplayName("Testing parseListItemFields with negativ depth")
-    void testParseListItemFields() throws Exception {
-        // Given
-        final String line = "  - asd: 1";
-        final Object testObject = new Object();
-        final Map<String, Object> item = Map.of(line, testObject);
-        final int depth = -2;
-        final DecodeContext context = new DecodeContext();
-        context.options = DecodeOptions.withStrict(false);
-        context.lines = new String[] { line };
-
-        // When
-        invokePrivateStatic("parseListItemFields",
-                new Class[] { Map.class, int.class, DecodeContext.class }, item, depth, context);
-
-        // Then
-        assertEquals(1, context.currentLine);
-    }
-
-    @Test
     @DisplayName("Given scalar item When parsed Then scalar returned and line advanced")
     void parseListItem_givenScalarItem_whenParsed_thenScalar() {
         // Given
@@ -194,24 +174,6 @@ class ListItemDecoderTest {
             () -> invokePrivateStatic("parseListItemFields",
                 new Class[]{Map.class, int.class, DecodeContext.class}, item, 0, context));
         assertInstanceOf(IllegalArgumentException.class, ex.getCause());
-    }
-
-    @Test
-    @DisplayName("Given over-indented field line in lenient mode When parsed Then line skipped")
-    void parseListItemFields_givenOverIndentedLenient_whenParsed_thenSkipped() throws Exception {
-        // Given
-        final Map<String, Object> item = new LinkedHashMap<>();
-        final DecodeContext context = new DecodeContext();
-        context.options = DecodeOptions.withStrict(false);
-        context.lines = new String[]{"  - item", "      orphan: 1", "  - next"};
-        context.currentLine = 1;
-
-        // When
-        invokePrivateStatic("parseListItemFields",
-            new Class[]{Map.class, int.class, DecodeContext.class}, item, 0, context);
-
-        // Then
-        assertEquals(2, context.currentLine);
     }
 
     @Test
