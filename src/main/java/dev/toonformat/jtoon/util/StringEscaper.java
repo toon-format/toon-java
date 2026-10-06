@@ -1,5 +1,7 @@
 package dev.toonformat.jtoon.util;
 
+import java.util.HexFormat;
+
 /**
  * Handles string escaping for TOON format.
  * Escapes special characters that need protection in quoted strings.
@@ -221,7 +223,7 @@ public final class StringEscaper {
 
     private static boolean isHexString(final String value) {
         for (int i = 0; i < value.length(); i++) {
-            if (Character.digit(value.charAt(i), HEX_RADIX) == -1) {
+            if (!HexFormat.isHexDigit(value.charAt(i))) {
                 return false;
             }
         }
