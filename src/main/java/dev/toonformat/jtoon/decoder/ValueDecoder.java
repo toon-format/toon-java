@@ -45,28 +45,11 @@ public final class ValueDecoder {
      * @param toon    TOON-formatted input string
      * @param options parsing options (delimiter, indentation, strict mode)
      * @return parsed object (Map, List, primitive, or null)
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      */
     @Nullable
     public static Object decode(final String toon, final DecodeOptions options) {
-        try {
-            return decodeInternal(toon, options);
-        } catch (FatalDecodeException e) {
-            // Spec §5.2/§7.4: bare scalars outside root primitive position and
-            // characters after a closing quote are errors in strict and
-            // non-strict mode alike; lenient mode must not swallow them.
-            throw e;
-        } catch (IllegalArgumentException e) {
-            if (!options.strict()) {
-                return null;
-            }
-            throw e;
-        }
-    }
-
-    @Nullable
-    private static Object decodeInternal(final String toon, final DecodeOptions options) {
         if (toon == null) {
             return new LinkedHashMap<>();
         }
@@ -304,8 +287,8 @@ public final class ValueDecoder {
      * @param toon    The TOON-formatted string to decode
      * @param options Decoding options (indent, delimiter, strict mode)
      * @return JSON string representation
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      */
     public static String decodeToJson(final String toon, final DecodeOptions options) {
         try {

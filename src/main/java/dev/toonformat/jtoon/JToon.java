@@ -100,8 +100,8 @@ public final class JToon {
      *
      * @param toon The TOON-formatted string to decode
      * @return Parsed object (Map, List, primitive, or null)
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      */
     @Nullable
     public static Object decode(final String toon) {
@@ -119,8 +119,8 @@ public final class JToon {
      * @param toon    The TOON-formatted string to decode
      * @param options Decoding options (indent, delimiter, strict mode)
      * @return Parsed object (Map, List, primitive, or null)
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      * @throws NullPointerException if options is null
      */
     @Nullable
@@ -140,8 +140,8 @@ public final class JToon {
      *
      * @param toon The TOON-formatted string to decode
      * @return JSON string representation
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      */
     public static String decodeToJson(final String toon) {
         return decodeToJson(toon, DecodeOptions.DEFAULT);
@@ -159,8 +159,8 @@ public final class JToon {
      * @param toon    The TOON-formatted string to decode
      * @param options Decoding options (indent, delimiter, strict mode)
      * @return JSON string representation
-     * @throws IllegalArgumentException if strict mode is enabled and input is
-     *                                  invalid
+     * @throws IllegalArgumentException if the input is invalid; non-strict mode
+     *                                  relaxes only the checks the spec makes lenient
      * @throws NullPointerException if options is null
      */
     public static String decodeToJson(final String toon, final DecodeOptions options) {

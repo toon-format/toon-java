@@ -148,9 +148,9 @@
  *
  * <h3>Lenient Mode</h3>
  * <ul>
- *   <li>Best-effort parsing</li>
- *   <li>Returns null on invalid input</li>
- *   <li>Skips malformed lines</li>
+ *   <li>Applies the leniencies the spec names for non-strict mode, such as count mismatches,
+ *       indentation depth jumps and skipped over-indented lines other than scalar lines</li>
+ *   <li>Throws IllegalArgumentException wherever the spec names no leniency (§14)</li>
  * </ul>
  *
  * <h2>Special Parsing Cases</h2>

@@ -45,7 +45,7 @@ public final class DecodeHelper {
      * {@link dev.toonformat.jtoon.util.StringEscaper#validateString}.
      *
      * @param token the token to validate
-     * @throws FatalDecodeException if another character follows the closing quote
+     * @throws IllegalArgumentException if another character follows the closing quote
      */
     static void validateQuotedTokenBoundary(final String token) {
         if (!token.startsWith("\"")) {
@@ -60,7 +60,7 @@ public final class DecodeHelper {
                 escaped = true;
             } else if (c == '"') {
                 if (!trimSpaces(token.substring(i + 1)).isEmpty()) {
-                    throw new FatalDecodeException(
+                    throw new IllegalArgumentException(
                         "Characters after closing quote in token: " + token);
                 }
                 return;
@@ -354,7 +354,7 @@ public final class DecodeHelper {
             if (findUnquotedColon(content) < 0) {
                 // Spec §5.2: a scalar line outside root primitive position is
                 // an error in strict and non-strict mode alike.
-                throw new FatalDecodeException(
+                throw new IllegalArgumentException(
                     "Bare token line outside root primitive position at line " + (context.currentLine + 1));
             }
             context.currentLine++;

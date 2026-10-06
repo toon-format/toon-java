@@ -366,36 +366,6 @@ class ValueDecoderTest {
     }
 
     @Test
-    void givenInvalidInputAndStrictFalse_whenDecode_thenReturnsNull() {
-        // Given — malformed quoted string causes StringEscaper to throw
-        final DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF,
-                DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
-                DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
-        final String invalidInput = "value: \"unclosed";
-
-        // When
-        final Object result = ValueDecoder.decode(invalidInput, options);
-
-        // Then
-        assertNull(result);
-    }
-
-    @Test
-    void givenDecodeReturnsNull_whenDecodeToJson_thenReturnsNullLiteral() {
-        // Given — malformed quoted string causes StringEscaper to throw
-        final DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF,
-                DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
-                DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
-        final String invalidInput = "value: \"unclosed";
-
-        // When
-        final String result = ValueDecoder.decodeToJson(invalidInput, options);
-
-        // Then
-        assertEquals("null", result);
-    }
-
-    @Test
     void givenNullLiteralInput_whenDecodeToJson_thenReturnsNullLiteral() {
         // Given
         final String input = "null";

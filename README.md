@@ -254,7 +254,7 @@ Converts TOON-formatted strings back to Java objects or JSON.
 - `options` – Optional decoding options (`DecodeOptions` record):
   - `indent` – Number of spaces per indentation level (default: `2`)
   - `delimiter` – Expected delimiter: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
-  - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, returns `null` on errors.
+  - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, applies the spec's non-strict leniencies, such as count mismatches, depth jumps and skipped over-indented lines, and throws wherever the spec names none.
   - `expandPaths` – Boolean Path expansion mode for dotted keys (default: `OFF`).
 
 **Returns:**
@@ -313,10 +313,10 @@ String toon = "tags[3|]: a|b|c";
 DecodeOptions options = DecodeOptions.withDelimiter(Delimiter.PIPE);
 Object result = JToon.decode(toon, options);
 
-// Lenient mode: an unterminated quoted token yields null instead of throwing
-String invalidToon = "key: \"unterminated";
+// Non-strict mode: a count mismatch decodes the values that are present
+String mismatchedToon = "tags[3]: a,b";
 DecodeOptions lenient = DecodeOptions.withStrict(false);
-Object result2 = JToon.decode(invalidToon, lenient);
+Object result2 = JToon.decode(mismatchedToon, lenient);
 ```
 
 **CI/CD:** GitHub Actions • Java 17 • Coverage enforcement • PR coverage comments
