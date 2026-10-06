@@ -12,8 +12,6 @@ import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
-import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
-import static dev.toonformat.jtoon.util.Constants.CLOSE_BRACKET;
 
 /**
  * Handles encoding of objects as list items in non-uniform arrays.
@@ -104,7 +102,7 @@ public final class ListItemEncoder {
         if (value.isValueNode()) {
             encodeFirstValueAsPrimitive(encodedKey, value, writer, depth, options);
         } else if (value.isArray()) {
-            encodeFirstValueAsArray(key, encodedKey, (ArrayNode) value, writer, depth, options);
+            encodeFirstValueAsArray(key, (ArrayNode) value, writer, depth, options);
         } else if (value.isObject()) {
             encodeFirstValueAsObject(key, encodedKey, (ObjectNode) value, writer, depth, options);
         }
@@ -120,7 +118,6 @@ public final class ListItemEncoder {
     }
 
     private static void encodeFirstValueAsArray(final String key,
-                                                final String encodedKey,
                                                 final ArrayNode arrayValue,
                                                 final LineWriter writer,
                                                 final int depth,
@@ -128,9 +125,9 @@ public final class ListItemEncoder {
         if (ArrayEncoder.isArrayOfPrimitives(arrayValue)) {
             encodeFirstArrayAsPrimitives(key, arrayValue, writer, depth, options);
         } else if (ArrayEncoder.isArrayOfObjects(arrayValue)) {
-            encodeFirstArrayAsObjects(key, encodedKey, arrayValue, writer, depth, options);
+            encodeFirstArrayAsObjects(key, arrayValue, writer, depth, options);
         } else {
-            encodeFirstArrayAsComplex(encodedKey, arrayValue, writer, depth, options);
+            encodeFirstArrayAsComplex(key, arrayValue, writer, depth, options);
         }
     }
 
@@ -144,7 +141,6 @@ public final class ListItemEncoder {
     }
 
     private static void encodeFirstArrayAsObjects(final String key,
-                                                    final String encodedKey,
                                                     final ArrayNode arrayValue,
                                                     final LineWriter writer,
                                                     final int depth,
@@ -157,8 +153,8 @@ public final class ListItemEncoder {
             // Write just the rows, header was already written above
             TabularArrayEncoder.writeTabularRows(arrayValue, header, writer, depth + 2, options);
         } else {
-            writer.push(depth,
-                    LIST_ITEM_PREFIX + encodedKey + OPEN_BRACKET + arrayValue.size() + CLOSE_BRACKET + COLON);
+            writer.push(depth, LIST_ITEM_PREFIX
+                + PrimitiveEncoder.formatHeader(arrayValue.size(), key, null, options.delimiter().toString()));
             for (JsonNode item : arrayValue) {
                 if (item.isObject()) {
                     encodeObjectAsListItem((ObjectNode) item, writer, depth + 2, options);
@@ -167,12 +163,13 @@ public final class ListItemEncoder {
         }
     }
 
-    private static void encodeFirstArrayAsComplex(final String encodedKey,
+    private static void encodeFirstArrayAsComplex(final String key,
                                                     final ArrayNode arrayValue,
                                                     final LineWriter writer,
                                                     final int depth,
                                                     final EncodeOptions options) {
-        writer.push(depth, LIST_ITEM_PREFIX + encodedKey + OPEN_BRACKET + arrayValue.size() + CLOSE_BRACKET + COLON);
+        writer.push(depth, LIST_ITEM_PREFIX
+            + PrimitiveEncoder.formatHeader(arrayValue.size(), key, null, options.delimiter().toString()));
 
         for (JsonNode item : arrayValue) {
             encodeValueAsListItem(item, writer, depth + 2, options);
