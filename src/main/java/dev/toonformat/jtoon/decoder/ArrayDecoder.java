@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import dev.toonformat.jtoon.util.Headers;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -260,7 +261,7 @@ public final class ArrayDecoder {
     /**
      * Validates array length if declared in the header.
      * The count check applies in strict mode only; the declared length never
-     * truncates a scope (§14.1). Resource bounds are always enforced.
+     * truncates a scope (§14.1), so non-strict mode ignores it entirely.
      *
      * @param header       header
      * @param actualLength actual length
@@ -269,8 +270,11 @@ public final class ArrayDecoder {
      */
     static void validateArrayLength(final String header, final int actualLength, final int maxArraySize,
             final boolean strict) {
+        if (!strict) {
+            return;
+        }
         final Integer declaredLength = extractLengthFromHeader(header, maxArraySize);
-        if (strict && declaredLength != null && declaredLength != actualLength) {
+        if (declaredLength != null && declaredLength != actualLength) {
             throw new IllegalArgumentException(
                 String.format("Array length mismatch: declared %d, found %d", declaredLength, actualLength));
         }
@@ -289,10 +293,10 @@ public final class ArrayDecoder {
         final Matcher matcher = ARRAY_HEADER_PATTERN.matcher(header);
         if (matcher.find()) {
             final String lengthStr = matcher.group(2);
-            final long longLength = Long.parseLong(lengthStr);
+            final long longLength = Headers.parseLength(lengthStr);
             if (longLength > Integer.MAX_VALUE) {
                 throw new IllegalArgumentException(
-                    "Array size too large: " + longLength);
+                    "Array size too large: " + lengthStr);
             }
             if (longLength > maxArraySize) {
                 throw new IllegalArgumentException(

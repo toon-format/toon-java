@@ -207,12 +207,7 @@ public final class Headers {
         if (i == digitsStart) {
             return null;
         }
-        final long declaredLength;
-        try {
-            declaredLength = Long.parseLong(content.substring(digitsStart, i));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        final long declaredLength = parseLength(content.substring(digitsStart, i));
         boolean keyed = false;
         if (i < n && content.charAt(i) == ':') {
             keyed = true;
@@ -227,6 +222,22 @@ public final class Headers {
             return null;
         }
         return new BracketSegment(declaredLength, keyed, delimiter, i + 1);
+    }
+
+    /**
+     * Parses the digits of a bracket-segment length. A length beyond
+     * {@code long} still forms a header, so it saturates to
+     * {@link Long#MAX_VALUE}, a count no scope can meet.
+     *
+     * @param digits the length digits
+     * @return the declared length
+     */
+    public static long parseLength(final String digits) {
+        try {
+            return Long.parseLong(digits);
+        } catch (NumberFormatException e) {
+            return Long.MAX_VALUE;
+        }
     }
 
     /**
