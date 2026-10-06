@@ -325,25 +325,6 @@ class KeyDecoderTest {
     }
 
     @Test
-    @DisplayName("Given wrong content When processed Then value is placed in nested map")
-    void processKeyValueLine_givenWrongContent() {
-        // Given
-        final Map<String, Object> result = new LinkedHashMap<>();
-        final DecodeContext context = new DecodeContext();
-        context.options = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.SAFE,
-                DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
-                DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
-        context.lines = new String[]{"invalid line"};
-        context.currentLine = 0;
-
-        // When
-        KeyDecoder.processKeyValueLine(result, context.lines[0], 0, context);
-
-        // Then
-        assertEquals(1, context.currentLine);
-    }
-
-    @Test
     @DisplayName("Given invalid key/value line in strict mode When processed Then exception is thrown")
     void processKeyValueLine_givenMissingColonStrict_whenProcessed_thenThrows() {
         // Given

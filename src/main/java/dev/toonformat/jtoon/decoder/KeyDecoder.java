@@ -157,12 +157,9 @@ public final class KeyDecoder {
             final String value = DecodeHelper.trimSpaces(content.substring(colonIdx + 1));
             parseKeyValuePairIntoMap(result, key, value, depth, context);
         } else {
-            // No colon found in key-value context - this is an error
-            if (context.options.strict()) {
-                throw new IllegalArgumentException(
-                    "Missing colon in key-value context at line " + (context.currentLine + 1));
-            }
-            context.currentLine++;
+            // No colon found in key-value context - an error in any mode
+            throw new IllegalArgumentException(
+                "Missing colon in key-value context at line " + (context.currentLine + 1));
         }
     }
 

@@ -286,9 +286,10 @@ public final class ListItemDecoder {
             wasParsed = KeyDecoder.parseKeyValueField(fieldContent, item, depth, context);
         }
 
-        // If neither pattern matched, skip this line to avoid an infinite loop
+        // Neither pattern matched: the line has no colon, an error in any mode
         if (!wasParsed) {
-            context.currentLine++;
+            throw new IllegalArgumentException(
+                "Missing colon in key-value context at line " + (context.currentLine + 1));
         }
     }
 }
