@@ -69,7 +69,7 @@ public final class ValueDecoder {
         //set an own decode context
         final DecodeContext context = new DecodeContext();
         context.options = options;
-        context.lines = buildContentLines(input.split("\r?\n", -1), options);
+        context.lines = buildContentLines(input.split("\n", -1), options);
         context.delimiter = options.delimiter();
 
         // Spec §5.1: a document of only comments and blank lines is an empty object
