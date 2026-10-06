@@ -286,6 +286,23 @@ public final class DecodeHelper {
     }
 
     /**
+     * Finds the content depth of a scope whose opening line sits at the given
+     * depth: one level deeper, or in non-strict mode the depth of a deeper
+     * first line, which later lines of the scope then have to match.
+     *
+     * @param openerDepth the depth of the line that opens the scope
+     * @param context     decode an object to deal with lines, delimiter and options
+     * @return the content depth of the scope
+     */
+    static int findContentDepth(final int openerDepth, final DecodeContext context) {
+        final Integer firstDepth = findNextNonBlankLineDepth(context);
+        if (!context.options.strict() && firstDepth != null && firstDepth > openerDepth + 1) {
+            return firstDepth;
+        }
+        return openerDepth + 1;
+    }
+
+    /**
      * Checks if a line contains an unquoted bracket pair ({@code [} followed
      * by {@code ]}). Used to detect malformed array header syntax in strict
      * mode; a lone bracket cannot form a bracket segment and stays part of a
@@ -401,8 +418,7 @@ public final class DecodeHelper {
     }
 
     /**
-     * Skips or rejects an over-indented line that jumps past the expected
-     * depth (§14.2).
+     * Skips or rejects a line that belongs to no scope (§8, §14.2).
      *
      * @param context   decode an object to deal with lines, delimiter, and options
      * @param lineDepth the depth of the over-indented line

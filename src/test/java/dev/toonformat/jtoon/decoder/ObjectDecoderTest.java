@@ -106,26 +106,6 @@ class ObjectDecoderTest {
 
             assertEquals(CONSUMED_CHILD_LINES, context.currentLine); // consumed all children
         }
-
-        @Test
-        @DisplayName("GIVEN deeper indentation WHEN child is not direct child THEN skip line in lenient mode")
-        void parseNestedObject_skips_invalid_depth() {
-            // Given
-            setUpContext("""
-                parent:
-                    tooDeep: X
-                  child: OK
-                """);
-            context.options = DecodeOptions.withStrict(false);
-            context.currentLine = 1;
-
-            // When
-            final Map<String, Object> result = ObjectDecoder.parseNestedObject(0, context);
-
-            // Then
-            assertEquals("OK", result.get("child"));
-            assertEquals(CONSUMED_CHILD_LINES, context.currentLine);
-        }
     }
 
     @Nested

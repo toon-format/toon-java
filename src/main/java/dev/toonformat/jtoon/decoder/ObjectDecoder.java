@@ -35,6 +35,7 @@ public final class ObjectDecoder {
 
     private static Map<String, Object> doParseNestedObject(final int parentDepth, final DecodeContext context) {
         final Map<String, Object> result = new LinkedHashMap<>();
+        final int contentDepth = DecodeHelper.findContentDepth(parentDepth, context);
 
         while (context.currentLine < context.lines.length) {
             final String line = context.lines[context.currentLine];
@@ -51,13 +52,11 @@ public final class ObjectDecoder {
                 return result;
             }
 
-            if (depth == parentDepth + 1) {
-                processDirectChildLine(result, line, parentDepth, depth, context);
-            } else if (depth > parentDepth + 1) {
-                // Over-indented line jumps past the expected depth (§14.2)
-                DecodeHelper.processOverIndentedLine(context, depth);
+            if (depth == contentDepth) {
+                processDirectChildLine(result, line, contentDepth - 1, depth, context);
             } else {
-                context.currentLine++;
+                // A line off the content depth belongs to no scope (§14.2)
+                DecodeHelper.processOverIndentedLine(context, depth);
             }
         }
 

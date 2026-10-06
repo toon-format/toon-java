@@ -74,10 +74,10 @@ public final class TabularArrayDecoder {
         final List<Object> result = new ArrayList<>();
         context.currentLine++;
 
-        final int expectedRowDepth = depth + 1;
+        final int expectedRowDepth = DecodeHelper.findContentDepth(depth, context);
 
         while (context.currentLine < context.lines.length) {
-            if (!processTabularArrayLine(expectedRowDepth, fields, arrayDelimiter, result, context)) {
+            if (!processTabularArrayLine(depth, expectedRowDepth, fields, arrayDelimiter, result, context)) {
                 break;
             }
         }
@@ -298,6 +298,7 @@ public final class TabularArrayDecoder {
     /**
      * Processes a single line in a tabular array.
      *
+     * @param headerDepth      the depth of the array header
      * @param expectedRowDepth the expected depth of the next row
      * @param fields           the field tree for the tabular array
      * @param arrayDelimiter   the type of delimiter used in the array
@@ -305,8 +306,8 @@ public final class TabularArrayDecoder {
      * @param context          decode an object to deal with lines, delimiter and options
      * @return true if parsing should continue, false if an array should terminate
      */
-    private static boolean processTabularArrayLine(final int expectedRowDepth, final List<FieldNode> fields,
-            final Delimiter arrayDelimiter, final List<Object> result,
+    private static boolean processTabularArrayLine(final int headerDepth, final int expectedRowDepth,
+            final List<FieldNode> fields, final Delimiter arrayDelimiter, final List<Object> result,
             final DecodeContext context) {
         final String line = context.lines[context.currentLine];
 
@@ -317,10 +318,15 @@ public final class TabularArrayDecoder {
                 context.currentLine++;
                 return true;
             }
-            return !handleBlankLineInTabularArray(expectedRowDepth, context);
+            return !handleBlankLineInTabularArray(headerDepth, context);
         }
 
         final int lineDepth = DecodeHelper.getDepth(line, context);
+        // A line between the header and an adopted deeper row depth belongs to no scope
+        if (lineDepth > headerDepth && lineDepth < expectedRowDepth) {
+            DecodeHelper.processOverIndentedLine(context, lineDepth);
+            return true;
+        }
         if (shouldTerminateTabularArray(line, lineDepth, expectedRowDepth, context)) {
             return false;
         }
@@ -334,11 +340,11 @@ public final class TabularArrayDecoder {
     /**
      * Handles blank line processing in a tabular array.
      *
-     * @param expectedRowDepth the expected depth of the next row
-     * @param context          decode an object to deal with lines, delimiter and options
+     * @param headerDepth the depth of the array header
+     * @param context     decode an object to deal with lines, delimiter and options
      * @return true if an array should terminate, false if a line should be skipped
      */
-    private static boolean handleBlankLineInTabularArray(final int expectedRowDepth, final DecodeContext context) {
+    private static boolean handleBlankLineInTabularArray(final int headerDepth, final DecodeContext context) {
         final int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
 
         if (nextNonBlankLine >= context.lines.length) {
@@ -346,8 +352,6 @@ public final class TabularArrayDecoder {
             return true;
         }
         final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
-        // Header depth is one level above the expected row depth
-        final int headerDepth = expectedRowDepth - 1;
         if (nextDepth <= headerDepth) {
             return true;
         }

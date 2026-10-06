@@ -51,14 +51,16 @@ public final class KeyedObjectDecoder {
 
         final Map<String, Object> result = new LinkedHashMap<>();
         context.currentLine++;
+        final int headerDepth = entryDepth - 1;
+        final int rowDepth = DecodeHelper.findContentDepth(headerDepth, context);
 
         while (context.currentLine < context.lines.length) {
-            final LineHandling handling = handleNextLine(result, entryDepth, context);
+            final LineHandling handling = handleNextLine(result, headerDepth, rowDepth, context);
             if (handling == LineHandling.STOP) {
                 break;
             }
             if (handling == LineHandling.PROCESS) {
-                processEntryLine(context.lines[context.currentLine], entryDepth,
+                processEntryLine(context.lines[context.currentLine], rowDepth,
                     fields, arrayDelimiter, result, context);
                 context.currentLine++;
             }
@@ -99,19 +101,19 @@ public final class KeyedObjectDecoder {
      * or when the next non-blank line sits outside the keyed object. Blank
      * lines inside the object are rejected in strict mode (§12).
      *
-     * @param result    the rows parsed so far
-     * @param entryDepth the depth of the entry rows
-     * @param context   decode an object to deal with lines, delimiter and options
+     * @param result      the rows parsed so far
+     * @param headerDepth the depth of the keyed header
+     * @param context     decode an object to deal with lines, delimiter and options
      * @return true when the blank line terminates the object
      */
-    private static boolean shouldStopAtBlankLine(final Map<String, Object> result, final int entryDepth,
+    private static boolean shouldStopAtBlankLine(final Map<String, Object> result, final int headerDepth,
             final DecodeContext context) {
         final int nextNonBlank = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
         if (nextNonBlank >= context.lines.length) {
             return true; // EOF - terminate
         }
         final int nextDepth = DecodeHelper.getDepth(context.lines[nextNonBlank], context);
-        if (nextDepth <= entryDepth - 1) {
+        if (nextDepth <= headerDepth) {
             return true; // outside the object - terminate
         }
         // Spec §12: blank lines between the header and the first entry
@@ -134,17 +136,18 @@ public final class KeyedObjectDecoder {
      * object at blank-line/EOF boundaries or shallower lines, skips blank and
      * over-indented lines (§14.2), and passes entry rows through.
      *
-     * @param result     the rows parsed so far
-     * @param entryDepth the depth of the entry rows
-     * @param context    decode an object to deal with lines, delimiter and options
+     * @param result      the rows parsed so far
+     * @param headerDepth the depth of the keyed header
+     * @param entryDepth  the depth of the entry rows
+     * @param context     decode an object to deal with lines, delimiter and options
      * @return the handling to apply to the current line
      */
-    private static LineHandling handleNextLine(final Map<String, Object> result, final int entryDepth,
-            final DecodeContext context) {
+    private static LineHandling handleNextLine(final Map<String, Object> result, final int headerDepth,
+            final int entryDepth, final DecodeContext context) {
         final String line = context.lines[context.currentLine];
 
         if (DecodeHelper.isBlankLine(line)) {
-            if (shouldStopAtBlankLine(result, entryDepth, context)) {
+            if (shouldStopAtBlankLine(result, headerDepth, context)) {
                 return LineHandling.STOP;
             }
             context.currentLine++;
@@ -152,10 +155,10 @@ public final class KeyedObjectDecoder {
         }
 
         final int lineDepth = DecodeHelper.getDepth(line, context);
-        if (lineDepth < entryDepth) {
+        if (lineDepth <= headerDepth) {
             return LineHandling.STOP;
         }
-        if (lineDepth > entryDepth) {
+        if (lineDepth != entryDepth) {
             DecodeHelper.processOverIndentedLine(context, lineDepth);
             return LineHandling.SKIP;
         }
