@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to Semantic Versioning and follows a Keep a Changelog-like format.
 
+## [Unreleased]
+
+### Changed
+
+-   Conformance raised from spec 4.1.2 to **4.2**. The 23 conformance fixture files are byte-identical to the spec repository at tag `v4.2.1`.
+-   **Non-strict decoding no longer returns `null` on invalid input.** It applies the leniencies the spec names – such as count mismatches, indentation depth jumps and skipped over-indented lines – and throws `IllegalArgumentException` wherever the spec names none (§14).
+
+### Fixed
+
+-   **The encoder no longer drops nested arrays that mix primitives and objects** inside list items.
+-   **A line without an unquoted colon is a scalar line, never a header**, and a scalar line outside root primitive position is an error in any mode, including among skipped over-indented lines and as a root scalar followed by other lines (§5, §5.2, §14.2).
+-   **A `[`-led line without a well-formed header is a key-value line**: a lone bracket stays part of the key, and in non-strict mode a malformed bracket segment such as `[03]` or `[invalid]` does too. An unclosed quote in an unquoted key opens a span to the end of the line, so no header follows it (§5.2, §6).
+-   **Non-strict mode adopts the depth of a jumped first line** in objects, lists, tabular rows and keyed entries; an indented first line of the document is over-indented, `null` and `[]` included (§8, §14.2).
+-   **Strict mode rejects a blank line anywhere inside a list's span** and an over-indented line under a list item, while non-strict mode keeps a list item's fields after a blank line (§12, §14.2).
+-   **A field list ends its header line**: strict mode rejects inline content after it (`items[1]{a}: 1`) and a malformed keyless header (`[1]{a}}:`) instead of dropping what follows, and non-strict mode reads such a line as a key-value pair. A field list spanning the colon (`[1]{x:y}`) leaves a key-value line in strict mode too (§6, §14.2).
+-   **`maxArraySize` bounds the actual element count** of inline, list, tabular and keyed forms in either mode; only the comparison with the declared `[N]` stays strict-only.
+-   **Header parsing:** empty field entries and malformed nested field groups are rejected, a length beyond the `long` range still forms a header, and a line below a bare `key[N]:` header carries no values (§6, §9).
+-   **Key and value tokens:** `: 1` decodes as the empty key, `\uXXXX` escapes with a surrogate or a non-ASCII digit are rejected, a carriage return before CRLF is content, a backslash outside quotes is a literal character (`a\: b` has the key `a\`), a list ends at a hyphen without a following space, and tabular rows sit exactly one level below their header in strict mode (§7, §9, §12).
+
 ## [2.0.5] - 2026-10-03
 
 ### Fixed
@@ -16,7 +35,7 @@ This project adheres to Semantic Versioning and follows a Keep a Changelog-like 
 
 ### Changed
 
--   Conformance raised from spec 4.1.1 to **4.1.2**, which is a single normative change: a root primitive starting with U+FEFF must be quoted (§7.2). On top of that, decoder strictness was tightened in five places where the implementation accepted input the spec rejects — token trimming, quoted-token boundaries, root-form discovery, header key tokens and the `[N]` length marker. The full conformance suite from 4.1 (canonical number formatting, BOM stripping, comment pre-pass §5.1, strict header validation §5/§6/§7.3/§7.4, nested field groups in tabular arrays §9.3, keyed tabular form §9.5/§10, non-strict tab leniency §12) carries over unchanged and remains green. The 24 conformance fixture files are byte-identical to the spec repository at tag `v4.1.2`.
+-   Conformance raised from spec 4.1.1 to **4.1.2**, which is a single normative change: a root primitive starting with U+FEFF must be quoted (§7.2). On top of that, decoder strictness was tightened in five places where the implementation accepted input the spec rejects — token trimming, quoted-token boundaries, root-form discovery, header key tokens and the `[N]` length marker. The full conformance suite from 4.1 (canonical number formatting, BOM stripping, comment pre-pass §5.1, strict header validation §5/§6/§7.3/§7.4, nested field groups in tabular arrays §9.3, keyed tabular form §9.5/§10, non-strict tab leniency §12) carries over unchanged and remains green. The 23 conformance fixture files are byte-identical to the spec repository at tag `v4.1.2`.
 -   Upstream [PR #201](https://github.com/toon-format/toon-java/pull/201) integrated (squash merge). Conflicts in `KeyDecoder`, `ListItemDecoder` and `ValueDecoder` were resolved additively, keeping both the `validateQuotedTokenBoundary` check from #201 and the `validateKeyHasNoUnquotedBrackets` check from #200. `DecodeHelper.trimSpaces()` remains the canonical token trimmer.
 -   The targeted specification version is now declared as `toon-spec: 4.1.2` in the README, as §13 recommends.
 
