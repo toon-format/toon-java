@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import static dev.toonformat.jtoon.util.Constants.BYTE_ORDER_MARK;
 import static dev.toonformat.jtoon.util.Constants.NULL_LITERAL;
-import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
  * Main decoder for converting TOON-formatted strings to Java objects.
@@ -199,7 +198,7 @@ public final class ValueDecoder {
      * array header, key-value pair, or bare scalar.
      */
     private static Object parseRootDocument(final String line, final int depth, final DecodeContext context) {
-        if (!line.isEmpty() && line.charAt(0) == OPEN_BRACKET.charAt(0)) {
+        if (DecodeHelper.opensKeylessArray(line)) {
             return parseRootArrayLine(line, depth, context);
         }
 
@@ -213,7 +212,7 @@ public final class ValueDecoder {
             return parseRootKeyValueLine(line, colonIdx, depth, context);
         }
 
-        return parseRootBareLine(line, depth, context);
+        return ObjectDecoder.parseBareScalarValue(line, depth, context);
     }
 
     private static Object parseRootArrayLine(final String line, final int depth, final DecodeContext context) {
@@ -246,17 +245,6 @@ public final class ValueDecoder {
         final String key = DecodeHelper.trimSpaces(line.substring(0, colonIdx));
         final String value = DecodeHelper.trimSpaces(line.substring(colonIdx + 1));
         return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);
-    }
-
-    private static Object parseRootBareLine(final String line, final int depth, final DecodeContext context) {
-        if (context.options.strict() && DecodeHelper.hasUnquotedBrackets(line)) {
-            // Line has brackets but no colon and didn't match KEYED_ARRAY_PATTERN
-            // (e.g. "items[2]{id,name}" missing colon)
-            throw new IllegalArgumentException(
-                "Invalid syntax: unquoted brackets without valid header at line "
-                    + (context.currentLine + 1));
-        }
-        return ObjectDecoder.parseBareScalarValue(line, depth, context);
     }
 
     /**

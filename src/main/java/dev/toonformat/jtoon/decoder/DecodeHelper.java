@@ -8,6 +8,7 @@ import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
 import static dev.toonformat.jtoon.util.Constants.COLON;
+import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.
@@ -162,6 +163,18 @@ public final class DecodeHelper {
         }
 
         return -1;
+    }
+
+    /**
+     * Checks if content opens a keyless array: a bracket segment with an
+     * unquoted colon, or the bare empty-array token. A bracket-led line
+     * without a colon is a scalar, never a header.
+     *
+     * @param content the line content past its indentation
+     * @return true if the content is a keyless header or {@code []}
+     */
+    static boolean opensKeylessArray(final String content) {
+        return content.startsWith(OPEN_BRACKET) && (findUnquotedColon(content) >= 0 || "[]".equals(content));
     }
 
     /**

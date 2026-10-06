@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
-import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
  * Handles decoding of TOON list item to JSON format.
@@ -68,7 +67,7 @@ public final class ListItemDecoder {
         }
 
         // Check for standalone array (e.g., "[2]: 1,2")
-        if (itemContent.startsWith(OPEN_BRACKET)) {
+        if (DecodeHelper.opensKeylessArray(itemContent)) {
             return parseStandaloneArrayItem(itemContent, depth, context);
         }
 

@@ -223,14 +223,6 @@ class ValueDecoderTest {
     }
 
     @Test
-    @DisplayName("rejects unquoted brackets without a valid header in strict mode")
-    void decode_strict_rejectsBracketsWithoutValidHeader() {
-        // When / Then
-        assertThrows(IllegalArgumentException.class,
-            () -> ValueDecoder.decode("items[2]{id,name}", DecodeOptions.DEFAULT));
-    }
-
-    @Test
     @DisplayName("Should parse TOON format primitive array to JSON")
     void parsePrimitiveArray() {
         // When

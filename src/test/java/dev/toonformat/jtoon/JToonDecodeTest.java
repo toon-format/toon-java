@@ -624,7 +624,7 @@ public class JToonDecodeTest {
         @DisplayName("should throw in strict mode for invalid array header")
         void testStrictModeError() {
             // Given
-            final String toon = "[invalid]";  // Invalid array header format
+            final String toon = "[invalid]: 1";  // Invalid array header format
 
             // When
             final DecodeOptions options = DecodeOptions.withStrict(true);
@@ -637,7 +637,7 @@ public class JToonDecodeTest {
         @DisplayName("should return null in lenient mode for invalid array header")
         void testLenientMode() {
             // Given
-            final String toon = "[invalid]";  // Invalid array header format
+            final String toon = "[invalid]: 1";  // Invalid array header format
             final DecodeOptions options = DecodeOptions.withStrict(false);
 
             // When
