@@ -74,14 +74,7 @@ public final class TabularArrayDecoder {
         final List<Object> result = new ArrayList<>();
         context.currentLine++;
 
-        // Determine the expected row depth dynamically from the first non-blank line
-        int expectedRowDepth = depth + 1;
-        if (context.currentLine < context.lines.length) {
-            final int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine, context);
-            if (nextNonBlankLine < context.lines.length) {
-                expectedRowDepth = DecodeHelper.getDepth(context.lines[nextNonBlankLine], context);
-            }
-        }
+        final int expectedRowDepth = depth + 1;
 
         while (context.currentLine < context.lines.length) {
             if (!processTabularArrayLine(expectedRowDepth, fields, arrayDelimiter, result, context)) {
@@ -465,12 +458,7 @@ public final class TabularArrayDecoder {
             return true;
         } else if (lineDepth > expectedRowDepth) {
             // A line deeper than the row depth belongs to no scope (§14.2)
-            if (context.options.strict()) {
-                throw new IllegalArgumentException(
-                    "Over-indented line after tabular rows at line " + (context.currentLine + 1));
-            }
-            // In non-strict mode, skip it
-            context.currentLine++;
+            DecodeHelper.processOverIndentedLine(context, lineDepth);
             return false;
         }
         return true;
