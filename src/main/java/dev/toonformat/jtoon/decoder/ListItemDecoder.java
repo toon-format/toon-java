@@ -43,7 +43,8 @@ public final class ListItemDecoder {
                 context.currentLine++;
             }
         } else {
-            context.currentLine++;
+            // A deeper line that no item's scope consumed belongs to no scope
+            DecodeHelper.processOverIndentedLine(context, lineDepth);
         }
     }
 

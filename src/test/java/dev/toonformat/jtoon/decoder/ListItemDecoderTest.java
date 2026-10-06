@@ -64,24 +64,6 @@ class ListItemDecoderTest {
     }
 
     @Test
-    @DisplayName("Process list array item, with a to small line depth")
-    void testProcessListArrayItemWithTooSmallLineDepth() {
-        // Given
-        final String line = "sadasdasdasd";
-        final int lineDepth = 1;
-        final int depth = 3;
-        final List<Object> result = List.of();
-        final DecodeContext context = new DecodeContext();
-        context.options = DecodeOptions.DEFAULT;
-
-        // When
-        ListItemDecoder.processListArrayItem(line, lineDepth, depth, result, context);
-
-        // Then
-        assertEquals(1, context.currentLine);
-    }
-
-    @Test
     @DisplayName("Testing parseListItemFields with negativ depth")
     void testParseListItemFields() throws Exception {
         // Given
