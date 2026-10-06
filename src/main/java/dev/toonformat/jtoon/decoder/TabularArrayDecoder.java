@@ -134,9 +134,13 @@ public final class TabularArrayDecoder {
         final StringBuilder name = new StringBuilder();
         boolean inQuotes = false;
         boolean escaped = false;
+        boolean grouped = false;
         int i = start;
         while (i < fieldList.length()) {
             final char c = fieldList.charAt(i);
+            if (grouped && c != ' ' && c != '}' && c != delimiterChar) {
+                throw new IllegalArgumentException("Unexpected content after nested field group");
+            }
             if (escaped) {
                 name.append(c);
                 escaped = false;
@@ -151,24 +155,29 @@ public final class TabularArrayDecoder {
                 i++;
             } else if (!inQuotes && c == '{') {
                 i = parseNestedFieldGroup(fieldList, i, arrayDelimiter, context, result, name);
+                // The name buffer is consumed only when the group was added
+                grouped = name.isEmpty();
             } else if (!inQuotes && c == '}') {
-                flushField(result, name);
+                flushField(result, name, grouped);
                 return i + 1;
             } else if (!inQuotes && c == delimiterChar) {
-                i = skipFieldDelimiter(fieldList, i, result, name);
+                i = skipFieldDelimiter(fieldList, i, result, name, grouped);
+                grouped = false;
             } else {
                 name.append(c);
                 i++;
             }
         }
-        flushField(result, name);
+        flushField(result, name, grouped);
         return -1;
     }
 
     /**
      * Parses a nested field group opened at the given brace, recursing into
-     * {@link #parseFieldList}. Unbalanced groups are rejected in strict mode
-     * and skipped in lenient mode.
+     * {@link #parseFieldList}. Unbalanced groups are rejected in strict mode;
+     * in lenient mode their children are dropped and the name stays a leaf
+     * field. A missing name or whitespace before the brace is rejected in any
+     * mode.
      *
      * @param fieldList      the field list string to parse
      * @param braceIdx       the index of the opening brace
@@ -182,6 +191,12 @@ public final class TabularArrayDecoder {
     private static int parseNestedFieldGroup(final String fieldList, final int braceIdx,
             final Delimiter arrayDelimiter, final DecodeContext context, final List<FieldNode> result,
             final StringBuilder name) {
+        if (DecodeHelper.trimSpaces(name.toString()).isEmpty()) {
+            throw new IllegalArgumentException("Missing field name before nested field group");
+        }
+        if (name.charAt(name.length() - 1) == ' ') {
+            throw new IllegalArgumentException("Whitespace before nested field group");
+        }
         final List<FieldNode> children = new ArrayList<>();
         final int next = parseFieldList(fieldList, braceIdx + 1, arrayDelimiter, context, children);
         if (next < 0) {
@@ -204,11 +219,12 @@ public final class TabularArrayDecoder {
      * @param delimiterIdx the index of the delimiter character
      * @param result       the list to add the flushed field to
      * @param name         the buffered field name
+     * @param grouped      whether the entry already ended with a nested field group
      * @return the index just past the delimiter and trailing spaces
      */
     private static int skipFieldDelimiter(final String fieldList, final int delimiterIdx,
-            final List<FieldNode> result, final StringBuilder name) {
-        flushField(result, name);
+            final List<FieldNode> result, final StringBuilder name, final boolean grouped) {
+        flushField(result, name, grouped);
         int i = delimiterIdx + 1;
         while (i < fieldList.length() && fieldList.charAt(i) == ' ') {
             i++;
@@ -217,13 +233,16 @@ public final class TabularArrayDecoder {
     }
 
     /**
-     * Adds the buffered field name as a leaf node and resets the buffer.
+     * Adds the buffered field name as a leaf node and resets the buffer. An
+     * empty entry is a header error unless a nested field group ended it.
      */
-    private static void flushField(final List<FieldNode> result, final StringBuilder name) {
-        if (!name.isEmpty()) {
+    private static void flushField(final List<FieldNode> result, final StringBuilder name, final boolean grouped) {
+        if (!DecodeHelper.trimSpaces(name.toString()).isEmpty()) {
             result.add(new FieldNode(decodeFieldName(name), Collections.emptyList()));
-            name.setLength(0);
+        } else if (!grouped) {
+            throw new IllegalArgumentException("Empty field entry in tabular header field list");
         }
+        name.setLength(0);
     }
 
     /**
