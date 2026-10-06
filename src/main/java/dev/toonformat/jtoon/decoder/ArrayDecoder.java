@@ -394,6 +394,7 @@ public final class ArrayDecoder {
     private static List<Object> parseListArray(final int depth, final String header, final DecodeContext context) {
         final List<Object> result = new ArrayList<>();
         context.currentLine++;
+        final int firstItemLine = context.currentLine;
 
         boolean shouldContinue = true;
         while (shouldContinue && context.currentLine < context.lines.length) {
@@ -417,10 +418,35 @@ public final class ArrayDecoder {
             }
         }
 
+        validateNoBlankLineInSpan(firstItemLine, context);
         if (header != null) {
             validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
         }
         return result;
+    }
+
+    /**
+     * In strict mode, rejects a blank line between the first item line and
+     * the last content line of a list. The items' nested scopes skip blank
+     * lines on their own, so the whole span is checked once the list is
+     * complete.
+     *
+     * @param firstItemLine the index of the first item line
+     * @param context       decode an object to deal with lines, delimiter and options
+     */
+    private static void validateNoBlankLineInSpan(final int firstItemLine, final DecodeContext context) {
+        if (!context.options.strict()) {
+            return;
+        }
+        int lastLine = context.currentLine - 1;
+        while (lastLine > firstItemLine && DecodeHelper.isBlankLine(context.lines[lastLine])) {
+            lastLine--;
+        }
+        for (int i = firstItemLine; i < lastLine; i++) {
+            if (DecodeHelper.isBlankLine(context.lines[i])) {
+                throw new IllegalArgumentException("Blank line inside list array at line " + (i + 1));
+            }
+        }
     }
 
     /**
