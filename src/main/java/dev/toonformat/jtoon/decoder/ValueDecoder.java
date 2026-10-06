@@ -212,9 +212,9 @@ public final class ValueDecoder {
 
     /**
      * Routes the root line to its form (§5): keyless array header, keyed
-     * array header, key-value pair, or bare scalar. A skipped indented line
-     * makes the document multi-line, so the bare scalar is then not a root
-     * primitive.
+     * array header, key-value pair, or bare scalar. Any other non-blank line,
+     * a skipped indented one included, makes the document multi-line, so the
+     * bare scalar is then not a root primitive.
      */
     private static Object parseRootDocument(final String line, final int depth, final boolean skippedLeading,
             final DecodeContext context) {
@@ -232,7 +232,8 @@ public final class ValueDecoder {
             return parseRootKeyValueLine(line, colonIdx, depth, context);
         }
 
-        if (skippedLeading) {
+        if (skippedLeading
+                || DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context) < context.lines.length) {
             throw new IllegalArgumentException(
                 "Bare token line outside root primitive position at line " + (context.currentLine + 1));
         }
