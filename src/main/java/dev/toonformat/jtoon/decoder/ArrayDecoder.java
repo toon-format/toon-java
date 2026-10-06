@@ -244,9 +244,9 @@ public final class ArrayDecoder {
     }
 
     /**
-     * Validates array length if declared in the header.
-     * The count check applies in strict mode only; the declared length never
-     * truncates a scope (§14.1), so non-strict mode ignores it entirely.
+     * Validates the array length against {@code maxArraySize} in either mode,
+     * and against the length declared in the header in strict mode only; the
+     * declared length never truncates a scope (§14.1).
      *
      * @param header       header
      * @param actualLength actual length
@@ -255,6 +255,7 @@ public final class ArrayDecoder {
      */
     static void validateArrayLength(final String header, final int actualLength, final int maxArraySize,
             final boolean strict) {
+        validateArraySize(actualLength, maxArraySize);
         if (!strict) {
             return;
         }
@@ -292,13 +293,23 @@ public final class ArrayDecoder {
         return null;
     }
 
+    /**
+     * Rejects an element count above {@code maxArraySize}.
+     *
+     * @param size         the element count
+     * @param maxArraySize maximum allowed array size
+     */
+    static void validateArraySize(final int size, final int maxArraySize) {
+        if (size > maxArraySize) {
+            throw new IllegalArgumentException(
+                "Array size " + size + " exceeds maximum allowed " + maxArraySize);
+        }
+    }
+
     static List<Object> parseArrayValues(final String values, final Delimiter arrayDelimiter,
                                           final int maxArraySize, final int maxStringLength) {
         final List<String> rawValues = parseDelimitedValues(values, arrayDelimiter);
-        if (rawValues.size() > maxArraySize) {
-            throw new IllegalArgumentException(
-                "Array size " + rawValues.size() + " exceeds maximum allowed " + maxArraySize);
-        }
+        validateArraySize(rawValues.size(), maxArraySize);
         final List<Object> result = new ArrayList<>(rawValues.size());
         for (final String value : rawValues) {
             result.add(PrimitiveDecoder.parse(value, maxStringLength));

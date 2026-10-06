@@ -176,6 +176,19 @@ class SecurityValidationTest {
             // Then
             assertNotNull(result);
         }
+
+        @Test
+        @DisplayName("should bound the actual element count in either mode")
+        void testActualCountExceedsMaxSize() {
+            for (final boolean strict : new boolean[]{true, false}) {
+                final DecodeOptions options = new DecodeOptions(2, Delimiter.COMMA, strict, PathExpansion.OFF,
+                        DecodeOptions.MAX_ALLOWED_DEPTH, 2, DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
+                assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]:\n  - 1\n  - 2\n  - 3", options));
+                assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]{x}:\n  1\n  2\n  3", options));
+                assertThrows(IllegalArgumentException.class,
+                    () -> JToon.decode("a[1:]{v}:\n  x: 1\n  y: 2\n  z: 3", options));
+            }
+        }
     }
 
     @Nested

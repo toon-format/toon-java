@@ -66,6 +66,7 @@ public final class KeyedObjectDecoder {
             }
         }
 
+        ArrayDecoder.validateArraySize(result.size(), context.options.maxArraySize());
         // Spec §9.5: the declared entry count must match in strict mode
         if (context.options.strict() && result.size() != header.declaredLength()) {
             throw new IllegalArgumentException(
