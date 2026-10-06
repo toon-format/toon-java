@@ -329,16 +329,12 @@ public final class ObjectDecoder {
 
         // Find the next non-blank line and its depth
         final Integer nextDepth = DecodeHelper.findNextNonBlankLineDepth(context);
-        if (nextDepth == null) {
-            // No non-blank line found - create an empty object
-            return new LinkedHashMap<>();
-        }
 
         // Handle empty value with nested content.
         // The list item is at depth, and the field itself is conceptually at depth + 1,
         // So nested content should be parsed with parentDepth = depth + 1
         // This allows nested fields at depth + 2 or deeper to be processed correctly
-        if (isEmpty && nextDepth > depth) {
+        if (isEmpty && nextDepth != null && nextDepth > depth) {
             return parseNestedObject(depth + 1, context);
         }
 
