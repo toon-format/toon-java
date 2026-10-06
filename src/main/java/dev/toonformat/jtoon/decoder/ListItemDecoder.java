@@ -115,8 +115,8 @@ public final class ListItemDecoder {
     private static Object parseStandaloneArrayItem(final String itemContent, final int depth,
             final DecodeContext context) {
         // Keyless headers are valid as list items only without a field
-        // list; [2]{x}: and [2:]{v}: are defects (§5, §6)
-        if (context.options.strict() && KEYLESS_FIELDS_HEADER.matcher(itemContent).find()) {
+        // list; [2]{x}: and [2:]{v}: are defects in any mode (§5, §6)
+        if (KEYLESS_FIELDS_HEADER.matcher(itemContent).find()) {
             throw new IllegalArgumentException(
                 "Keyless array header with field list only valid at document root at line "
                     + (context.currentLine + 1));
