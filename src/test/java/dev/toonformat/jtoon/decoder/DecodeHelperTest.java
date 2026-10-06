@@ -237,18 +237,6 @@ class DecodeHelperTest {
     }
 
     @Test
-    @DisplayName("validateNoMultiplePrimitivesAtRoot: throws when another root primitive follows")
-    void validateNoMultiplePrimitivesAtRoot_throws() {
-        // Given
-        setUpContext("1\n2\n");
-        context.currentLine = 0;
-
-// When/Then
-        assertThrows(IllegalArgumentException.class,
-            () -> DecodeHelper.validateNoMultiplePrimitivesAtRoot(context));
-    }
-
-    @Test
     @DisplayName("checkFinalValueConflict: throws when existing is object/array and new is scalar (strict)")
     void checkFinalValueConflict_strictConflicts() {
         // Given
@@ -535,57 +523,6 @@ class DecodeHelperTest {
             // When / Then
             assertThrows(IllegalArgumentException.class,
                 () -> DecodeHelper.checkPathExpansionConflict(map, "x", TEST_CONFLICT_VALUE, context));
-        }
-    }
-
-    @Nested
-    @DisplayName("validateNoMultiplePrimitivesAtRoot()")
-    class ValidateRootTests {
-
-        int before;
-
-        @BeforeEach
-        void setUp() {
-            before = context.currentLine;
-        }
-
-        @AfterEach
-        void tearDown() {
-            context.currentLine = before;
-        }
-
-        @Test
-        @DisplayName("Given next line at depth 0 in strict mode -> throw")
-        void rootPrimitiveConflict() {
-            // Given
-            setUpContext(new String[]{"abc"}, true, 2);
-            context.currentLine = 0;
-
-            // When / Then
-            assertThrows(IllegalArgumentException.class,
-                () -> DecodeHelper.validateNoMultiplePrimitivesAtRoot(context));
-        }
-
-        @Test
-        @DisplayName("Given deeper indentation -> OK")
-        void deeperIndentOk() {
-            // Given
-            setUpContext(new String[]{"  abc"}, true, 2);
-            context.currentLine = 0;
-
-            // When / Then
-            assertDoesNotThrow(() -> DecodeHelper.validateNoMultiplePrimitivesAtRoot(context));
-        }
-
-        @Test
-        @DisplayName("Given only blanks -> OK")
-        void blanksOnlyOk() {
-            // Given
-            setUpContext(new String[]{"   "}, true, 2);
-            context.currentLine = 0;
-
-            // When / Then
-            assertDoesNotThrow(() -> DecodeHelper.validateNoMultiplePrimitivesAtRoot(context));
         }
     }
 

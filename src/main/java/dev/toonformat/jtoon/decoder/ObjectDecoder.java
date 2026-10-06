@@ -211,22 +211,15 @@ public final class ObjectDecoder {
     }
 
     /**
-     * Parses a bare scalar value and validates in strict mode.
+     * Parses a bare scalar value.
      *
      * @param content the content string to parse
-     * @param depth   the depth of the scalar value
      * @param context decode an object to deal with lines, delimiter and options
      * @return the parsed scalar value
      */
-    static Object parseBareScalarValue(final String content, final int depth, final DecodeContext context) {
+    static Object parseBareScalarValue(final String content, final DecodeContext context) {
         final Object result = PrimitiveDecoder.parse(content, context);
         context.currentLine++;
-
-        // In strict mode, check if there are more primitives at the root level
-        if (depth == 0 && context.options.strict()) {
-            DecodeHelper.validateNoMultiplePrimitivesAtRoot(context);
-        }
-
         return result;
     }
 

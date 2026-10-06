@@ -365,26 +365,6 @@ public final class DecodeHelper {
     }
 
     /**
-     * Validates that there are no multiple primitives at root level in strict mode.
-     *
-     * @param context decode an object to deal with lines, delimiter and options
-     * @throws IllegalArgumentException in case the next depth is equal to 0
-     */
-    static void validateNoMultiplePrimitivesAtRoot(final DecodeContext context) {
-        int lineIndex = context.currentLine;
-        while (lineIndex < context.lines.length && isBlankLine(context.lines[lineIndex])) {
-            lineIndex++;
-        }
-        if (lineIndex < context.lines.length) {
-            final int nextDepth = getDepth(context.lines[lineIndex], context);
-            if (nextDepth == 0) {
-                throw new IllegalArgumentException(
-                    "Multiple primitives at root depth in strict mode at line " + (lineIndex + 1));
-            }
-        }
-    }
-
-    /**
      * Ensures no unconsumed lines remain after the root form was parsed.
      * The root form spans the whole document (§5); trailing content must not be
      * silently discarded. In strict mode any leftover line is an error. In

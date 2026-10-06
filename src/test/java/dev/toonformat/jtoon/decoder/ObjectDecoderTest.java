@@ -50,7 +50,7 @@ class ObjectDecoderTest {
         setUpContext("v: \"true\"");
 
         // When
-        final Object result = ObjectDecoder.parseBareScalarValue("v: \"true\"", 0, context);
+        final Object result = ObjectDecoder.parseBareScalarValue("v: \"true\"", context);
 
         // Then
         assertEquals("v: \"true\"", result.toString());
@@ -169,18 +169,15 @@ class ObjectDecoderTest {
     class ParseBareScalarValueTests {
 
         int before;
-        DecodeOptions beforeOptions;
 
         @BeforeEach
         void setUp() {
             before = context.currentLine;
-            beforeOptions = context.options;
         }
 
         @AfterEach
         void tearDown() {
             context.currentLine = before;
-            context.options = beforeOptions;
         }
 
         @Test
@@ -190,26 +187,11 @@ class ObjectDecoderTest {
             setUpContext("123");
 
             // When
-            final Object result = ObjectDecoder.parseBareScalarValue("123", 0, context);
+            final Object result = ObjectDecoder.parseBareScalarValue("123", context);
 
             // Then
             assertEquals(TEST_NUMBER_VALUE, result);
             assertEquals(1, context.currentLine);
-        }
-
-        @Test
-        @DisplayName("GIVEN strict mode WHEN multiple root primitives THEN exception")
-        void parseBareScalarValue_multiple_primitives_strict() {
-            // Given
-            setUpContext("""
-                42
-                99
-                """);
-            context.options = DecodeOptions.withStrict(true);
-
-            // When / then
-            assertThrows(IllegalArgumentException.class, () ->
-                ObjectDecoder.parseBareScalarValue("99", 0, context));
         }
     }
 

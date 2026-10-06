@@ -229,7 +229,7 @@ public final class ValueDecoder {
             throw new IllegalArgumentException(
                 "Bare token line outside root primitive position at line " + (context.currentLine + 1));
         }
-        return ObjectDecoder.parseBareScalarValue(line, depth, context);
+        return ObjectDecoder.parseBareScalarValue(line, context);
     }
 
     private static Object parseRootArrayLine(final String line, final int depth, final DecodeContext context) {
