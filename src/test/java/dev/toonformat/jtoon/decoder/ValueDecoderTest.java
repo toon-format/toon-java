@@ -291,16 +291,15 @@ class ValueDecoderTest {
     }
 
     @Test
-    void givenNoLines_whenParse_thenReturnEmptyMap() {
+    void givenIndentedFirstLineInNonStrictMode_whenParse_thenSkipLine() {
         // Given
         final DecodeOptions decodeOptions = new DecodeOptions(2, Delimiter.COMMA, false, PathExpansion.OFF,
                 DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
                 DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
-        final Object parseValue = ValueDecoder.decode("  indented", decodeOptions);// depth=1
+        final Object parseValue = ValueDecoder.decode("  indented: 1", decodeOptions);
 
         // Then
-        assertNotNull(parseValue);
-        assertInstanceOf(Map.class, parseValue);
+        assertEquals(Map.of(), parseValue);
     }
 
     @Test

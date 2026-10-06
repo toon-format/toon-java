@@ -78,23 +78,40 @@ public final class ValueDecoder {
 
         // Spec §5: root-form discovery starts at the first non-blank line
         context.currentLine = DecodeHelper.findNextNonBlankLine(0, context);
-        final int lineIndex = context.currentLine;
-        final String line = context.lines[lineIndex];
-        final int depth = DecodeHelper.getDepth(line, context);
-
-        if (depth > 0) {
-            if (context.options.strict()) {
-                throw new IllegalArgumentException("Unexpected indentation at line " + lineIndex);
-            }
+        final int firstLine = context.currentLine;
+        skipIndentedLeadingLines(context);
+        if (context.currentLine >= context.lines.length) {
             return new LinkedHashMap<>();
         }
 
-        final Object result = parseRootDocument(line, depth, context);
+        final Object result = parseRootDocument(context.lines[context.currentLine], 0,
+            context.currentLine > firstLine, context);
 
         // The root form spans the whole document (§5); leftover lines must not be
         // silently discarded.
         DecodeHelper.validateNoTrailingContent(context);
         return result;
+    }
+
+    /**
+     * Skips the indented lines before the first depth-0 line: an indented
+     * first line belongs to no scope, so strict mode rejects it and
+     * non-strict mode skips it unless it is a scalar line.
+     *
+     * @param context decode an object to deal with lines, delimiter and options
+     */
+    private static void skipIndentedLeadingLines(final DecodeContext context) {
+        while (context.currentLine < context.lines.length) {
+            final int depth = DecodeHelper.getDepth(context.lines[context.currentLine], context);
+            if (depth == 0) {
+                return;
+            }
+            if (context.options.strict()) {
+                throw new IllegalArgumentException("Unexpected indentation at line " + (context.currentLine + 1));
+            }
+            DecodeHelper.processOverIndentedLine(context, depth);
+            context.currentLine = DecodeHelper.findNextNonBlankLine(context.currentLine, context);
+        }
     }
 
     private static String stripByteOrderMark(final String input) {
@@ -195,9 +212,12 @@ public final class ValueDecoder {
 
     /**
      * Routes the root line to its form (§5): keyless array header, keyed
-     * array header, key-value pair, or bare scalar.
+     * array header, key-value pair, or bare scalar. A skipped indented line
+     * makes the document multi-line, so the bare scalar is then not a root
+     * primitive.
      */
-    private static Object parseRootDocument(final String line, final int depth, final DecodeContext context) {
+    private static Object parseRootDocument(final String line, final int depth, final boolean skippedLeading,
+            final DecodeContext context) {
         if (DecodeHelper.opensKeylessArray(line)) {
             return parseRootArrayLine(line, depth, context);
         }
@@ -212,6 +232,10 @@ public final class ValueDecoder {
             return parseRootKeyValueLine(line, colonIdx, depth, context);
         }
 
+        if (skippedLeading) {
+            throw new IllegalArgumentException(
+                "Bare token line outside root primitive position at line " + (context.currentLine + 1));
+        }
         return ObjectDecoder.parseBareScalarValue(line, depth, context);
     }
 
