@@ -83,7 +83,7 @@ public final class ListItemDecoder {
         final int colonIdx = DecodeHelper.findUnquotedColon(itemContent);
 
         // Simple scalar: - value
-        if (colonIdx <= 0) {
+        if (colonIdx < 0) {
             context.currentLine++;
             return PrimitiveDecoder.parse(itemContent, context);
         }

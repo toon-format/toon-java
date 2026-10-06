@@ -158,7 +158,7 @@ public final class ObjectDecoder {
         }
 
         final int colonIdx = DecodeHelper.findUnquotedColon(content);
-        if (colonIdx > 0) {
+        if (colonIdx >= 0) {
             final String key = DecodeHelper.trimSpaces(content.substring(0, colonIdx));
             final String value = DecodeHelper.trimSpaces(content.substring(colonIdx + 1));
 

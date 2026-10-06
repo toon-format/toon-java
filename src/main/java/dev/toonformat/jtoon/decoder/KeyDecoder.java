@@ -152,7 +152,7 @@ public final class KeyDecoder {
             final int depth, final DecodeContext context) {
         final int colonIdx = DecodeHelper.findUnquotedColon(content);
 
-        if (colonIdx > 0) {
+        if (colonIdx >= 0) {
             final String key = DecodeHelper.trimSpaces(content.substring(0, colonIdx));
             final String value = DecodeHelper.trimSpaces(content.substring(colonIdx + 1));
             parseKeyValuePairIntoMap(result, key, value, depth, context);
@@ -406,7 +406,7 @@ public final class KeyDecoder {
     static boolean parseKeyValueField(final String fieldContent, final Map<String, Object> item, final int depth,
                                        final DecodeContext context) {
         final int colonIdx = DecodeHelper.findUnquotedColon(fieldContent);
-        if (colonIdx <= 0) {
+        if (colonIdx < 0) {
             return false;
         }
 

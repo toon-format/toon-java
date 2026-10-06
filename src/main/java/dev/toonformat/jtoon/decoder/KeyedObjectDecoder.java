@@ -181,7 +181,7 @@ public final class KeyedObjectDecoder {
         // Spec §9.5: an entry row splits at its first unquoted colon; the
         // remainder is parsed as a tabular row with the active delimiter.
         final int colonIdx = DecodeHelper.findUnquotedColon(entryContent);
-        if (colonIdx <= 0) {
+        if (colonIdx < 0) {
             if (context.options.strict()) {
                 throw new IllegalArgumentException(
                     "Missing colon in keyed entry at line " + (context.currentLine + 1));

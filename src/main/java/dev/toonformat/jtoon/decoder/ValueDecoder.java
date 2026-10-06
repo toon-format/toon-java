@@ -208,7 +208,7 @@ public final class ValueDecoder {
         }
 
         final int colonIdx = DecodeHelper.findUnquotedColon(line);
-        if (colonIdx > 0) {
+        if (colonIdx >= 0) {
             return parseRootKeyValueLine(line, colonIdx, depth, context);
         }
 
