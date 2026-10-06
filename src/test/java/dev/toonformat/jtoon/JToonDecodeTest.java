@@ -614,7 +614,7 @@ public class JToonDecodeTest {
         @DisplayName("should throw in strict mode for invalid array header")
         void testStrictModeError() {
             // Given
-            final String toon = "[invalid]: 1";  // Invalid array header format
+            final String toon = "[invalid]: 1";
 
             // When
             final DecodeOptions options = DecodeOptions.withStrict(true);
@@ -624,17 +624,17 @@ public class JToonDecodeTest {
         }
 
         @Test
-        @DisplayName("should return null in lenient mode for invalid array header")
+        @DisplayName("should read an invalid array header as a key in lenient mode")
         void testLenientMode() {
             // Given
-            final String toon = "[invalid]: 1";  // Invalid array header format
+            final String toon = "[invalid]: 1";
             final DecodeOptions options = DecodeOptions.withStrict(false);
 
             // When
             final Object result = JToon.decode(toon, options);
 
             // Then
-            assertEquals(Collections.emptyList(), result);
+            assertEquals(Map.of("[invalid]", 1L), result);
         }
 
         @Test
@@ -748,15 +748,10 @@ public class JToonDecodeTest {
         }
 
         @Test
-        @DisplayName("lenient mode: allows leading zeros in bracket length")
-        void lenientAllowsLeadingZeros() {
+        @DisplayName("lenient mode: reads a leading-zero bracket length as part of the key")
+        void lenientReadsLeadingZeroLengthAsKey() {
             final DecodeOptions lenient = DecodeOptions.withStrict(false);
-            final Object result = JToon.decode("items[03]: a,b,c", lenient);
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> map = (Map<String, Object>) result;
-            @SuppressWarnings("unchecked")
-            final List<Object> items = (List<Object>) map.get("items");
-            assertEquals(EXPECTED_TAG_COUNT, items.size());
+            assertEquals(Map.of("items[03]", "a,b,c"), JToon.decode("items[03]: a,b,c", lenient));
         }
     }
 

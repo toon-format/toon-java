@@ -67,7 +67,7 @@ public final class ListItemDecoder {
         }
 
         // Check for standalone array (e.g., "[2]: 1,2")
-        if (DecodeHelper.opensKeylessArray(itemContent)) {
+        if (DecodeHelper.opensKeylessArray(itemContent, context.options.strict())) {
             return parseStandaloneArrayItem(itemContent, depth, context);
         }
 

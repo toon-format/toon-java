@@ -290,20 +290,6 @@ class ArrayDecoderTest {
     }
 
     @Test
-    void shouldReturnEmptyListForInvalidHeaderInLenientMode() {
-        // Given
-        this.context.lines = "[x]".split("\n", -1);
-        this.context.options = DecodeOptions.withStrict(false);
-        this.context.delimiter = DecodeOptions.DEFAULT.delimiter();
-
-        // When
-        final List<Object> result = ArrayDecoder.parseArray("[x]", 0, context);
-
-        // Then
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
     @DisplayName("extract length from the Header")
     void extractLengthFromHeader() throws Exception {
         // Given

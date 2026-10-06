@@ -201,10 +201,11 @@ public final class Headers {
         }
         i++;
         final int digitsStart = i;
-        while (i < n && Character.isDigit(content.charAt(i))) {
+        while (i < n && content.charAt(i) >= '0' && content.charAt(i) <= '9') {
             i++;
         }
-        if (i == digitsStart) {
+        // A length has at least one ASCII digit and no leading zero (§6)
+        if (i == digitsStart || (i - digitsStart > 1 && content.charAt(digitsStart) == '0')) {
             return null;
         }
         final long declaredLength = parseLength(content.substring(digitsStart, i));

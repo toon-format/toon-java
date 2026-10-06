@@ -144,11 +144,7 @@ public final class ArrayDecoder {
             return Collections.emptyList();
         }
 
-        if (context.options.strict()) {
-            throw new IllegalArgumentException("Invalid array header: " + header);
-        }
-        context.currentLine++;
-        return Collections.emptyList();
+        throw new IllegalArgumentException("Invalid array header: " + header);
     }
 
     /**

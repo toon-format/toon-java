@@ -1,6 +1,7 @@
 package dev.toonformat.jtoon.decoder;
 
 import dev.toonformat.jtoon.Delimiter;
+import dev.toonformat.jtoon.util.Headers;
 import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
@@ -192,14 +193,23 @@ public final class DecodeHelper {
 
     /**
      * Checks if content opens a keyless array: the bare {@code []}, or a
-     * bracket segment followed by its header colon (§6). Any other
+     * bracket segment followed by its header colon (§6). Strict mode routes
+     * a malformed segment to the array parser, which rejects it; non-strict
+     * mode reads it as part of a key-value key instead (§14.2). Any other
      * bracket-led line is a key-value line or a scalar line, never a header.
      *
      * @param content the line content past its indentation
-     * @return true if the content has the shape of a keyless header or is {@code []}
+     * @param strict  strict mode flag
+     * @return true if the content is to be parsed as a keyless array
      */
-    static boolean opensKeylessArray(final String content) {
-        return "[]".equals(content) || content.startsWith(OPEN_BRACKET) && findHeaderColon(content) >= 0;
+    static boolean opensKeylessArray(final String content, final boolean strict) {
+        if ("[]".equals(content)) {
+            return true;
+        }
+        if (!content.startsWith(OPEN_BRACKET) || findHeaderColon(content) < 0) {
+            return false;
+        }
+        return strict || Headers.matchKeylessKeyedHeader(content) != null;
     }
 
     /**
