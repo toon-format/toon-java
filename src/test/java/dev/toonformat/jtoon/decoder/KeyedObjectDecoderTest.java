@@ -57,21 +57,6 @@ class KeyedObjectDecoderTest {
     }
 
     @Test
-    @DisplayName("Given inline content after keyed header When parsed Then exception")
-    void parseKeyedTabularObject_givenInlineContent_whenParsed_thenThrows() {
-        // Given
-        final DecodeContext context = new DecodeContext();
-        context.lines = new String[]{"servers[1:]{host}: x"};
-        context.currentLine = 0;
-        final Headers.KeyedHeaderMatch header = Headers.matchKeyedArrayHeader(context.lines[0]);
-
-        // When / Then
-        final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> KeyedObjectDecoder.parseKeyedTabularObject(context.lines[0], header, 1, context));
-        assertTrue(ex.getMessage().contains("Inline content after keyed header"));
-    }
-
-    @Test
     @DisplayName("Given entry count mismatch in strict mode When parsed Then exception")
     void parseKeyedTabularObject_givenCountMismatchStrict_whenParsed_thenThrows() {
         // Given

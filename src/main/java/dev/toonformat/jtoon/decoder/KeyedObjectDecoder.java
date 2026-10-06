@@ -35,7 +35,7 @@ public final class KeyedObjectDecoder {
      */
     static Map<String, Object> parseKeyedTabularObject(final String content,
             final Headers.KeyedHeaderMatch header, final int entryDepth, final DecodeContext context) {
-        validateKeyedHeader(content, header, context);
+        validateKeyedHeader(header, context);
 
         final String fieldsSpec = content.substring(header.fieldsStart() + 1, header.headerEnd() - 1);
         final Delimiter arrayDelimiter = delimiterFromChar(header.delimiter(), context);
@@ -76,23 +76,16 @@ public final class KeyedObjectDecoder {
     }
 
     /**
-     * Validates the keyed header shape: a field list must be present and no
-     * inline content may follow the header.
+     * Validates the keyed header shape: a field list must be present.
      *
-     * @param content the header line content
      * @param header  the keyed header match for the line
      * @param context decode an object to deal with lines, delimiter and options
      * @throws IllegalArgumentException for a defective header
      */
-    private static void validateKeyedHeader(final String content,
-            final Headers.KeyedHeaderMatch header, final DecodeContext context) {
+    private static void validateKeyedHeader(final Headers.KeyedHeaderMatch header, final DecodeContext context) {
         if (header.fieldsStart() < 0) {
             throw new IllegalArgumentException(
                 "Keyed header requires a field list at line " + (context.currentLine + 1));
-        }
-        if (!DecodeHelper.trimSpaces(content.substring(header.headerEnd() + 1)).isEmpty()) {
-            throw new IllegalArgumentException(
-                "Inline content after keyed header at line " + (context.currentLine + 1));
         }
     }
 

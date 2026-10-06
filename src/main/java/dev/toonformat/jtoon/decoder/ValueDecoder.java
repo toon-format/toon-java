@@ -210,7 +210,7 @@ public final class ValueDecoder {
      */
     private static Object parseRootDocument(final String line, final int depth, final boolean skippedLeading,
             final DecodeContext context) {
-        if (DecodeHelper.opensKeylessArray(line, context.options.strict())) {
+        if (DecodeHelper.opensKeylessArray(line)) {
             return parseRootArrayLine(line, depth, context);
         }
 

@@ -107,6 +107,10 @@ public final class Headers {
         if (fields.endIndex() >= n || content.charAt(fields.endIndex()) != ':') {
             return null;
         }
+        // A fields-bearing header carries no inline content (§6)
+        if (fields.start() >= 0 && !content.substring(fields.endIndex() + 1).chars().allMatch(c -> c == ' ')) {
+            return null;
+        }
         return new KeyedHeaderMatch(content.substring(0, keyEnd), keyEnd, bracket.declaredLength(),
             bracket.keyed(), bracket.delimiter(), fields.start(), fields.endIndex());
     }

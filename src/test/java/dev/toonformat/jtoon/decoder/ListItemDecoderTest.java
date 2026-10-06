@@ -117,12 +117,12 @@ class ListItemDecoderTest {
     void parseListItem_givenKeylessFieldsHeaderStrict_whenParsed_thenThrows() {
         // Given
         final DecodeContext context = new DecodeContext();
-        context.lines = new String[]{"- [2]{x}: 1"};
+        context.lines = new String[]{"- [2]{x}:"};
         context.currentLine = 0;
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> ListItemDecoder.parseListItem("- [2]{x}: 1", 0, context));
+            () -> ListItemDecoder.parseListItem("- [2]{x}:", 0, context));
         assertTrue(ex.getMessage().contains("Keyless array header with field list"));
     }
 

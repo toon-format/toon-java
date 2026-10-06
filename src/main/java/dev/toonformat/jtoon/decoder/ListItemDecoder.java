@@ -67,7 +67,7 @@ public final class ListItemDecoder {
         }
 
         // Check for standalone array (e.g., "[2]: 1,2")
-        if (DecodeHelper.opensKeylessArray(itemContent, context.options.strict())) {
+        if (DecodeHelper.opensKeylessArray(itemContent)) {
             return parseStandaloneArrayItem(itemContent, depth, context);
         }
 
@@ -220,7 +220,7 @@ public final class ListItemDecoder {
         final String rawKey = DecodeHelper.trimSpaces(itemContent.substring(0, colonIdx));
         DecodeHelper.validateQuotedTokenBoundary(rawKey);
         final String value = DecodeHelper.trimSpaces(itemContent.substring(colonIdx + 1));
-        DecodeHelper.validateKeyHasNoUnquotedBrackets(rawKey, value, context);
+        DecodeHelper.rejectMalformedHeader(rawKey, value, context);
         final String key = StringEscaper.unescape(rawKey);
 
         context.currentLine++;

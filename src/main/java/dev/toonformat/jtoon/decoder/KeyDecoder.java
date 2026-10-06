@@ -175,7 +175,7 @@ public final class KeyDecoder {
     static void parseKeyValuePairIntoMap(final Map<String, Object> map, final String key, final String value,
                                          final int depth, final DecodeContext context) {
         DecodeHelper.validateQuotedTokenBoundary(key);
-        DecodeHelper.validateKeyHasNoUnquotedBrackets(key, value, context);
+        DecodeHelper.rejectMalformedHeader(key, value, context);
         final String unescapedKey = StringEscaper.unescape(key);
 
         final Object parsedValue = parseKeyValue(value, depth, context);
@@ -410,7 +410,7 @@ public final class KeyDecoder {
         final String rawFieldKey = DecodeHelper.trimSpaces(fieldContent.substring(0, colonIdx));
         DecodeHelper.validateQuotedTokenBoundary(rawFieldKey);
         final String fieldValue = DecodeHelper.trimSpaces(fieldContent.substring(colonIdx + 1));
-        DecodeHelper.validateKeyHasNoUnquotedBrackets(rawFieldKey, fieldValue, context);
+        DecodeHelper.rejectMalformedHeader(rawFieldKey, fieldValue, context);
         final String fieldKey = StringEscaper.unescape(rawFieldKey);
 
         final Object parsedValue = ObjectDecoder.parseFieldValue(fieldValue, depth + 2, context);

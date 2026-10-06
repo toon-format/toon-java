@@ -590,37 +590,39 @@ class DecodeHelperTest {
     }
 
     @Nested
-    @DisplayName("hasUnquotedBrackets()")
-    class HasUnquotedBrackets {
+    @DisplayName("rejectMalformedHeader()")
+    class RejectMalformedHeader {
 
         @Test
-        @DisplayName("should return true when brackets are present")
-        void detectsBrackets() {
-            assertTrue(DecodeHelper.hasUnquotedBrackets("foo[bar]"));
-            assertTrue(DecodeHelper.hasUnquotedBrackets("[test]"));
-            assertTrue(DecodeHelper.hasUnquotedBrackets("items[2]extra"));
+        @DisplayName("should throw in strict mode when the line keeps a header shape")
+        void rejectsHeaderShape() {
+            context.options = DecodeOptions.withStrict(true);
+            assertThrows(IllegalArgumentException.class,
+                () -> DecodeHelper.rejectMalformedHeader("foo[bar]", "1", context));
+            assertThrows(IllegalArgumentException.class,
+                () -> DecodeHelper.rejectMalformedHeader("items[2]extra", "1", context));
+            assertThrows(IllegalArgumentException.class,
+                () -> DecodeHelper.rejectMalformedHeader("items[1]{a}", "1", context));
+            assertThrows(IllegalArgumentException.class,
+                () -> DecodeHelper.rejectMalformedHeader("k[2", "]{a}: x", context));
         }
 
         @Test
-        @DisplayName("should return false when no brackets")
-        void noBrackets() {
-            assertFalse(DecodeHelper.hasUnquotedBrackets("simple key: value"));
-            assertFalse(DecodeHelper.hasUnquotedBrackets("foo"));
-            assertFalse(DecodeHelper.hasUnquotedBrackets(""));
+        @DisplayName("should accept a line without a header shape")
+        void acceptsNoHeaderShape() {
+            context.options = DecodeOptions.withStrict(true);
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("foo", "[1]", context));
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("a[b", "c", context));
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("[1]{x", "y}", context));
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("\"foo[bar]\"", "1", context));
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("\"escaped\\\"quote[br]\"", "1", context));
         }
 
         @Test
-        @DisplayName("should return false when brackets are inside quotes")
-        void bracketsInsideQuotes() {
-            assertFalse(DecodeHelper.hasUnquotedBrackets("\"[test]\""));
-            assertFalse(DecodeHelper.hasUnquotedBrackets("\"foo[bar]\""));
-        }
-
-        @Test
-        @DisplayName("should handle escaped quotes properly")
-        void escapedQuotes() {
-            // escaped quote inside quoted section should not end the quotes
-            assertFalse(DecodeHelper.hasUnquotedBrackets("\"escaped\\\"quote[br]\""));
+        @DisplayName("should accept a header shape in non-strict mode")
+        void acceptsHeaderShapeWhenLenient() {
+            context.options = DecodeOptions.withStrict(false);
+            assertDoesNotThrow(() -> DecodeHelper.rejectMalformedHeader("foo[bar]", "1", context));
         }
     }
 

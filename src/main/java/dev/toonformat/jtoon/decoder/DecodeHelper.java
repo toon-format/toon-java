@@ -11,7 +11,6 @@ import static dev.toonformat.jtoon.util.Constants.SPACE;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
-import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
  * Handles indentation, depth, conflicts, and validation for other decode classes.
@@ -193,44 +192,15 @@ public final class DecodeHelper {
 
     /**
      * Checks if content opens a keyless array: the bare {@code []}, or a
-     * bracket segment followed by its header colon (§6). Strict mode routes
-     * a malformed segment to the array parser, which rejects it; non-strict
-     * mode reads it as part of a key-value key instead (§14.2). Any other
-     * bracket-led line is a key-value line or a scalar line, never a header.
+     * header that matches the §6 grammar. Any other bracket-led line is a
+     * key-value line, which strict mode rejects for its malformed header
+     * (§14.2), or a scalar line.
      *
      * @param content the line content past its indentation
-     * @param strict  strict mode flag
      * @return true if the content is to be parsed as a keyless array
      */
-    static boolean opensKeylessArray(final String content, final boolean strict) {
-        if ("[]".equals(content)) {
-            return true;
-        }
-        if (!content.startsWith(OPEN_BRACKET) || findHeaderColon(content) < 0) {
-            return false;
-        }
-        return strict || Headers.matchKeylessKeyedHeader(content) != null;
-    }
-
-    /**
-     * Finds the colon that ends a header whose bracket segment opens at index
-     * 0: the first unquoted colon past the closing bracket, and past the
-     * matching brace when a field list opens before that colon (§6).
-     *
-     * @param content the line content past its indentation
-     * @return the index of the header colon, or -1 if the line has no header shape
-     */
-    private static int findHeaderColon(final String content) {
-        final int bracketEnd = findUnquoted(content, ']', 0);
-        if (bracketEnd < 0) {
-            return -1;
-        }
-        int segmentEnd = bracketEnd;
-        final int braceStart = findUnquoted(content, '{', bracketEnd);
-        if (braceStart >= 0 && braceStart < findUnquoted(content, COLON.charAt(0), bracketEnd)) {
-            segmentEnd = Math.max(segmentEnd, Headers.skipBalancedFieldSpec(content, braceStart + 1, content.length()));
-        }
-        return findUnquoted(content, COLON.charAt(0), segmentEnd);
+    static boolean opensKeylessArray(final String content) {
+        return "[]".equals(content) || Headers.matchKeylessKeyedHeader(content) != null;
     }
 
     /**
@@ -346,39 +316,10 @@ public final class DecodeHelper {
     }
 
     /**
-     * Checks if a line contains an unquoted bracket pair ({@code [} followed
-     * by {@code ]}). Used to detect malformed array header syntax in strict
-     * mode; a lone bracket cannot form a bracket segment and stays part of a
-     * literal key.
-     *
-     * @param line the line to check
-     * @return true if an unquoted bracket pair is found
-     */
-    static boolean hasUnquotedBrackets(final String line) {
-        boolean inQuotes = false;
-        boolean escaped = false;
-        boolean opened = false;
-        for (int i = 0; i < line.length(); i++) {
-            final char c = line.charAt(i);
-            if (escaped) {
-                escaped = false;
-            } else if (inQuotes && c == BACKSLASH) {
-                escaped = true;
-            } else if (c == DOUBLE_QUOTE) {
-                inQuotes = !inQuotes;
-            } else if (!inQuotes && c == '[') {
-                opened = true;
-            } else if (!inQuotes && c == ']' && opened) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * In strict mode, rejects a key-value key with unquoted brackets: the line
-     * did not match the header grammar, so its bracket segment is malformed
-     * (§6, §14.2). This catches:
+     * In strict mode, rejects a key-value line that still has a header shape:
+     * an unquoted bracket segment in its key, followed by a colon past the
+     * segment and its field list. The line did not match the header grammar,
+     * so the header is malformed (§6, §14.2). This catches:
      * <ul>
      * <li>the removed length marker ({@code xs[#2]})</li>
      * <li>extra brackets between bracket segment and colon ({@code foo[1][bar]})</li>
@@ -387,22 +328,40 @@ public final class DecodeHelper {
      * <li>negative bracket length ({@code items[-1]})</li>
      * <li>whitespace between bracket segment and colon/fields segment
      * ({@code items[2] :}, {@code items[2] {a,b}:})</li>
+     * <li>inline content after a field list ({@code items[1]{a}: 1})</li>
      * </ul>
-     *
-     * A field list that spans the colon ({@code [1]{x:y}}) leaves the line
-     * without a header colon, so it stays a key-value line.
+     * A lone bracket ({@code a[b}) or a field list spanning the colon
+     * ({@code [1]{x:y}}) leaves no header shape, so the line stays a
+     * key-value line.
      *
      * @param key     the raw key token before the colon
      * @param value   the value after the colon
      * @param context decode an object to deal with lines, delimiter and options
-     * @throws IllegalArgumentException in strict mode if the key has unquoted brackets
+     * @throws IllegalArgumentException in strict mode if the line has a header shape
      */
-    static void validateKeyHasNoUnquotedBrackets(final String key, final String value, final DecodeContext context) {
-        if (context.options.strict() && hasUnquotedBrackets(key)
-                && findHeaderColon(key + COLON + value) == key.length()) {
+    static void rejectMalformedHeader(final String key, final String value, final DecodeContext context) {
+        if (context.options.strict() && hasHeaderShape(key, value)) {
             throw new IllegalArgumentException(
                 "Invalid array header syntax at line " + (context.currentLine + 1));
         }
+    }
+
+    private static boolean hasHeaderShape(final String key, final String value) {
+        final int bracketStart = findUnquoted(key, '[', 0);
+        if (bracketStart < 0) {
+            return false;
+        }
+        final String content = key + COLON + value;
+        final int bracketEnd = findUnquoted(content, ']', bracketStart);
+        if (bracketEnd < 0) {
+            return false;
+        }
+        int segmentEnd = bracketEnd;
+        final int braceStart = findUnquoted(content, '{', bracketEnd);
+        if (braceStart >= 0 && braceStart < findUnquoted(content, COLON.charAt(0), bracketEnd)) {
+            segmentEnd = Math.max(segmentEnd, Headers.skipBalancedFieldSpec(content, braceStart + 1, content.length()));
+        }
+        return findUnquoted(content, COLON.charAt(0), segmentEnd) >= 0;
     }
 
     /**

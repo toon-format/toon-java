@@ -734,6 +734,22 @@ public class JToonDecodeTest {
         }
 
         @Test
+        @DisplayName("strict mode: throws on a header it would otherwise drop content after")
+        void strictRejectsContentAfterHeader() {
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("items[0]{a,b}: 1,2"));
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("[1]{a,b}}:\n  1,2"));
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]:\n  - [1]{a}: 1"));
+        }
+
+        @Test
+        @DisplayName("lenient mode: reads a fields-bearing header with inline content as a key")
+        void lenientReadsFieldsHeaderWithInlineContentAsKey() {
+            final DecodeOptions lenient = DecodeOptions.withStrict(false);
+            assertEquals(Map.of("items[0]{a,b}", "1,2"), JToon.decode("items[0]{a,b}: 1,2", lenient));
+            assertEquals(Map.of("a", List.of(Map.of("[1]{a}", 1L))), JToon.decode("a[1]:\n  - [1]{a}: 1", lenient));
+        }
+
+        @Test
         @DisplayName("throws on an indented root null or empty array in either mode")
         void rejectsIndentedRootLiteral() {
             final DecodeOptions lenient = DecodeOptions.withStrict(false);
