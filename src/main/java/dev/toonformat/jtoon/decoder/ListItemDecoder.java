@@ -252,8 +252,19 @@ public final class ListItemDecoder {
             final int depth, final DecodeContext context) {
         while (context.currentLine < context.lines.length) {
             final String line = context.lines[context.currentLine];
-            final int lineDepth = DecodeHelper.getDepth(line, context);
 
+            // Non-strict mode ignores blank lines before a line at field depth or deeper (§12)
+            if (DecodeHelper.isBlankLine(line)) {
+                final int nextNonBlankLine = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
+                if (context.options.strict() || nextNonBlankLine >= context.lines.length
+                        || DecodeHelper.getDepth(context.lines[nextNonBlankLine], context) < depth + 2) {
+                    return;
+                }
+                context.currentLine = nextNonBlankLine;
+                continue;
+            }
+
+            final int lineDepth = DecodeHelper.getDepth(line, context);
             if (lineDepth < depth + 2) {
                 return;
             }
