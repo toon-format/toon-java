@@ -55,11 +55,7 @@ public final class ObjectDecoder {
                 processDirectChildLine(result, line, parentDepth, depth, context);
             } else if (depth > parentDepth + 1) {
                 // Over-indented line jumps past the expected depth (§14.2)
-                if (context.options.strict()) {
-                    throw new IllegalArgumentException(
-                        "Over-indented line at " + (context.currentLine + 1) + " (depth " + depth + ")");
-                }
-                context.currentLine++;
+                DecodeHelper.processOverIndentedLine(context, depth);
             } else {
                 context.currentLine++;
             }
@@ -283,7 +279,7 @@ public final class ObjectDecoder {
             final int nextDepth = DecodeHelper.getDepth(context.lines[context.currentLine + 1], context);
             if (nextDepth > depth) {
                 if (!value.isEmpty()) {
-                    return parseInlineValueWithOrphanLines(value, depth, nextDepth, context, scalarParser);
+                    return parseInlineValueWithOrphanLines(value, depth, context, scalarParser);
                 }
                 context.currentLine++;
                 // parseNestedObject manages the currentLine, so we don't increment here
@@ -298,28 +294,27 @@ public final class ObjectDecoder {
 
     /**
      * Parses an inline value whose line carries deeper, orphaned lines:
-     * rejected in strict mode (§14.2), skipped in non-strict mode.
+     * rejected in strict mode (§14.2), skipped in non-strict mode unless
+     * they are scalar lines.
      *
      * @param value        the inline value string to parse
      * @param depth        the depth at which the value is located
-     * @param nextDepth    the depth of the first orphaned line
      * @param context      decode an object to deal with lines, delimiter and options
      * @param scalarParser parses the inline value
      * @return the parsed scalar value
      */
-    private static Object parseInlineValueWithOrphanLines(final String value, final int depth, final int nextDepth,
+    private static Object parseInlineValueWithOrphanLines(final String value, final int depth,
             final DecodeContext context, final BiFunction<String, DecodeContext, Object> scalarParser) {
         // Inline value: the field does not open a scope, so a deeper
         // line belongs to no scope at all (§14.2)
-        if (context.options.strict()) {
-            throw new IllegalArgumentException(
-                "Over-indented line at " + (context.currentLine + 2) + " (depth " + nextDepth + ")");
+        context.currentLine++;
+        while (context.currentLine < context.lines.length) {
+            final int lineDepth = DecodeHelper.getDepth(context.lines[context.currentLine], context);
+            if (lineDepth <= depth) {
+                break;
+            }
+            DecodeHelper.processOverIndentedLine(context, lineDepth);
         }
-        // Non-strict: skip the orphaned lines and keep the inline value
-        do {
-            context.currentLine++;
-        } while (context.currentLine < context.lines.length
-            && DecodeHelper.getDepth(context.lines[context.currentLine], context) > depth);
         return scalarParser.apply(value, context);
     }
 

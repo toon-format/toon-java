@@ -380,15 +380,23 @@ public final class DecodeHelper {
                 throw new IllegalArgumentException(
                     "Unexpected content after root form at line " + (context.currentLine + 1));
             }
-            final int depth = getDepth(line, context);
-            final String content = line.substring(depth * context.options.indent());
-            if (findUnquotedColon(content) < 0) {
-                // Spec §5.2: a scalar line outside root primitive position is
-                // an error in strict and non-strict mode alike.
-                throw new IllegalArgumentException(
-                    "Bare token line outside root primitive position at line " + (context.currentLine + 1));
-            }
+            rejectScalarLine(context);
             context.currentLine++;
+        }
+    }
+
+    /**
+     * Rejects the current line if it is a scalar line: without an unquoted
+     * colon it is a bare token outside root primitive position, an error in
+     * strict and non-strict mode alike, so lenient skipping never covers it.
+     *
+     * @param context decode an object to deal with lines, delimiter and options
+     * @throws IllegalArgumentException if the current line is a scalar line
+     */
+    private static void rejectScalarLine(final DecodeContext context) {
+        if (findUnquotedColon(context.lines[context.currentLine]) < 0) {
+            throw new IllegalArgumentException(
+                "Bare token line outside root primitive position at line " + (context.currentLine + 1));
         }
     }
 
@@ -398,13 +406,14 @@ public final class DecodeHelper {
      *
      * @param context   decode an object to deal with lines, delimiter, and options
      * @param lineDepth the depth of the over-indented line
-     * @throws IllegalArgumentException in strict mode
+     * @throws IllegalArgumentException in strict mode, or for a scalar line in any mode
      */
     static void processOverIndentedLine(final DecodeContext context, final int lineDepth) {
         if (context.options.strict()) {
             throw new IllegalArgumentException(
                 "Over-indented line at " + (context.currentLine + 1) + " (depth " + lineDepth + ")");
         }
+        rejectScalarLine(context);
         context.currentLine++;
     }
 

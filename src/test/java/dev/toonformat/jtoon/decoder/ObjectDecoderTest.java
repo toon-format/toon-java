@@ -347,7 +347,7 @@ class ObjectDecoderTest {
             // Given
             setUpContext("""
                 key: 15
-                  orphan
+                  orphan: 1
                 """);
             context.options = DecodeOptions.withStrict(false);
             context.currentLine = 0;

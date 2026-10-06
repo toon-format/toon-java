@@ -85,7 +85,7 @@ class ListItemDecoderTest {
     @DisplayName("Testing parseListItemFields with negativ depth")
     void testParseListItemFields() throws Exception {
         // Given
-        final String line = "  - asd";
+        final String line = "  - asd: 1";
         final Object testObject = new Object();
         final Map<String, Object> item = Map.of(line, testObject);
         final int depth = -2;
@@ -221,7 +221,7 @@ class ListItemDecoderTest {
         final Map<String, Object> item = new LinkedHashMap<>();
         final DecodeContext context = new DecodeContext();
         context.options = DecodeOptions.withStrict(false);
-        context.lines = new String[]{"  - item", "      orphan", "  - next"};
+        context.lines = new String[]{"  - item", "      orphan: 1", "  - next"};
         context.currentLine = 1;
 
         // When
