@@ -4,7 +4,6 @@ import dev.toonformat.jtoon.EncodeOptions;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
 import java.util.List;
 import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
@@ -267,29 +266,7 @@ public final class ArrayEncoder {
         writer.push(depth, header);
 
         for (JsonNode item : items) {
-            if (item.isValueNode()) {
-                // Direct primitive as list item
-                writer.push(depth + 1,
-                        LIST_ITEM_PREFIX + PrimitiveEncoder.encodePrimitive(item, options.delimiter().toString()));
-            } else if (item.isArray()) {
-                // Direct array as list item
-                if (isArrayOfPrimitives(item)) {
-                    final String inline = formatInlineArray((ArrayNode) item, options.delimiter().toString(), null);
-                    writer.push(depth + 1, LIST_ITEM_PREFIX + inline);
-                }
-                if (isArrayOfObjects(item)) {
-                    final ArrayNode arrayItems = (ArrayNode) item;
-                    final String nestedHeader = PrimitiveEncoder.formatHeader(arrayItems.size(), null, null,
-                                                                              options.delimiter().toString());
-                    writer.push(depth + 1, LIST_ITEM_PREFIX + nestedHeader);
-
-                    arrayItems.elements().forEach(e -> ListItemEncoder.encodeObjectAsListItem((ObjectNode) e, writer,
-                                                                                               depth + 2, options));
-                }
-            } else if (item.isObject()) {
-                // Object as list item - delegate to ListItemEncoder
-                ListItemEncoder.encodeObjectAsListItem((ObjectNode) item, writer, depth + 1, options);
-            }
+            ListItemEncoder.encodeValueAsListItem(item, writer, depth + 1, options);
         }
     }
 }
