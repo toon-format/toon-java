@@ -132,7 +132,7 @@ public final class ArrayDecoder {
             skipBlankLines(context);
 
             if (context.currentLine < context.lines.length) {
-                return parseArrayDataLine(header, depth, arrayDelimiter, context);
+                return parseArrayDataLine(header, depth, context);
             }
             validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
             return Collections.unmodifiableList(new ArrayList<>());
@@ -223,37 +223,28 @@ public final class ArrayDecoder {
     }
 
     /**
-     * Parses the first data line below an array header, routing list items to
-     * the list parser and any other content to the value splitter.
+     * Parses the first data line below an array header: a deeper list item
+     * opens a list; any other line is left to the enclosing scope, so the
+     * array is empty.
      *
      * @param header         the full header string
      * @param depth          depth of the array
-     * @param arrayDelimiter array delimiter
      * @param context        decode context
      * @return the parsed array values
      */
     private static List<Object> parseArrayDataLine(final String header, final int depth,
-            final Delimiter arrayDelimiter, final DecodeContext context) {
+            final DecodeContext context) {
         final String nextLine = context.lines[context.currentLine];
         final int nextDepth = DecodeHelper.getDepth(nextLine, context);
         final String nextContent = nextLine.substring(nextDepth * context.options.indent());
 
-        if (nextDepth <= depth) {
-            // The next line is not a child of this array, the array is empty
-            validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
-            return Collections.emptyList();
-        }
-
-        if (DecodeHelper.isListItemLine(nextContent)) {
+        if (nextDepth > depth && DecodeHelper.isListItemLine(nextContent)) {
             context.currentLine--;
             return Collections.unmodifiableList(parseListArray(depth, header, context));
         }
 
-        context.currentLine++;
-        final List<Object> result = parseArrayValues(nextContent, arrayDelimiter,
-            context.options.maxArraySize(), context.options.maxStringLength());
-        validateArrayLength(header, result.size(), context.options.maxArraySize(), context.options.strict());
-        return Collections.unmodifiableList(result);
+        validateArrayLength(header, 0, context.options.maxArraySize(), context.options.strict());
+        return Collections.emptyList();
     }
 
     /**

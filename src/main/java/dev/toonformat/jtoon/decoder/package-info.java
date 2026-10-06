@@ -53,7 +53,7 @@
  * <ul>
  *   <li><strong>Tabular:</strong> {@code items[2]{id,name}:} → parses rows into Maps</li>
  *   <li><strong>List:</strong> {@code items[2]:} with {@code - } prefixed lines</li>
- *   <li><strong>Primitive:</strong> {@code tags[3]: a,b,c} → inline or multiline</li>
+ *   <li><strong>Primitive:</strong> {@code tags[3]: a,b,c} → inline on the header line</li>
  * </ul>
  *
  * <h2>Parsing Strategy</h2>
@@ -127,14 +127,10 @@
  *
  * <h3>Primitive Arrays</h3>
  * <p>
- * Inline or multiline values without field spec or list markers:
+ * Inline values on the header line, without field spec or list markers:
  * </p>
  * <pre>{@code
  * tags[3]: reading,gaming,coding
- *
- * // or multiline:
- * tags[3]:
- *   reading,gaming,coding
  * }</pre>
  *
  * <h2>Error Handling</h2>

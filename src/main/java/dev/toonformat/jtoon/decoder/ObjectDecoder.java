@@ -96,12 +96,22 @@ public final class ObjectDecoder {
      * @param context decode an object to deal with lines, delimiter and options
      */
     static void parseRootObjectFields(final Map<String, Object> obj, final int depth, final DecodeContext context) {
-        while (isRootFieldLine(depth, context)) {
+        while (context.currentLine < context.lines.length) {
             final String line = context.lines[context.currentLine];
 
             // Skip blank lines
             if (DecodeHelper.isBlankLine(line)) {
                 context.currentLine++;
+                continue;
+            }
+
+            final int lineDepth = DecodeHelper.getDepth(line, context);
+            if (lineDepth < depth) {
+                return;
+            }
+            // A deeper line belongs to no field; skipping it keeps the root fields after it (§8, §14.2)
+            if (lineDepth > depth) {
+                DecodeHelper.processOverIndentedLine(context, lineDepth);
                 continue;
             }
 
@@ -111,19 +121,6 @@ public final class ObjectDecoder {
                 return;
             }
         }
-    }
-
-    /**
-     * Returns whether the current line is a root field line at the given
-     * depth, staying within the line buffer.
-     *
-     * @param depth   the expected root field depth
-     * @param context decode an object to deal with lines, delimiter and options
-     * @return true when the current line sits at the root field depth
-     */
-    private static boolean isRootFieldLine(final int depth, final DecodeContext context) {
-        return context.currentLine < context.lines.length
-            && DecodeHelper.getDepth(context.lines[context.currentLine], context) == depth;
     }
 
     /**

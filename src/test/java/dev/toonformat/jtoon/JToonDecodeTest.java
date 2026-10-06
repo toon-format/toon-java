@@ -236,26 +236,16 @@ public class JToonDecodeTest {
         }
 
         @Test
-        @DisplayName("should decode multiline primitive array")
-        void testMultilinePrimitiveArray() {
+        @DisplayName("should reject primitive values on the line below the header")
+        void rejectsPrimitiveValuesBelowHeader() {
             // Given
             final String toon = """
                 tags[3]:
                   reading,gaming,coding
                 """;
 
-            // When
-            final Object result = JToon.decode(toon);
-
-            // Then
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> map = (Map<String, Object>) result;
-            @SuppressWarnings("unchecked")
-            final List<Object> tags = (List<Object>) map.get("tags");
-            assertEquals(EXPECTED_TAG_COUNT, tags.size());
-            assertEquals("reading", tags.get(0));
-            assertEquals("gaming", tags.get(1));
-            assertEquals("coding", tags.get(2));
+            // When / Then
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode(toon));
         }
 
         @Test
