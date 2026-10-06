@@ -273,15 +273,18 @@ public final class DecodeHelper {
     }
 
     /**
-     * Checks if a line contains unquoted brackets ({@code [} or {@code ]}).
-     * Used to detect malformed array header syntax in strict mode.
+     * Checks if a line contains an unquoted bracket pair ({@code [} followed
+     * by {@code ]}). Used to detect malformed array header syntax in strict
+     * mode; a lone bracket cannot form a bracket segment and stays part of a
+     * literal key.
      *
      * @param line the line to check
-     * @return true if unquoted brackets are found
+     * @return true if an unquoted bracket pair is found
      */
     static boolean hasUnquotedBrackets(final String line) {
         boolean inQuotes = false;
         boolean escaped = false;
+        boolean opened = false;
         for (int i = 0; i < line.length(); i++) {
             final char c = line.charAt(i);
             if (escaped) {
@@ -290,7 +293,9 @@ public final class DecodeHelper {
                 escaped = true;
             } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
-            } else if (!inQuotes && (c == '[' || c == ']')) {
+            } else if (!inQuotes && c == '[') {
+                opened = true;
+            } else if (!inQuotes && c == ']' && opened) {
                 return true;
             }
         }
