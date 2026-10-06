@@ -386,6 +386,7 @@ public final class ArrayDecoder {
         final List<Object> result = new ArrayList<>();
         context.currentLine++;
         final int firstItemLine = context.currentLine;
+        final int itemDepth = DecodeHelper.findContentDepth(depth, context);
 
         boolean shouldContinue = true;
         while (shouldContinue && context.currentLine < context.lines.length) {
@@ -401,10 +402,13 @@ public final class ArrayDecoder {
                 }
             } else {
                 final int lineDepth = DecodeHelper.getDepth(line, context);
-                if (shouldTerminateListArray(lineDepth, depth, line, context)) {
+                // A line between the header and an adopted deeper item depth belongs to no scope
+                if (lineDepth > depth && lineDepth < itemDepth) {
+                    DecodeHelper.processOverIndentedLine(context, lineDepth);
+                } else if (shouldTerminateListArray(lineDepth, itemDepth - 1, line, context)) {
                     shouldContinue = false;
                 } else {
-                    ListItemDecoder.processListArrayItem(line, lineDepth, depth, result, context);
+                    ListItemDecoder.processListArrayItem(line, lineDepth, itemDepth - 1, result, context);
                 }
             }
         }
