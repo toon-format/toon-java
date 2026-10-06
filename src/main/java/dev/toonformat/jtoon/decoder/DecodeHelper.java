@@ -228,37 +228,9 @@ public final class DecodeHelper {
         int segmentEnd = bracketEnd;
         final int braceStart = findUnquoted(content, '{', bracketEnd);
         if (braceStart >= 0 && braceStart < findUnquoted(content, COLON.charAt(0), bracketEnd)) {
-            segmentEnd = Math.max(segmentEnd, findMatchingBrace(content, braceStart));
+            segmentEnd = Math.max(segmentEnd, Headers.skipBalancedFieldSpec(content, braceStart + 1, content.length()));
         }
         return findUnquoted(content, COLON.charAt(0), segmentEnd);
-    }
-
-    /**
-     * Finds the brace that closes the field list opening at the given index.
-     *
-     * @param content    the line content to scan
-     * @param braceStart the index of the opening brace
-     * @return the index of the matching closing brace, or -1 if unbalanced
-     */
-    private static int findMatchingBrace(final String content, final int braceStart) {
-        int depth = 0;
-        boolean inQuotes = false;
-        boolean escaped = false;
-        for (int i = braceStart; i < content.length(); i++) {
-            final char c = content.charAt(i);
-            if (escaped) {
-                escaped = false;
-            } else if (c == BACKSLASH) {
-                escaped = true;
-            } else if (c == DOUBLE_QUOTE) {
-                inQuotes = !inQuotes;
-            } else if (!inQuotes && c == '{') {
-                depth++;
-            } else if (!inQuotes && c == '}' && --depth == 0) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     /**

@@ -286,7 +286,7 @@ public final class Headers {
      * @param n       the content length
      * @return the index of the matching closing brace, or -1 when unbalanced
      */
-    private static int skipBalancedFieldSpec(final String content, final int i, final int n) {
+    public static int skipBalancedFieldSpec(final String content, final int i, final int n) {
         int pos = i;
         int depth = 1;
         boolean escaped = false;
