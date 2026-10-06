@@ -727,6 +727,13 @@ public class JToonDecodeTest {
         }
 
         @Test
+        @DisplayName("strict mode: reads a field list spanning the colon as a key-value line")
+        void strictReadsFieldListSpanningColonAsKeyValue() {
+            assertEquals(Map.of("[1]{x", "y}"), JToon.decode("[1]{x:y}"));
+            assertEquals(Map.of("a[1]{x", "y}"), JToon.decode("a[1]{x:y}"));
+        }
+
+        @Test
         @DisplayName("lenient mode: allows brackets in keys")
         void lenientAllowsBracketsInKeys() {
             final DecodeOptions lenient = DecodeOptions.withStrict(false);

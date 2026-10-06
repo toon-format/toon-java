@@ -252,21 +252,6 @@ public final class ValueDecoder {
 
     private static Object parseRootKeyValueLine(final String line, final int colonIdx, final int depth,
             final DecodeContext context) {
-        if (context.options.strict()) {
-            final String key = DecodeHelper.trimSpaces(line.substring(0, colonIdx));
-            // In strict mode, reject keys with unquoted brackets that didn't match
-            // KEYED_ARRAY_PATTERN. This catches:
-            //   - extra brackets between bracket segment and colon (foo[1][bar])
-            //   - text between bracket segment and colon (foo[2]extra)
-            //   - noninteger bracket segment (foo[bar])
-            //   - negative bracket length (items[-1])
-            //   - whitespace between bracket segment and colon/fields segment
-            //     (items[2] :, items[2] {a,b}:)
-            if (DecodeHelper.hasUnquotedBrackets(key)) {
-                throw new IllegalArgumentException(
-                    "Invalid array header syntax at line " + (context.currentLine + 1));
-            }
-        }
         final String key = DecodeHelper.trimSpaces(line.substring(0, colonIdx));
         final String value = DecodeHelper.trimSpaces(line.substring(colonIdx + 1));
         return KeyDecoder.parseKeyValuePair(key, value, depth, depth == 0, context);

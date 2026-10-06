@@ -389,12 +389,17 @@ public final class DecodeHelper {
      * ({@code items[2] :}, {@code items[2] {a,b}:})</li>
      * </ul>
      *
+     * A field list that spans the colon ({@code [1]{x:y}}) leaves the line
+     * without a header colon, so it stays a key-value line.
+     *
      * @param key     the raw key token before the colon
+     * @param value   the value after the colon
      * @param context decode an object to deal with lines, delimiter and options
      * @throws IllegalArgumentException in strict mode if the key has unquoted brackets
      */
-    static void validateKeyHasNoUnquotedBrackets(final String key, final DecodeContext context) {
-        if (context.options.strict() && hasUnquotedBrackets(key)) {
+    static void validateKeyHasNoUnquotedBrackets(final String key, final String value, final DecodeContext context) {
+        if (context.options.strict() && hasUnquotedBrackets(key)
+                && findHeaderColon(key + COLON + value) == key.length()) {
             throw new IllegalArgumentException(
                 "Invalid array header syntax at line " + (context.currentLine + 1));
         }

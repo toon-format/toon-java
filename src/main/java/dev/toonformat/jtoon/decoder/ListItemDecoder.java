@@ -219,9 +219,9 @@ public final class ListItemDecoder {
         // Object item: - key: value
         final String rawKey = DecodeHelper.trimSpaces(itemContent.substring(0, colonIdx));
         DecodeHelper.validateQuotedTokenBoundary(rawKey);
-        DecodeHelper.validateKeyHasNoUnquotedBrackets(rawKey, context);
-        final String key = StringEscaper.unescape(rawKey);
         final String value = DecodeHelper.trimSpaces(itemContent.substring(colonIdx + 1));
+        DecodeHelper.validateKeyHasNoUnquotedBrackets(rawKey, value, context);
+        final String key = StringEscaper.unescape(rawKey);
 
         context.currentLine++;
 
