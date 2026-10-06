@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
 
 /**
  * Handles decoding of TOON list item to JSON format.
@@ -38,7 +37,7 @@ public final class ListItemDecoder {
         if (lineDepth == depth + 1) {
             final String content = line.substring((depth + 1) * context.options.indent());
 
-            if (content.startsWith(LIST_ITEM_MARKER)) {
+            if (DecodeHelper.isListItemLine(content)) {
                 result.add(parseListItem(content, depth, context));
             } else {
                 context.currentLine++;

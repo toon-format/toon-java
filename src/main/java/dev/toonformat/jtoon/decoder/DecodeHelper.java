@@ -8,6 +8,8 @@ import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
 import static dev.toonformat.jtoon.util.Constants.SPACE;
 import static dev.toonformat.jtoon.util.Constants.COLON;
+import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
+import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
 import static dev.toonformat.jtoon.util.Constants.OPEN_BRACKET;
 
 /**
@@ -163,6 +165,17 @@ public final class DecodeHelper {
         }
 
         return -1;
+    }
+
+    /**
+     * Checks if content is a list-item line: the bare marker or the marker
+     * followed by a space. A hyphen glued to its token is not a list item.
+     *
+     * @param content the line content past its indentation
+     * @return true if the content is a list-item line
+     */
+    static boolean isListItemLine(final String content) {
+        return LIST_ITEM_MARKER.equals(content) || content.startsWith(LIST_ITEM_PREFIX);
     }
 
     /**

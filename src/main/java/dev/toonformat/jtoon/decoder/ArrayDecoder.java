@@ -10,8 +10,6 @@ import java.util.regex.Matcher;
 import static dev.toonformat.jtoon.util.Constants.BACKSLASH;
 import static dev.toonformat.jtoon.util.Constants.COLON;
 import static dev.toonformat.jtoon.util.Constants.DOUBLE_QUOTE;
-import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_MARKER;
-import static dev.toonformat.jtoon.util.Constants.LIST_ITEM_PREFIX;
 import static dev.toonformat.jtoon.util.Headers.ARRAY_HEADER_PATTERN;
 import static dev.toonformat.jtoon.util.Headers.TABULAR_HEADER_PATTERN;
 
@@ -246,7 +244,7 @@ public final class ArrayDecoder {
             return Collections.emptyList();
         }
 
-        if (LIST_ITEM_MARKER.equals(nextContent) || nextContent.startsWith(LIST_ITEM_PREFIX)) {
+        if (DecodeHelper.isListItemLine(nextContent)) {
             context.currentLine--;
             return Collections.unmodifiableList(parseListArray(depth, header, context));
         }
@@ -467,10 +465,9 @@ public final class ArrayDecoder {
         if (lineDepth < depth + 1) {
             return true; // Line depth is less than expected - terminate
         }
-        // Also terminate if line is at expected depth but doesn't start with "-"
         if (lineDepth == depth + 1) {
             final String content = line.substring((depth + 1) * context.options.indent());
-            return !content.startsWith("-"); // Not an array item - terminate
+            return !DecodeHelper.isListItemLine(content);
         }
         return false;
     }
