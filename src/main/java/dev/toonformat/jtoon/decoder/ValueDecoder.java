@@ -57,14 +57,6 @@ public final class ValueDecoder {
         // byte-order mark, not content; remove it before any processing.
         final String input = stripByteOrderMark(toon);
 
-        final String trimmed = DecodeHelper.trimSpaces(input);
-        if (NULL_LITERAL.equals(trimmed)) {
-            return null;
-        }
-        if ("[]".equals(trimmed)) {
-            return java.util.Collections.emptyList();
-        }
-
         //set an own decode context
         final DecodeContext context = new DecodeContext();
         context.options = options;

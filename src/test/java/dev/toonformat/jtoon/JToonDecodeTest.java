@@ -734,6 +734,16 @@ public class JToonDecodeTest {
         }
 
         @Test
+        @DisplayName("throws on an indented root null or empty array in either mode")
+        void rejectsIndentedRootLiteral() {
+            final DecodeOptions lenient = DecodeOptions.withStrict(false);
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  null"));
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  []"));
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  null", lenient));
+            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  []", lenient));
+        }
+
+        @Test
         @DisplayName("lenient mode: allows brackets in keys")
         void lenientAllowsBracketsInKeys() {
             final DecodeOptions lenient = DecodeOptions.withStrict(false);
