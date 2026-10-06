@@ -45,7 +45,7 @@ public final class ArrayDecoder {
             final char c = matcher.group(FIELDS_GROUP_INDEX).charAt(i);
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+            } else if (inQuotes && c == '\\') {
                 escaped = true;
             } else if (c == '"') {
                 inQuotes = !inQuotes;
@@ -329,7 +329,7 @@ public final class ArrayDecoder {
                 stringBuilder.append(currentChar);
                 escaped = false;
                 i++;
-            } else if (currentChar == BACKSLASH) {
+            } else if (inQuotes && currentChar == BACKSLASH) {
                 stringBuilder.append(currentChar);
                 escaped = true;
                 i++;

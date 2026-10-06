@@ -170,7 +170,7 @@ public final class DecodeHelper {
                 return i;
             } else if (escaped) {
                 escaped = false;
-            } else if (c == BACKSLASH) {
+            } else if (inQuotes && c == BACKSLASH) {
                 escaped = true;
             } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
@@ -362,7 +362,7 @@ public final class DecodeHelper {
             final char c = line.charAt(i);
             if (escaped) {
                 escaped = false;
-            } else if (c == BACKSLASH) {
+            } else if (inQuotes && c == BACKSLASH) {
                 escaped = true;
             } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;

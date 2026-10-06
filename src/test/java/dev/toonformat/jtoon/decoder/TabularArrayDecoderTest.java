@@ -375,7 +375,7 @@ class TabularArrayDecoderTest {
 
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("a\\\\b,c", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("\"a\\\\b\",c", Delimiter.COMMA, ctx);
 
         // Then
         assertEquals(2, fields.size());

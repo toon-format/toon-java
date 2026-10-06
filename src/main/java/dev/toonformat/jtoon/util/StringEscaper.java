@@ -144,21 +144,19 @@ public final class StringEscaper {
     }
 
     /**
-     * Unescapes a string and removes surrounding quotes if present.
-     * Reverses the escaping applied by {@link #escape(String)}.
+     * Unescapes a quoted string and removes its surrounding quotes.
+     * Reverses the escaping applied by {@link #escape(String)}. An unquoted
+     * token is literal, backslashes included (§7.4), and is returned as is.
      *
      * @param value The string to unescape (may be quoted)
      * @return The unescaped string with quotes removed
      */
     public static String unescape(final String value) {
-        if (value == null || value.length() < 2) {
+        if (value == null || value.length() < 2 || !value.startsWith("\"") || !value.endsWith("\"")) {
             return value;
         }
 
-        String unquoted = value;
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            unquoted = value.substring(1, value.length() - 1);
-        }
+        final String unquoted = value.substring(1, value.length() - 1);
 
         final StringBuilder result = new StringBuilder();
         boolean escaped = false;

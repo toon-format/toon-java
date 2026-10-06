@@ -138,7 +138,7 @@ public final class TabularArrayDecoder {
                 name.append(c);
                 escaped = false;
                 i++;
-            } else if (c == BACKSLASH) {
+            } else if (inQuotes && c == BACKSLASH) {
                 name.append(c);
                 escaped = true;
                 i++;
@@ -263,7 +263,7 @@ public final class TabularArrayDecoder {
             final char c = keysStr.charAt(i);
             if (escaped) {
                 escaped = false;
-            } else if (c == BACKSLASH) {
+            } else if (inQuotes && c == BACKSLASH) {
                 escaped = true;
             } else if (c == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
@@ -429,7 +429,7 @@ public final class TabularArrayDecoder {
             final char c = content.charAt(i);
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+            } else if (inQuotes && c == '\\') {
                 escaped = true;
             } else if (c == '"') {
                 inQuotes = !inQuotes;

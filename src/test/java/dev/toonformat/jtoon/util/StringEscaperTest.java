@@ -146,7 +146,7 @@ public class StringEscaperTest {
         @DisplayName("should unescape basic special characters")
         void testBasicUnescaping(final String description, final String input, final String expected) {
             // Then
-            assertEquals(expected, StringEscaper.unescape(input));
+            assertEquals(expected, StringEscaper.unescape("\"" + input + "\""));
         }
     }
 
@@ -253,7 +253,7 @@ public class StringEscaperTest {
         @Test
         @DisplayName("should reject invalid escape sequences")
         void testUnknownEscapeSequences() {
-            assertThrows(IllegalArgumentException.class, () -> StringEscaper.unescape("\\ax"));
+            assertThrows(IllegalArgumentException.class, () -> StringEscaper.unescape("\"\\ax\""));
         }
 
         @Test
@@ -265,26 +265,26 @@ public class StringEscaperTest {
         @Test
         void unescapesBackslashSequences() {
             // Then
-            assertEquals("a\"b", StringEscaper.unescape("a\\\"b"));
+            assertEquals("a\"b", StringEscaper.unescape("\"a\\\"b\""));
         }
 
         @Test
         void unescapesMultipleCharacters() {
             // Then
-            assertEquals("a\nb\tc", StringEscaper.unescape("a\\nb\\tc"));
+            assertEquals("a\nb\tc", StringEscaper.unescape("\"a\\nb\\tc\""));
         }
 
         @Test
         void handlesTrailingBackslashCorrectly() {
             // Then
             // trailing \ will set escaped=true but there is no next char → nothing appended
-            assertEquals("abc", StringEscaper.unescape("abc\\"));
+            assertEquals("abc", StringEscaper.unescape("\"abc\\\""));
         }
 
         @Test
         void handlesDoubleBackslashCorrectly() {
             // Then
-            assertEquals("a\\b", StringEscaper.unescape("a\\\\b"));
+            assertEquals("a\\b", StringEscaper.unescape("\"a\\\\b\""));
         }
     }
 
@@ -384,20 +384,20 @@ public class StringEscaperTest {
         @Test
         @DisplayName("should unescape \\u0004 to control char")
         void unescapeControlChar() {
-            assertEquals("a\004b", StringEscaper.unescape("a\\u0004b"));
+            assertEquals("a\004b", StringEscaper.unescape("\"a\\u0004b\""));
         }
 
         @Test
         @DisplayName("should unescape \\u001F")
         void unescapeUpperControlChar() {
-            assertEquals("\037", StringEscaper.unescape("\\u001f"));
+            assertEquals("\037", StringEscaper.unescape("\"\\u001f\""));
         }
 
         @Test
         @DisplayName("should throw on surrogate pair in \\u escapes")
         void unescapeSurrogatePair() {
             final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> StringEscaper.unescape("\\uD800\\uDC00"));
+                () -> StringEscaper.unescape("\"\\uD800\\uDC00\""));
             assertTrue(ex.getMessage().contains("surrogate"));
         }
 
@@ -405,21 +405,21 @@ public class StringEscaperTest {
         @DisplayName("should throw on truncated \\u escape")
         void truncatedUnicodeEscape() {
             assertThrows(IllegalArgumentException.class,
-                () -> StringEscaper.unescape("\\u00b"));
+                () -> StringEscaper.unescape("\"\\u00b\""));
         }
 
         @Test
         @DisplayName("should throw on invalid hex in \\u escape")
         void invalidUnicodeHex() {
             assertThrows(IllegalArgumentException.class,
-                () -> StringEscaper.unescape("\\u00XX"));
+                () -> StringEscaper.unescape("\"\\u00XX\""));
         }
 
         @Test
         @DisplayName("should throw on lone low surrogate in \\u escape")
         void loneLowSurrogate() {
             final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> StringEscaper.unescape("\\uDC00"));
+                () -> StringEscaper.unescape("\"\\uDC00\""));
             assertTrue(ex.getMessage().contains("surrogate"));
         }
 
@@ -427,7 +427,7 @@ public class StringEscaperTest {
         @DisplayName("should throw on lone high surrogate in \\u escape")
         void loneHighSurrogate() {
             final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> StringEscaper.unescape("\\uD800"));
+                () -> StringEscaper.unescape("\"\\uD800\""));
             assertTrue(ex.getMessage().contains("surrogate"));
         }
 

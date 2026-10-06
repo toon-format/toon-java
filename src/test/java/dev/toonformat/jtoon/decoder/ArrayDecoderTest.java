@@ -224,12 +224,12 @@ class ArrayDecoderTest {
     }
 
     @Test
-    void shouldKeepBackslashEscapedDelimiterInsideValue() {
+    void shouldSplitAtDelimiterAfterBackslashOutsideQuotes() {
         // When
         final List<String> result = ArrayDecoder.parseDelimitedValues("a\\,b,c", Delimiter.COMMA);
 
         // Then
-        assertEquals(List.of("a\\,b", "c"), result);
+        assertEquals(List.of("a\\", "b", "c"), result);
     }
 
     @Test

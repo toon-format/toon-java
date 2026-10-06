@@ -295,7 +295,7 @@ public final class Headers {
             final char c = content.charAt(pos);
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+            } else if (inQuotes && c == '\\') {
                 escaped = true;
             } else if (c == '"') {
                 inQuotes = !inQuotes;
