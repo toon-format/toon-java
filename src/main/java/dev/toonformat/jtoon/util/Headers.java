@@ -168,13 +168,28 @@ public final class Headers {
      * @param content  the line content to scan
      * @param keyStart the index where the key starts
      * @param n        the content length
-     * @return the index just past the key, or -1 when the key is empty or a
-     *         space separates it from the bracket segment
+     * @return the index just past the key, or -1 when the key is empty, holds
+     *         an unclosed quote, or a space separates it from the bracket segment
      */
     private static int scanUnquotedKey(final String content, final int keyStart, final int n) {
         int i = keyStart;
-        while (i < n && content.charAt(i) != '[' && content.charAt(i) != ':') {
+        boolean inQuotes = false;
+        while (i < n) {
+            final char c = content.charAt(i);
+            if (inQuotes && c == '\\' && i + 1 < n) {
+                i += 2;
+                continue;
+            }
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (!inQuotes && (c == '[' || c == ':')) {
+                break;
+            }
             i++;
+        }
+        // An unclosed quote opens a span to the end of the line, so no bracket segment follows (§5.2)
+        if (inQuotes) {
+            return -1;
         }
         if (i == keyStart) {
             return -1;
