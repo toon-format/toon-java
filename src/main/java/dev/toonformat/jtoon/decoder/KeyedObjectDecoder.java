@@ -41,7 +41,7 @@ public final class KeyedObjectDecoder {
         final Delimiter arrayDelimiter = delimiterFromChar(header.delimiter(), context);
 
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys(fieldsSpec, arrayDelimiter, context);
+            TabularArrayDecoder.parseTabularKeys(fieldsSpec, arrayDelimiter);
 
         // Spec §9.3: a duplicate field name within one field list is a header
         // defect, diagnosed from the header line alone.

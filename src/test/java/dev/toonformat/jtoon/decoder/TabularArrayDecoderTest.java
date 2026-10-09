@@ -309,13 +309,9 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse simple field list into leaf nodes")
     void parseTabularKeys_givenSimpleList_thenLeafNodes() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("a,b,c", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("a,b,c", Delimiter.COMMA);
 
         // Then
         assertEquals(SIMPLE_FIELD_COUNT, fields.size());
@@ -328,13 +324,9 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse backslash-escaped backslash inside a field name")
     void parseTabularKeys_givenEscapedBackslash_thenSingleField() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("\"a\\\\b\",c", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("\"a\\\\b\",c", Delimiter.COMMA);
 
         // Then
         assertEquals(2, fields.size());
@@ -345,13 +337,9 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse quoted field name preserving delimiter characters")
     void parseTabularKeys_givenQuotedName_thenDelimiterPreserved() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("\"a,b\",c", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("\"a,b\",c", Delimiter.COMMA);
 
         // Then
         assertEquals(2, fields.size());
@@ -362,13 +350,9 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse nested field group into parent field with children")
     void parseTabularKeys_givenNestedGroup_thenParentWithChildren() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("a{b,c},d", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("a{b,c},d", Delimiter.COMMA);
 
         // Then
         assertEquals(2, fields.size());
@@ -382,42 +366,18 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Throw on unbalanced braces in strict mode")
     void parseTabularKeys_givenUnbalancedStrict_thenThrows() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When / Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> TabularArrayDecoder.parseTabularKeys("a{b,c", Delimiter.COMMA, ctx));
+            () -> TabularArrayDecoder.parseTabularKeys("a{b,c", Delimiter.COMMA));
         assertTrue(ex.getMessage().contains("Unbalanced braces"));
-    }
-
-    @Test
-    @DisplayName("Skip unbalanced group in lenient mode and keep parsed fields")
-    void parseTabularKeys_givenUnbalancedLenient_thenPartialFields() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.withStrict(false);
-
-        // When
-        final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("a{b,c", Delimiter.COMMA, ctx);
-
-        // Then
-        assertEquals(1, fields.size());
-        assertEquals("a", fields.get(0).name());
     }
 
     @Test
     @DisplayName("Skip whitespace after delimiter in field list")
     void parseTabularKeys_givenWhitespaceAfterDelimiter_thenTrimmedFields() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("a ,  b", Delimiter.COMMA, ctx);
+            TabularArrayDecoder.parseTabularKeys("a ,  b", Delimiter.COMMA);
 
         // Then
         assertEquals(2, fields.size());
@@ -428,13 +388,9 @@ class TabularArrayDecoderTest {
     @Test
     @DisplayName("Parse field list with pipe delimiter")
     void parseTabularKeys_givenPipeDelimiter_thenFields() {
-        // Given
-        final DecodeContext ctx = new DecodeContext();
-        ctx.options = DecodeOptions.DEFAULT;
-
         // When
         final List<TabularArrayDecoder.FieldNode> fields =
-            TabularArrayDecoder.parseTabularKeys("x|y", Delimiter.PIPE, ctx);
+            TabularArrayDecoder.parseTabularKeys("x|y", Delimiter.PIPE);
 
         // Then
         assertEquals(2, fields.size());

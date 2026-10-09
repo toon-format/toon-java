@@ -57,7 +57,7 @@ public final class TabularArrayDecoder {
         }
 
         final String keysStr = matcher.group(4);
-        final List<FieldNode> fields = parseTabularKeys(keysStr, arrayDelimiter, context);
+        final List<FieldNode> fields = parseTabularKeys(keysStr, arrayDelimiter);
 
         // Spec §9.3: a duplicate field name within one field list is a header
         // defect, diagnosed from the header line alone. Names repeated at
@@ -89,15 +89,13 @@ public final class TabularArrayDecoder {
      *
      * @param keysStr        the string representation of keys
      * @param arrayDelimiter the type of delimiter used in the array
-     * @param context        decode an object to deal with lines, delimiter and options
      * @return the parsed field tree
      */
-    static List<FieldNode> parseTabularKeys(final String keysStr, final Delimiter arrayDelimiter,
-            final DecodeContext context) {
+    static List<FieldNode> parseTabularKeys(final String keysStr, final Delimiter arrayDelimiter) {
         validateKeysDelimiter(keysStr, arrayDelimiter);
 
         final List<FieldNode> result = new ArrayList<>();
-        parseFieldList(keysStr, 0, arrayDelimiter, context, result);
+        parseFieldList(keysStr, 0, arrayDelimiter, result);
         return result;
     }
 
@@ -108,13 +106,12 @@ public final class TabularArrayDecoder {
      * @param fieldList      the field list string to parse
      * @param start          the index at which parsing starts
      * @param arrayDelimiter the type of delimiter used in the array
-     * @param context        decode an object to deal with lines, delimiter and options
      * @param result         the list to add parsed fields to
      * @return the index just past the closing brace of the parsed group, or -1
      *         when the string ends before a group is closed
      */
     private static int parseFieldList(final String fieldList, final int start, final Delimiter arrayDelimiter,
-            final DecodeContext context, final List<FieldNode> result) {
+            final List<FieldNode> result) {
         final char delimiterChar = arrayDelimiter.toString().charAt(0);
         final StringBuilder name = new StringBuilder();
         boolean inQuotes = false;
@@ -137,7 +134,7 @@ public final class TabularArrayDecoder {
                 inQuotes = !inQuotes;
                 i++;
             } else if (!inQuotes && c == '{') {
-                i = parseNestedFieldGroup(fieldList, i, arrayDelimiter, context, result, name);
+                i = parseNestedFieldGroup(fieldList, i, arrayDelimiter, result, name);
                 // The name buffer is consumed only when the group was added
                 grouped = name.isEmpty();
             } else if (!inQuotes && c == '}') {
@@ -171,23 +168,18 @@ public final class TabularArrayDecoder {
 
     /**
      * Parses a nested field group opened at the given brace, recursing into
-     * {@link #parseFieldList}. Unbalanced groups are rejected in strict mode;
-     * in lenient mode their children are dropped and the name stays a leaf
-     * field. A missing name or whitespace before the brace is rejected in any
-     * mode.
+     * {@link #parseFieldList}. An unbalanced group, a missing name, or
+     * whitespace before the brace is rejected in any mode.
      *
      * @param fieldList      the field list string to parse
      * @param braceIdx       the index of the opening brace
      * @param arrayDelimiter the type of delimiter used in the array
-     * @param context        decode an object to deal with lines, delimiter and options
      * @param result         the list to add the parsed group field to
      * @param name           the buffered group field name
-     * @return the index just past the closing brace, or the end of the string
-     *         when the group is unbalanced and lenient mode skips it
+     * @return the index just past the closing brace
      */
     private static int parseNestedFieldGroup(final String fieldList, final int braceIdx,
-            final Delimiter arrayDelimiter, final DecodeContext context, final List<FieldNode> result,
-            final StringBuilder name) {
+            final Delimiter arrayDelimiter, final List<FieldNode> result, final StringBuilder name) {
         if (DecodeHelper.trimSpaces(name.toString()).isEmpty()) {
             throw new IllegalArgumentException("Missing field name before nested field group");
         }
@@ -195,13 +187,9 @@ public final class TabularArrayDecoder {
             throw new IllegalArgumentException("Whitespace before nested field group");
         }
         final List<FieldNode> children = new ArrayList<>();
-        final int next = parseFieldList(fieldList, braceIdx + 1, arrayDelimiter, context, children);
+        final int next = parseFieldList(fieldList, braceIdx + 1, arrayDelimiter, children);
         if (next < 0) {
-            if (context.options.strict()) {
-                throw new IllegalArgumentException(
-                    "Unbalanced braces in tabular header field list");
-            }
-            return fieldList.length();
+            throw new IllegalArgumentException("Unbalanced braces in tabular header field list");
         }
         result.add(new FieldNode(decodeFieldName(name), children));
         name.setLength(0);
