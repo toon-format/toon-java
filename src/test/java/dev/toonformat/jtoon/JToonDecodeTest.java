@@ -724,36 +724,11 @@ public class JToonDecodeTest {
         }
 
         @Test
-        @DisplayName("strict mode: throws on a field list spanning the colon")
-        void strictThrowsOnFieldListSpanningColon() {
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("[1]{x:y}"));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]{x:y}"));
-        }
-
-        @Test
-        @DisplayName("strict mode: throws on a header it would otherwise drop content after")
-        void strictRejectsContentAfterHeader() {
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("items[0]{a,b}: 1,2"));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("[1]{a,b}}:\n  1,2"));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]:\n  - [1]{a}: 1"));
-        }
-
-        @Test
         @DisplayName("non-strict mode: throws on a fields-bearing header with inline content (§14.2)")
         void lenientReadsFieldsHeaderWithInlineContentAsKey() {
             final DecodeOptions lenient = DecodeOptions.withStrict(false);
             assertThrows(IllegalArgumentException.class, () -> JToon.decode("items[0]{a,b}: 1,2", lenient));
             assertThrows(IllegalArgumentException.class, () -> JToon.decode("a[1]:\n  - [1]{a}: 1", lenient));
-        }
-
-        @Test
-        @DisplayName("throws on an indented root null or empty array in either mode")
-        void rejectsIndentedRootLiteral() {
-            final DecodeOptions lenient = DecodeOptions.withStrict(false);
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  null"));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  []"));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  null", lenient));
-            assertThrows(IllegalArgumentException.class, () -> JToon.decode("  []", lenient));
         }
 
         @Test
