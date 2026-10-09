@@ -53,7 +53,7 @@ public final class ToonValidator {
      * @return validation result with issues list
      */
     public static ValidationResult validate(final String toon, final DecodeOptions options) {
-        if (toon == null || toon.isBlank()) {
+        if (toon == null || toon.chars().allMatch(c -> c == ' ')) {
             return ValidationResult.pass();
         }
 
