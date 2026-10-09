@@ -367,12 +367,8 @@ public final class DecodeHelper {
      * @throws IllegalArgumentException if a non-blank line follows the root form
      */
     static void validateNoTrailingContent(final DecodeContext context) {
-        while (context.currentLine < context.lines.length) {
-            final String line = context.lines[context.currentLine];
-            if (isBlankLine(line)) {
-                context.currentLine++;
-                continue;
-            }
+        context.currentLine = findNextNonBlankLine(context.currentLine, context);
+        if (context.currentLine < context.lines.length) {
             throw new IllegalArgumentException(
                 "Unexpected content after root form at line " + (context.currentLine + 1));
         }
