@@ -238,8 +238,8 @@ public final class ObjectDecoder {
 
     /**
      * Parses a value that may either open a nested scope or decode as a
-     * scalar. Deeper lines open a nested object; inline values on a field
-     * that does not open a scope are rejected in strict mode (§14.2).
+     * scalar. Deeper lines open a nested object; a deeper line right after
+     * an inline value belongs to no scope and is rejected in both modes (§14.2).
      *
      * @param value        the value string to parse
      * @param depth        the depth at which the value is located
@@ -254,40 +254,20 @@ public final class ObjectDecoder {
         final int nextIdx = DecodeHelper.findNextNonBlankLine(context.currentLine + 1, context);
         if (nextIdx < context.lines.length
                 && DecodeHelper.getDepth(context.lines[nextIdx], context) > depth) {
-            if (!value.isEmpty()) {
-                return parseInlineValueWithOrphanLines(value, depth, context, scalarParser);
-            }
             context.currentLine++;
-            // parseNestedObject manages the currentLine, so we don't increment here
-            return parseNestedObject(depth, context);
-        }
-        context.currentLine++;
-        return scalarParser.apply(value, context);
-    }
-
-    /**
-     * Parses an inline value whose line carries deeper, orphaned lines:
-     * rejected in both modes (§14.2) — the §14.4 recoveries do not cover
-     * lines that belong to no scope.
-     *
-     * @param value        the inline value string to parse
-     * @param depth        the depth at which the value is located
-     * @param context      decode an object to deal with lines, delimiter and options
-     * @param scalarParser parses the inline value
-     * @return the parsed scalar value
-     */
-    private static Object parseInlineValueWithOrphanLines(final String value, final int depth,
-            final DecodeContext context, final BiFunction<String, DecodeContext, Object> scalarParser) {
-        // Inline value: the field does not open a scope, so a deeper
-        // line belongs to no scope at all (§14.2)
-        context.currentLine++;
-        while (context.currentLine < context.lines.length) {
-            final int lineDepth = DecodeHelper.getDepth(context.lines[context.currentLine], context);
-            if (lineDepth <= depth) {
-                break;
+            if (value.isEmpty()) {
+                // parseNestedObject manages the currentLine, so we don't increment here
+                return parseNestedObject(depth, context);
             }
-            throw DecodeHelper.overIndentedLineError(context, lineDepth);
+            // Inline value: the field does not open a scope, so a deeper
+            // line belongs to no scope at all (§14.2)
+            final int lineDepth = DecodeHelper.getDepth(context.lines[context.currentLine], context);
+            if (lineDepth > depth) {
+                throw DecodeHelper.overIndentedLineError(context, lineDepth);
+            }
+            return scalarParser.apply(value, context);
         }
+        context.currentLine++;
         return scalarParser.apply(value, context);
     }
 
