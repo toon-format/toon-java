@@ -370,16 +370,7 @@ public final class TabularArrayDecoder {
      */
     private static boolean shouldTerminateTabularArray(final String line, final int lineDepth,
             final int expectedRowDepth, final Delimiter arrayDelimiter, final DecodeContext context) {
-        final int headerDepth = expectedRowDepth - 1;
-
         if (lineDepth < expectedRowDepth) {
-            if (lineDepth == headerDepth) {
-                final String content = line.substring(headerDepth * context.options.indent());
-                final int colonIdx = DecodeHelper.findUnquotedColon(content);
-                if (colonIdx > 0) {
-                    return true; // Key-value pair at the same depth-terminate an array
-                }
-            }
             return true; // Line depth is less than expected - terminate
         }
 
