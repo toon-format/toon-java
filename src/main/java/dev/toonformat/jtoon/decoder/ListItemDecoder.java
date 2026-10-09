@@ -45,7 +45,7 @@ public final class ListItemDecoder {
             }
         } else {
             // A deeper line that no item's scope consumed belongs to no scope
-            DecodeHelper.processOverIndentedLine(context, lineDepth);
+            throw DecodeHelper.overIndentedLineError(context, lineDepth);
         }
     }
 
@@ -257,12 +257,11 @@ public final class ListItemDecoder {
                 return;
             }
 
-            if (lineDepth == depth + 2) {
-                processListItemFieldLine(item, line, depth, context);
-            } else {
-                // lineDepth > depth + 2: over-indented line (§14.2)
-                DecodeHelper.processOverIndentedLine(context, lineDepth);
+            // lineDepth > depth + 2: over-indented line (§14.2)
+            if (lineDepth > depth + 2) {
+                throw DecodeHelper.overIndentedLineError(context, lineDepth);
             }
+            processListItemFieldLine(item, line, depth, context);
         }
     }
 

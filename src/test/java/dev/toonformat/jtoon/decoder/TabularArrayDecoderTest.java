@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import dev.toonformat.jtoon.DecodeOptions;
@@ -107,34 +106,6 @@ class TabularArrayDecoderTest {
             () -> TabularArrayDecoder.parseTabularArray(toon, 0, Delimiter.COMMA, context));
         assertTrue(ex.getMessage().contains("Over-indented"),
             "Expected over-indentation error, got: " + ex.getMessage());
-    }
-
-    @Test
-    void testReturnsTrueWhenLineDepthLessThanExpected() throws Exception {
-        // Given
-        context.options = new DecodeOptions(2, Delimiter.COMMA, true, PathExpansion.OFF,
-                DecodeOptions.MAX_ALLOWED_DEPTH, DecodeOptions.DEFAULT_MAX_ARRAY_SIZE,
-                DecodeOptions.DEFAULT_MAX_STRING_LENGTH);
-
-
-        final String line = "  some text";   // Content irrelevant for this branch
-        final int lineDepth = 1;             // LESS than expectedRowDepth
-        final int expectedRowDepth = 3;       // Ensures we fall to final return
-
-        final List<String> keys = List.of("a", "b", "c");
-        final List<Object> result = new ArrayList<>();
-
-        // When
-        final boolean processed = (boolean) invokePrivateStatic("processTabularRow",
-            new Class[]{String.class, int.class, int.class, List.class,
-                Delimiter.class, List.class, DecodeContext.class},
-            line, lineDepth, expectedRowDepth,
-            keys, Delimiter.COMMA, result, context
-        );
-
-        // Then
-        assertTrue(processed, "Should return true when lineDepth < expectedRowDepth");
-        assertTrue(result.isEmpty(), "Result list must remain unchanged");
     }
 
     @Test

@@ -379,18 +379,17 @@ public final class DecodeHelper {
     }
 
     /**
-     * Skips or rejects a line that belongs to no scope (§8, §14.2). Over-
+     * Builds the error for a line that belongs to no scope (§8, §14.2). Over-
      * indented lines are an error in both modes: the non-strict recoveries of
      * §14.4 do not cover them, adoption happens only in
      * {@link #findContentDepth(int, DecodeContext)}.
      *
      * @param context   decode an object to deal with lines, delimiter, and options
      * @param lineDepth the depth of the over-indented line
-     * @throws IllegalArgumentException always
+     * @return the error to throw
      */
-    @SuppressWarnings("DoNotCallSuggester")
-    static void processOverIndentedLine(final DecodeContext context, final int lineDepth) {
-        throw new IllegalArgumentException(
+    static IllegalArgumentException overIndentedLineError(final DecodeContext context, final int lineDepth) {
+        return new IllegalArgumentException(
             "Over-indented line at " + (context.currentLine + 1) + " (depth " + lineDepth + ")");
     }
 

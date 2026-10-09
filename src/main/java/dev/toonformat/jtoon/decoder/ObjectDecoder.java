@@ -52,12 +52,11 @@ public final class ObjectDecoder {
                 return result;
             }
 
-            if (depth == contentDepth) {
-                processDirectChildLine(result, line, contentDepth - 1, depth, context);
-            } else {
-                // A line off the content depth belongs to no scope (§14.2)
-                DecodeHelper.processOverIndentedLine(context, depth);
+            // A line off the content depth belongs to no scope (§14.2)
+            if (depth != contentDepth) {
+                throw DecodeHelper.overIndentedLineError(context, depth);
             }
+            processDirectChildLine(result, line, contentDepth - 1, depth, context);
         }
 
         return result;
@@ -110,10 +109,9 @@ public final class ObjectDecoder {
             if (lineDepth < depth) {
                 return;
             }
-            // A deeper line belongs to no field; skipping it keeps the root fields after it (§8, §14.2)
+            // A deeper line belongs to no field (§8, §14.2)
             if (lineDepth > depth) {
-                DecodeHelper.processOverIndentedLine(context, lineDepth);
-                continue;
+                throw DecodeHelper.overIndentedLineError(context, lineDepth);
             }
 
             final String content = line.substring(depth * context.options.indent());
@@ -288,7 +286,7 @@ public final class ObjectDecoder {
             if (lineDepth <= depth) {
                 break;
             }
-            DecodeHelper.processOverIndentedLine(context, lineDepth);
+            throw DecodeHelper.overIndentedLineError(context, lineDepth);
         }
         return scalarParser.apply(value, context);
     }

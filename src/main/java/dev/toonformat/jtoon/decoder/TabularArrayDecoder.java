@@ -323,16 +323,14 @@ public final class TabularArrayDecoder {
         final int lineDepth = DecodeHelper.getDepth(line, context);
         // A line between the header and an adopted deeper row depth belongs to no scope
         if (lineDepth > headerDepth && lineDepth < expectedRowDepth) {
-            DecodeHelper.processOverIndentedLine(context, lineDepth);
-            return true;
+            throw DecodeHelper.overIndentedLineError(context, lineDepth);
         }
         if (shouldTerminateTabularArray(line, lineDepth, expectedRowDepth, arrayDelimiter, context)) {
             return false;
         }
 
-        if (processTabularRow(line, lineDepth, expectedRowDepth, fields, arrayDelimiter, result, context)) {
-            context.currentLine++;
-        }
+        processTabularRow(line, lineDepth, expectedRowDepth, fields, arrayDelimiter, result, context);
+        context.currentLine++;
         return true;
     }
 
@@ -441,31 +439,25 @@ public final class TabularArrayDecoder {
     }
 
     /**
-     * Processes a tabular row if it matches the expected depth.
+     * Processes a tabular row at the expected depth.
      *
      * @param line             the line to process
-     * @param lineDepth        the depth of the line
+     * @param lineDepth        the depth of the line, at least the expected row depth
      * @param expectedRowDepth the expected depth of the next row
      * @param fields           the field tree for the tabular array
      * @param arrayDelimiter   the type of delimiter used in the array
      * @param result           the list to store parsed rows in
      * @param context          decode an object to deal with lines, delimiter and options
-     * @return true if a line was processed and the currentLine should be incremented, false otherwise.
      */
-    private static boolean processTabularRow(final String line, final int lineDepth,
+    private static void processTabularRow(final String line, final int lineDepth,
             final int expectedRowDepth, final List<FieldNode> fields, final Delimiter arrayDelimiter,
             final List<Object> result, final DecodeContext context) {
-        if (lineDepth == expectedRowDepth) {
-            final String rowContent = line.substring(expectedRowDepth * context.options.indent());
-            final Map<String, Object> row = parseTabularRow(rowContent, fields, arrayDelimiter, context);
-            result.add(row);
-            return true;
-        } else if (lineDepth > expectedRowDepth) {
+        if (lineDepth > expectedRowDepth) {
             // A line deeper than the row depth belongs to no scope (§14.2)
-            DecodeHelper.processOverIndentedLine(context, lineDepth);
-            return false;
+            throw DecodeHelper.overIndentedLineError(context, lineDepth);
         }
-        return true;
+        final String rowContent = line.substring(expectedRowDepth * context.options.indent());
+        result.add(parseTabularRow(rowContent, fields, arrayDelimiter, context));
     }
 
     /**

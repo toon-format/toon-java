@@ -389,7 +389,7 @@ public final class ArrayDecoder {
 
     /**
      * Processes one content line inside a list array: over-indented lines
-     * between the header and the adopted item depth are skipped, lines
+     * between the header and the adopted item depth are rejected, lines
      * outside the list terminate it, and all other lines parse as items.
      *
      * @param line      the content line to process
@@ -403,8 +403,7 @@ public final class ArrayDecoder {
             final List<Object> result, final DecodeContext context) {
         final int lineDepth = DecodeHelper.getDepth(line, context);
         if (lineDepth > depth && lineDepth < itemDepth) {
-            DecodeHelper.processOverIndentedLine(context, lineDepth);
-            return true;
+            throw DecodeHelper.overIndentedLineError(context, lineDepth);
         }
         if (shouldTerminateListArray(lineDepth, itemDepth - 1, line, context)) {
             return false;
