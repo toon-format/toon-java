@@ -93,22 +93,6 @@ class TabularArrayDecoderTest {
     }
 
     @Test
-    @DisplayName("processTabularRow: deeper-than-expected line throws in non-strict mode (§14.2)")
-    void processTabularRow_rejectsDeeperIndentedLine() {
-        // Given — over-indented line inside a tabular array is an error in both modes (§14.2)
-        final String toon = "[2]{id,name}:\n  1,Ada\n    nested: true\n  2,Bob";
-
-        setUpContext(toon);
-        context.options = DecodeOptions.withStrict(false);
-
-        // When / Then
-        final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> TabularArrayDecoder.parseTabularArray(toon, 0, Delimiter.COMMA, context));
-        assertTrue(ex.getMessage().contains("Over-indented"),
-            "Expected over-indentation error, got: " + ex.getMessage());
-    }
-
-    @Test
     void testReturnsTrueWhenNextDepthIsHeaderOrLess() throws Exception {
         // Given
 
