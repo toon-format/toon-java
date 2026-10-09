@@ -490,11 +490,8 @@ public final class TabularArrayDecoder {
             final Map<String, Object> target, final int... nextCell) {
         for (final FieldNode field : fields) {
             if (field.children().isEmpty()) {
-                final int index = nextCell[0];
-                nextCell[0] = index + 1;
-                if (index < values.size()) {
-                    target.put(field.name(), values.get(index));
-                }
+                target.put(field.name(), values.get(nextCell[0]));
+                nextCell[0]++;
             } else {
                 final Map<String, Object> group = new LinkedHashMap<>();
                 assignRowValues(field.children(), values, group, nextCell);
