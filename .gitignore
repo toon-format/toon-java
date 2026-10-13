@@ -1,5 +1,7 @@
 .gradle
 build/
+.omo/
+.out-of-scope/
 .out-of-scope/
 .omo/
 !gradle/wrapper/gradle-wrapper.jar
