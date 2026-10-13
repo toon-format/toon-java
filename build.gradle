@@ -179,13 +179,13 @@ dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.4'
 
     // NullAway + Error Prone for compile-time null safety
-    errorprone 'com.uber.nullaway:nullaway:0.14.2'
-    // error_prone_core 2.34.0: last version compatible with Java 17
-    errorprone('com.google.errorprone:error_prone_core:2.34.0') {
-        version {
-            strictly '2.34.0'
-        }
-    }
+    // Disabled on java17 branch: NullAway 0.14.2 requires ErrorProne 2.50.0 (Java 21+)
+    // errorprone 'com.uber.nullaway:nullaway:0.14.2'
+    // errorprone('com.google.errorprone:error_prone_core:2.50.0') {
+    //     version {
+    //         strictly '2.50.0'
+    //     }
+    // }
     api 'org.jspecify:jspecify:1.0.1'
 
     testImplementation platform('org.junit:junit-bom:6.1.3')
