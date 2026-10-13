@@ -4,7 +4,7 @@
 [![Release](https://github.com/toon-format/toon-java/actions/workflows/release.yml/badge.svg)](https://github.com/toon-format/toon-java/actions/workflows/release.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.toonformat/jtoon.svg)](https://central.sonatype.com/artifact/dev.toonformat/jtoon)
 ![Coverage](.github/badges/jacoco.svg)
-[![SPEC v4.4](https://img.shields.io/badge/spec-v4.4-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
+[![SPEC v4.4.0](https://img.shields.io/badge/spec-v4.4.0-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
 [![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE)
 
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Working towards full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
@@ -30,12 +30,10 @@ The `java17` branch maintains the 2.0.x line for Java 17 users. It uses [Jackson
 
 > **Note:** Java 17 (September 2021) does not natively support spec §4.2 for shortest round-trip digits. Jackson's Schubfach implementation provides spec-compliant output on Java 17.
 
-## Next Steps
+## Git Branches
 
-- [x] Raise `main` to Java 21 (3.0.0)
-- [x] Establish `java17` as long-term maintenance branch
-- [x] Release 2.0.8 (Java 17 baseline restored)
-- [ ] Release 3.0.0 (Java 21)
+- Raise `main` to Java 21 (3.0.0)
+- Establish `java17` as long-term maintenance branch
 
 ## Installation
 
