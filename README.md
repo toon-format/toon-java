@@ -16,7 +16,7 @@ Compact, human-readable serialization format for LLM contexts with **30-60% toke
 | Branch | Java | Version | Status |
 |--------|------|---------|--------|
 | `main` | 21 | 3.0.0+ | Active development |
-| `java17` | 17 | 2.0.x | Maintenance (until Q4 2026) |
+| `java17` | 17 | 2.0.x | Maintenance (until Q4 2027) |
 
 ### Java 17 (2.0.x)
 
@@ -27,6 +27,13 @@ The `java17` branch maintains the 2.0.x line for Java 17 users. It uses [Jackson
 ### Java 21 (3.0.0+)
 
 The `main` branch targets Java 21 and uses the native `Double.toString` (shortest digits since JDK 19). Full spec compliance.
+
+## Next Steps
+
+- [ ] Raise `main` to Java 21 (3.0.0)
+- [ ] Establish `java17` as long-term maintenance branch
+- [ ] Write release notes for 2.0.8
+- [ ] Communicate 2.0.8 release (Java 17 baseline restored)
 
 ## Installation
 
