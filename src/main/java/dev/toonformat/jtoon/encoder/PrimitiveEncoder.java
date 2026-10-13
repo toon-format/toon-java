@@ -3,7 +3,7 @@ package dev.toonformat.jtoon.encoder;
 import dev.toonformat.jtoon.util.StringEscaper;
 import dev.toonformat.jtoon.util.StringValidator;
 import org.jspecify.annotations.Nullable;
-import tech.uom.lib.ryu.Ryu;
+import tools.jackson.core.io.schubfach.DoubleToDecimal;
 import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -76,11 +76,16 @@ public final class PrimitiveEncoder {
             return value.asString();
         }
 
-        // Use Ryu for shortest round-trip digits (spec §4.2).
-        // BigDecimal.valueOf(double) uses Double.toString which only delivers
-        // shortest digits from JDK 19+ (JDK-4511638). Ryu provides the same
-        // output on Java 17.
-        final BigDecimal decimal = new BigDecimal(Ryu.doubleToString(value.doubleValue()));
+        // Preserve exact BigDecimal precision (spec §4.2) — do not round-trip
+        // through Double for high-precision values.
+        if (value.isBigDecimal()) {
+            return stripTrailingZeros(value.decimalValue().toPlainString());
+        }
+
+        // Use Jackson's Schubfach-based DoubleToDecimal for shortest round-trip
+        // digits on Java 17 (spec §4.2). Double.toString only delivers shortest
+        // digits from JDK 19+ (JDK-4511638).
+        final BigDecimal decimal = new BigDecimal(DoubleToDecimal.toString(value.doubleValue()));
         final String plainString = decimal.toPlainString();
 
         // Strip trailing zeros but preserve the number's mathematical value
