@@ -21,10 +21,22 @@ jobs:
       contents: write
 
     steps:
+      - name: Determine branch from tag
+        id: get_branch
+        run: |
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name || github.ref_name }}"
+          if [[ "$TAG" == v2.* ]]; then
+            echo "branch=java17" >> "$GITHUB_OUTPUT"
+            echo "java=17" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "java=21" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v7.0.1
         with:
-          ref: main
+          ref: ${{ steps.get_branch.outputs.branch }}
           fetch-depth: 0
 
       - name: Extract version from tag
@@ -54,10 +66,10 @@ jobs:
           echo "gradle.properties updated:"
           cat gradle.properties
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v6.0.1
         with:
-          java-version: '21'
+          java-version: ${{ steps.get_branch.outputs.java }}
           distribution: 'temurin'
           cache: 'gradle'
 
@@ -116,7 +128,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md build.gradle gradle/verification-metadata.xml
           git diff --staged --quiet || git commit -m "docs: update version to ${{ steps.get_version.outputs.VERSION }} in README"
-          git push origin main
+          git push origin ${{ steps.get_branch.outputs.branch }}
 
       - name: Create GitHub Release (if not exists)
         if: steps.skip_duplicate.outputs.skip != 'true'
@@ -157,7 +169,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .github/badges/jacoco.svg
           git diff --staged --quiet || git commit -m "ci: update JaCoCo badge"
-          git push origin main
+          git push origin ${{ steps.get_branch.outputs.branch }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
