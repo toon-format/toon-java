@@ -176,7 +176,7 @@ tasks.checkstyleTest {
 dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.2.3'
     implementation 'tools.jackson.module:jackson-module-blackbird:3.2.3'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.4'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.5'
 
     // NullAway + Error Prone for compile-time null safety
     errorprone 'com.uber.nullaway:nullaway:0.14.2'
