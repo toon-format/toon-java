@@ -181,7 +181,7 @@ dependencies {
     // NullAway + Error Prone for compile-time null safety
     errorprone 'com.uber.nullaway:nullaway:0.14.2'
     // Pin error_prone_core to 2.50.0 (requires Java 21)
-    errorprone('com.google.errorprone:error_prone_core:2.50.0') {
+    errorprone('com.google.errorprone:error_prone_core:2.51.0') {
         version {
             strictly '2.50.0'
         }
