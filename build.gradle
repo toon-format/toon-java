@@ -9,7 +9,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '13.0.0'
     id 'org.cyclonedx.bom' version '3.5.1'
     id 'info.solidsoft.pitest' version '1.19.0'
-    id 'net.ltgt.errorprone' version '5.1.1'
+    id 'net.ltgt.errorprone' version '5.2.0'
 }
 
 group = 'dev.toonformat'
@@ -180,10 +180,10 @@ dependencies {
 
     // NullAway + Error Prone for compile-time null safety
     errorprone 'com.uber.nullaway:nullaway:0.14.3'
-    // Pin error_prone_core to 2.51.0 (requires Java 21)
-    errorprone('com.google.errorprone:error_prone_core:2.51.0') {
+    // Pin error_prone_core to 2.52.0 (requires Java 21)
+    errorprone('com.google.errorprone:error_prone_core:2.52.0') {
         version {
-            strictly '2.51.0'
+            strictly '2.52.0'
         }
     }
     api 'org.jspecify:jspecify:1.0.1'
