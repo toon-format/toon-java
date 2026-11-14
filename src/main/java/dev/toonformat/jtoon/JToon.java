@@ -174,8 +174,7 @@ public final class JToon {
     /**
      * Configures the ObjectMapper used internally by JToon. Must be called before the
      * first encode/decode operation; otherwise an {@link IllegalStateException} is
-     * thrown. Use this to register an optimizer module (e.g. {@code BlackbirdModule}
-     * on Java 25+, or {@code AfterburnerModule}) or any custom configuration.
+     * thrown.
      *
      * @param mapper the ObjectMapper to use (must not be null)
      */
