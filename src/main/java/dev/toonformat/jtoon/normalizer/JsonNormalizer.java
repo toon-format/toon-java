@@ -158,25 +158,17 @@ public final class JsonNormalizer {
      */
     @Nullable
     private static JsonNode tryNormalizePrimitive(final Object value) {
-        if (value instanceof String stringValue) {
-            return StringNode.valueOf(stringValue);
-        } else if (value instanceof Boolean boolValue) {
-            return BooleanNode.valueOf(boolValue);
-        } else if (value instanceof Integer intValue) {
-            return IntNode.valueOf(intValue);
-        } else if (value instanceof Long longValue) {
-            return LongNode.valueOf(longValue);
-        } else if (value instanceof Double doubleValue) {
-            return normalizeDouble(doubleValue);
-        } else if (value instanceof Float floatValue) {
-            return normalizeFloat(floatValue);
-        } else if (value instanceof Short shortValue) {
-            return ShortNode.valueOf(shortValue);
-        } else if (value instanceof Byte byteValue) {
-            return IntNode.valueOf(byteValue);
-        } else {
-            return null;
-        }
+        return switch (value) {
+            case String stringValue -> StringNode.valueOf(stringValue);
+            case Boolean boolValue -> BooleanNode.valueOf(boolValue);
+            case Integer intValue -> IntNode.valueOf(intValue);
+            case Long longValue -> LongNode.valueOf(longValue);
+            case Double doubleValue -> normalizeDouble(doubleValue);
+            case Float floatValue -> normalizeFloat(floatValue);
+            case Short shortValue -> ShortNode.valueOf(shortValue);
+            case Byte byteValue -> IntNode.valueOf(byteValue);
+            default -> null;
+        };
     }
 
     /**
@@ -248,33 +240,24 @@ public final class JsonNormalizer {
      */
     @Nullable
     private static JsonNode tryNormalizeTemporal(final Object value) {
-        if (value instanceof LocalDateTime ldt) {
-            return formatTemporal(ldt, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } else if (value instanceof LocalDate ld) {
-            return formatTemporal(ld, DateTimeFormatter.ISO_LOCAL_DATE);
-        } else if (value instanceof LocalTime lt) {
-            return formatTemporal(lt, DateTimeFormatter.ISO_LOCAL_TIME);
-        } else if (value instanceof ZonedDateTime zonedDateTime) {
-            // Use toOffsetDateTime().toString() to avoid [Zone/Id] bracket
-            // that ZonedDateTime.toString() appends (not standard ISO 8601)
-            return StringNode.valueOf(zonedDateTime.toOffsetDateTime().toString());
-        } else if (value instanceof OffsetDateTime offsetDateTime) {
-            return formatTemporal(offsetDateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        } else if (value instanceof Calendar calendar) {
-            return StringNode.valueOf(calendar.toInstant().toString());
-        } else if (value instanceof Instant instant) {
-            return StringNode.valueOf(instant.toString());
-        } else if (value instanceof java.sql.Timestamp timestamp) {
-            return formatTemporal(timestamp.toLocalDateTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } else if (value instanceof java.sql.Date date) {
-            return formatTemporal(date.toLocalDate(), DateTimeFormatter.ISO_LOCAL_DATE);
-        } else if (value instanceof java.sql.Time time) {
-            return formatTemporal(time.toLocalTime(), DateTimeFormatter.ISO_LOCAL_TIME);
-        } else if (value instanceof Date date) {
-            return StringNode.valueOf(LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault()).toString());
-        } else {
-            return null;
-        }
+        return switch (value) {
+            case LocalDateTime ldt -> formatTemporal(ldt, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            case LocalDate ld -> formatTemporal(ld, DateTimeFormatter.ISO_LOCAL_DATE);
+            case LocalTime lt -> formatTemporal(lt, DateTimeFormatter.ISO_LOCAL_TIME);
+            case ZonedDateTime zonedDateTime -> {
+                // Use toOffsetDateTime().toString() to avoid [Zone/Id] bracket
+                // that ZonedDateTime.toString() appends (not standard ISO 8601)
+                yield StringNode.valueOf(zonedDateTime.toOffsetDateTime().toString());
+            }
+            case OffsetDateTime offsetDateTime -> formatTemporal(offsetDateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            case Calendar calendar -> StringNode.valueOf(calendar.toInstant().toString());
+            case Instant instant -> StringNode.valueOf(instant.toString());
+            case java.sql.Timestamp timestamp -> formatTemporal(timestamp.toLocalDateTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            case java.sql.Date date -> formatTemporal(date.toLocalDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+            case java.sql.Time time -> formatTemporal(time.toLocalTime(), DateTimeFormatter.ISO_LOCAL_TIME);
+            case Date date -> StringNode.valueOf(LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault()).toString());
+            default -> null;
+        };
     }
 
     /**
