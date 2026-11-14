@@ -123,41 +123,47 @@ Some Java-specific types are automatically normalized for LLM-safe output:
 
 ## API
 
-### `JToon.encode(Object value): String`
+### Method Overview
 
-### `JToon.encode(Object value, EncodeOptions options): String`
+| Method | Returns | Description                                |
+|---|---|--------------------------------------------|
+| `encode(Object)` | `String` | Java Object → TOON                         |
+| `encode(Object, EncodeOptions)` | `String` | as above, with options                     |
+| `encodeJson(String)` | `String` | JSON String → TOON                         |
+| `encodeJson(String, EncodeOptions)` | `String` | as above, with options                     |
+| `decode(String)` | `Object` | TOON → Java Object                         |
+| `decode(String, DecodeOptions)` | `Object` | as above, with options                     |
+| `decodeToJson(String)` | `String` | TOON → JSON String                         |
+| `decodeToJson(String, DecodeOptions)` | `String` | as above, with options                     |
+| `configure(ObjectMapper)` | `void` | Set custom ObjectMapper (before first use) |
+| `createMapper(JacksonModule...)` | `ObjectMapper` | Default config + modules                   |
 
-### `JToon.encodeJson(String json): String`
+### Encode
 
-### `JToon.encodeJson(String json, EncodeOptions options): String`
+```java
+String encode(Object value);
+String encode(Object value, EncodeOptions options);
+String encodeJson(String json);
+String encodeJson(String json, EncodeOptions options);
+```
 
-Converts any Java object or JSON-string to TOON format.
+`EncodeOptions` (Defaults: `indent=2`, `delimiter=COMMA`, `flatten=OFF`, `flattenDepth=Integer.MAX_VALUE`):
 
-**Parameters:**
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `indent` | `int` | `2` | Spaces per level |
+| `delimiter` | `Delimiter` | `COMMA` | Tabular/inline delimiter |
+| `flatten` | `KeyFolding` | `OFF` | Key folding for nested objects |
+| `flattenDepth` | `int` | `MAX` | Max. depth for folding |
 
-- `value` – Any Java object (Map, List, primitive, or nested structure). Non-serializable values are converted to `null`. Java temporal types are converted to ISO strings, Optional is unwrapped, and Stream is materialized.
-- `options` – Optional encoding options (`EncodeOptions` record):
-  - `indent` – Number of spaces per indentation level (default: `2`)
-  - `delimiter` – Delimiter enum for array values and tabular rows: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
-  - `flatten` – Key folding to collapse single-key wrapper chains (default: `OFF`).
-  - `flattenDepth` – maximum number of segments to fold  (default: `Infinity`)
-
-For `encodeJson` overloads:
-
-- `json` – A valid JSON string to be parsed and encoded. Invalid or blank JSON throws `IllegalArgumentException`.
-
-**Returns:**
-
-A TOON-formatted string with no trailing newline or spaces.
-
-**Example:**
+Factory methods: `withIndent`, `withDelimiter`, `withFlatten`, `withFlattenDepth`.
 
 ```java
 import dev.toonformat.jtoon.JToon;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
 
-record Item(String sku, int qty, double price,  @JsonIgnore double internPrice) {}
+record Item(String sku, int qty, double price, @JsonIgnore double internPrice) {}
 record Data(List<Item> items) {}
 
 Item item1 = new Item("A1", 2, 9.99, 8.50);
@@ -167,15 +173,13 @@ Data data = new Data(List.of(item1, item2));
 System.out.println(JToon.encode(data));
 ```
 
-**Output:**
-
 ```yaml
 items[2]{sku,qty,price}:
   A1,2,9.99
   B2,1,14.5
 ```
 
-The [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) @JsonIgnore will help to keep fields from exposing.
+The [Jackson Annotation](https://github.com/FasterXML/jackson-annotations) `@JsonIgnore` keeps fields from being exposed.
 
 #### Encode a plain JSON string
 
@@ -192,8 +196,6 @@ String json = """
 System.out.println(JToon.encodeJson(json));
 ```
 
-Output:
-
 ```yaml
 user:
   id: 123
@@ -201,93 +203,28 @@ user:
   tags[2]: reading,gaming
 ```
 
-#### Delimiter Options
-
-The `delimiter` option allows you to choose between comma (default), tab, or pipe delimiters for array values and tabular rows. Alternative delimiters can provide additional token savings in specific contexts.
-
-##### Tab Delimiter (`\t`)
-
-Using tab delimiters instead of commas can reduce token count further, especially for tabular data:
+### Decode
 
 ```java
-import dev.toonformat.jtoon.*;
-import java.util.*;
-
-record Item(String sku, String name, int qty, double price) {}
-
-record Data(List<Item> items) {}
-
-Item item1 = new Item("A1", "Widget", 2, 9.99);
-Item item2 = new Item("B2", "Gadget", 1, 14.5);
-Data data = new Data(List.of(item1, item2));
-
-EncodeOptions options = new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, 3);
-System.out.println(JToon.encode(data, options));
+Object decode(String toon);
+Object decode(String toon, DecodeOptions options);
+String decodeToJson(String toon);
+String decodeToJson(String toon, DecodeOptions options);
 ```
 
-**Output:**
+`DecodeOptions` (Defaults: `indent=2`, `delimiter=COMMA`, `strict=true`, `expandPaths=OFF`, `maxDepth=512`, `maxArraySize=10_000_000`, `maxStringLength=10_000_000`):
 
-```yaml
-items[2	]{sku	name	qty	price}:
-  A1	Widget	2	9.99
-  B2	Gadget	1	14.5
-```
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `indent` | `int` | `2` | Spaces per level |
+| `delimiter` | `Delimiter` | `COMMA` | Expected tabular/inline delimiter |
+| `strict` | `boolean` | `true` | Strict validation; when `false`, spec-specific leniencies apply |
+| `expandPaths` | `PathExpansion` | `OFF` | Path expansion for dotted keys |
+| `maxDepth` | `int` | `512` | Max. nesting depth |
+| `maxArraySize` | `int` | `10_000_000` | Max. elements per array/object |
+| `maxStringLength` | `int` | `10_000_000` | Max. string length |
 
-**Benefits:**
-
-- Tabs are single characters and often tokenize more efficiently than commas.
-- Tabs rarely appear in natural text, reducing the need for quote-escaping.
-- The delimiter is explicitly encoded in the array header, making it self-descriptive.
-
-**Considerations:**
-
-- Some terminals and editors may collapse or expand tabs visually.
-- String values containing tabs will still require quoting.
-
-##### Pipe Delimiter (`|`)
-
-Pipe delimiters offer a middle ground between commas and tabs:
-
-```java
-// Using the same Item and Data records from above
-EncodeOptions options = new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, 3);
-System.out.println(JToon.encode(data, options));
-```
-
-**Output:**
-
-```yaml
-items[2|]{sku|name|qty|price}:
-  A1|Widget|2|9.99
-  B2|Gadget|1|14.5
-```
-
-### `JToon.decode(String toon): Object`
-
-### `JToon.decode(String toon, DecodeOptions options): Object`
-
-### `JToon.decodeToJson(String toon): String`
-
-### `JToon.decodeToJson(String toon, DecodeOptions options): String`
-
-Converts TOON-formatted strings back to Java objects or JSON.
-
-**Parameters:**
-
-- `toon` – TOON-formatted input string
-- `options` – Optional decoding options (`DecodeOptions` record):
-  - `indent` – Number of spaces per indentation level (default: `2`)
-  - `delimiter` – Expected delimiter: `Delimiter.COMMA` (default), `Delimiter.TAB`, or `Delimiter.PIPE`
-  - `strict` – Boolean for validation mode. When `true` (default), throws `IllegalArgumentException` on invalid input. When `false`, applies the spec's non-strict leniencies, such as count mismatches, depth jumps and skipped over-indented lines, and throws wherever the spec names none.
-  - `expandPaths` – Boolean Path expansion mode for dotted keys (default: `OFF`).
-
-**Returns:**
-
-For `decode`: A Java object (`Map` for objects, `List` for arrays, primitives for scalars, or `null`)
-
-For `decodeToJson`: A JSON string representation
-
-**Example:**
+Factory methods: `withIndent`, `withDelimiter`, `withStrict`.
 
 ```java
 import dev.toonformat.jtoon.JToon;
@@ -298,32 +235,23 @@ String toon = """
       2,Bob,user
     """;
 
-// Decode to Java objects
-Object result = JToon.decode(toon);
-
-// Decode directly to JSON string
-String json = JToon.decodeToJson(toon);
+Object result = JToon.decode(toon);          // Java objects
+String json  = JToon.decodeToJson(toon);     // JSON string
 ```
 
-#### Round-Trip Conversion
+#### Round-Trip
 
 ```java
 import dev.toonformat.jtoon.*;
 import java.util.*;
 
-// Original data
 Map<String, Object> data = new LinkedHashMap<>();
 data.put("id", 123);
 data.put("name", "Ada");
 data.put("tags", Arrays.asList("dev", "admin"));
 
- // Encode to TOON
 String toon = JToon.encode(data);
-
-// Decode back to objects
- Object decoded = JToon.decode(toon);
-
-// Values are preserved (note: integers decode as Long)
+Object decoded = JToon.decode(toon);   // Integers decode as Long
 ```
 
 #### Custom Decode Options
@@ -332,16 +260,65 @@ String toon = JToon.encode(data);
 import dev.toonformat.jtoon.*;
 
 String toon = "tags[3|]: a|b|c";
+DecodeOptions pipe = DecodeOptions.withDelimiter(Delimiter.PIPE);
+Object result = JToon.decode(toon, pipe);
 
-// Decode with pipe delimiter
-DecodeOptions options = DecodeOptions.withDelimiter(Delimiter.PIPE);
-Object result = JToon.decode(toon, options);
-
-// Non-strict mode: a count mismatch decodes the values that are present
-String mismatchedToon = "tags[3]: a,b";
+String mismatched = "tags[3]: a,b";
 DecodeOptions lenient = DecodeOptions.withStrict(false);
-Object result2 = JToon.decode(mismatchedToon, lenient);
+Object result2 = JToon.decode(mismatched, lenient);
 ```
+
+### Delimiter
+
+| Delimiter | Symbol | Notes |
+|---|---|---|
+| `COMMA` | `,` | Default |
+| `TAB` | `\t` | Less escaping, efficient tokenization |
+| `PIPE` | `\|` | Compromise |
+
+```java
+import dev.toonformat.jtoon.*;
+import java.util.*;
+
+record Item(String sku, String name, int qty, double price) {}
+record Data(List<Item> items) {}
+
+Data data = new Data(List.of(
+    new Item("A1", "Widget", 2, 9.99),
+    new Item("B2", "Gadget", 1, 14.5)));
+
+// Tab
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.TAB, KeyFolding.OFF, 3)));
+// Pipe
+System.out.println(JToon.encode(data, new EncodeOptions(2, Delimiter.PIPE, KeyFolding.OFF, 3)));
+```
+
+### Jackson ObjectMapper / Optimizer Modules
+
+JToon uses a shared, thread-safe `ObjectMapper` internally. By default **no optimizer
+module** (Blackbird/Afterburner) is registered, which keeps JToon usable on Java 17+
+with any Jackson 3.x release — including Jackson 3.3.0, whose `BlackbirdModule`
+requires Java 25.
+
+Applications that want the performance boost of an optimizer module can plug in their
+own `ObjectMapper` **before the first** encode/decode call:
+
+```java
+import dev.toonformat.jtoon.JToon;
+import tools.jackson.databind.JacksonModule;
+import tools.jackson.module.afterburner.AfterburnerModule;
+import tools.jackson.module.blackbird.BlackbirdModule;
+
+// Java 17+ (Afterburner works on Java 17 and later)
+JToon.configure(JToon.createMapper(new AfterburnerModule()));
+
+// Java 25+ (Blackbird is faster but requires Java 25)
+JToon.configure(JToon.createMapper(new BlackbirdModule()));
+```
+
+`JToon.configure(ObjectMapper)` and `JToon.createMapper(JacksonModule...)` are the
+entry points; `ObjectMapperSingleton` exposes the same helpers. Calling `configure`
+after the first encode/decode throws `IllegalStateException`.
 
 **CI/CD:** GitHub Actions • Java 21 • Coverage enforcement • PR coverage comments
 
@@ -364,18 +341,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
 
 ## Project Status
 
-`toon-spec: 4.4`
+`toon-spec: 4.4.0`
 
-This project is 100% compliant with TOON specification 4.4. Release conformance enforced on CI/CD.
+This project is 100% compliant with TOON specification 4.4.0 Release conformance enforced on CI/CD.
 
 ## Documentation
 
-- [📘 Full Documentation](docs/) - Extended guides and references
-- [🔧 API Reference](https://javadoc.io/doc/dev.toonformat/jtoon) - Detailed Javadoc
-- [📋 Format Specification](docs/FORMAT.md) - TOON syntax and rules
-- [📜 TOON Spec](https://github.com/toon-format/spec) - Official specification
-- [🐛 Issues](https://github.com/toon-format/toon-java/issues) - Bug reports and features
-- [🤝 Contributing](CONTRIBUTING.md) - Contribution guidelines
+- [Full Documentation](docs/) - Extended guides and references
+- [API Reference](https://javadoc.io/doc/dev.toonformat/jtoon) - Detailed Javadoc
+- [Format Specification](docs/FORMAT.md) - TOON syntax and rules
+- [TOON Spec](https://github.com/toon-format/spec) - Official specification
+- [Issues](https://github.com/toon-format/toon-java/issues) - Bug reports and features
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ## License
 

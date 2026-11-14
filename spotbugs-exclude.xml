@@ -34,6 +34,10 @@
 	<Match>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
+
+	<Match>
+        <Bug pattern="EI_EXPOSE_STATIC_REP2" />
+    </Match>
 	    
     <!-- Exclude warnings for string concatenation in logging -->
     <Match>

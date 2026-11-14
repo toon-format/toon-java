@@ -3,8 +3,11 @@ package dev.toonformat.jtoon;
 import dev.toonformat.jtoon.decoder.ValueDecoder;
 import dev.toonformat.jtoon.encoder.ValueEncoder;
 import dev.toonformat.jtoon.normalizer.JsonNormalizer;
+import dev.toonformat.jtoon.util.ObjectMapperSingleton;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Objects;
 
 /**
@@ -166,5 +169,29 @@ public final class JToon {
     public static String decodeToJson(final String toon, final DecodeOptions options) {
         Objects.requireNonNull(options, "DecodeOptions cannot be null");
         return ValueDecoder.decodeToJson(toon, options);
+    }
+
+    /**
+     * Configures the ObjectMapper used internally by JToon. Must be called before the
+     * first encode/decode operation; otherwise an {@link IllegalStateException} is
+     * thrown. Use this to register an optimizer module (e.g. {@code BlackbirdModule}
+     * on Java 25+, or {@code AfterburnerModule}) or any custom configuration.
+     *
+     * @param mapper the ObjectMapper to use (must not be null)
+     */
+    public static void configure(final ObjectMapper mapper) {
+        ObjectMapperSingleton.setInstance(mapper);
+    }
+
+    /**
+     * Creates an ObjectMapper based on JToon's default configuration, with the given
+     * modules registered. Convenience for applications that want to add an optimizer
+     * module without rebuilding the whole configuration.
+     *
+     * @param modules modules to register (may be empty)
+     * @return a new ObjectMapper
+     */
+    public static ObjectMapper createMapper(final JacksonModule... modules) {
+        return ObjectMapperSingleton.createMapper(modules);
     }
 }
