@@ -244,18 +244,19 @@ public final class JsonNormalizer {
             case LocalDateTime ldt -> formatTemporal(ldt, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             case LocalDate ld -> formatTemporal(ld, DateTimeFormatter.ISO_LOCAL_DATE);
             case LocalTime lt -> formatTemporal(lt, DateTimeFormatter.ISO_LOCAL_TIME);
-            case ZonedDateTime zonedDateTime -> {
-                // Use toOffsetDateTime().toString() to avoid [Zone/Id] bracket
-                // that ZonedDateTime.toString() appends (not standard ISO 8601)
-                yield StringNode.valueOf(zonedDateTime.toOffsetDateTime().toString());
-            }
+            // Use toOffsetDateTime().toString() to avoid [Zone/Id] bracket
+            // that ZonedDateTime.toString() appends (not standard ISO 8601)
+            case ZonedDateTime zonedDateTime -> StringNode.valueOf(zonedDateTime.toOffsetDateTime().toString());
             case OffsetDateTime offsetDateTime -> formatTemporal(offsetDateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             case Calendar calendar -> StringNode.valueOf(calendar.toInstant().toString());
             case Instant instant -> StringNode.valueOf(instant.toString());
-            case java.sql.Timestamp timestamp -> formatTemporal(timestamp.toLocalDateTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            case java.sql.Date date -> formatTemporal(date.toLocalDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+            case java.sql.Timestamp timestamp ->
+                formatTemporal(timestamp.toLocalDateTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            case java.sql.Date date ->
+                formatTemporal(date.toLocalDate(), DateTimeFormatter.ISO_LOCAL_DATE);
             case java.sql.Time time -> formatTemporal(time.toLocalTime(), DateTimeFormatter.ISO_LOCAL_TIME);
-            case Date date -> StringNode.valueOf(LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault()).toString());
+            case Date date ->
+                StringNode.valueOf(LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault()).toString());
             default -> null;
         };
     }
