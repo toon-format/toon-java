@@ -7,7 +7,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'org.owasp.dependencycheck' version '13.0.0'
-    id 'org.cyclonedx.bom' version '3.5.1'
+    id 'org.cyclonedx.bom' version '3.6.1'
     id 'info.solidsoft.pitest' version '1.19.0'
     id 'net.ltgt.errorprone' version '5.2.0'
 }
@@ -179,7 +179,7 @@ dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.5'
 
     // NullAway + Error Prone for compile-time null safety
-    errorprone 'com.uber.nullaway:nullaway:0.14.3'
+    errorprone 'com.uber.nullaway:nullaway:0.14.4'
     // Pin error_prone_core to 2.52.0 (requires Java 21)
     errorprone('com.google.errorprone:error_prone_core:2.52.0') {
         version {
