@@ -331,10 +331,13 @@ after the first encode/decode throws `IllegalStateException`.
 # Run tests only
 ./gradlew test
 
-# Update dependency verification metadata (required when adding/updating dependencies).
-# Delete first: --write-verification-metadata merges, it does not replace.
+# Regenerate dependency verification metadata (cold cache required:
+# a warm cache skips cached .pom/.module files and they get no checksum entry).
 rm -f gradle/verification-metadata.xml
-./gradlew --write-verification-metadata sha256 build cyclonedxBom -x test
+GRADLE_USER_HOME="$(mktemp -d)" ./gradlew --write-verification-metadata sha256 build cyclonedxBom -x test
+
+# Verify (must pass without the --write flag)
+./gradlew build cyclonedxBom -x test
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
